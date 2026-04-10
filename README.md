@@ -75,7 +75,7 @@ npm start        # Lance sur http://localhost:3000
 | `ANTHROPIC_API_KEY` | Clé API Anthropic                      |
 | `PORT`            | Port du serveur (défaut : 5000)          |
 | `FRONTEND_URL`    | URL du frontend pour CORS                |
-| `COOKIE_SECRET`   | (optionnel) clé pour signer cookies si besoin, non stocké en front
+| `COOKIE_SECRET`   | (optionnel) clé pour signer cookies si besoin, non stocké en front |
 
 ---
 
@@ -88,6 +88,9 @@ npm start        # Lance sur http://localhost:3000
 | POST    | `/api/auth/connexion`    | Se connecter (cookie httpOnly)
 | POST    | `/api/auth/logout`       | Se déconnecter (efface le cookie)
 | GET     | `/api/auth/profil`       | Voir son profil       |
+| PUT     | `/api/auth/profil`       | Modifier son profil  |
+| PUT     | `/api/auth/changer-mot-de-passe` | Changer le mot de passe |
+| DELETE  | `/api/auth/compte`       | Supprimer le compte  |
 
 ### Cours
 | Méthode | Route               | Description              |
@@ -131,3 +134,11 @@ npm start        # Lance sur http://localhost:3000
 - **Explication de concepts** : analogies, exemples concrets
 - **Planning intelligent** : sessions adaptées à tes cours et disponibilités
 - **Chat assistant** : réponses en streaming temps réel
+
+---
+
+## Fonctionnalités ajoutées
+
+- **Page Profil** : modification du profil, changement de mot de passe, suppression de compte
+- **Dark Mode** : support du thème sombre
+- **ErrorBoundary** : gestion centralisée des erreurs React
