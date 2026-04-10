@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const { body } = require("express-validator");
 const {
   getCours, getCoursParId, creerCours, modifierCours, supprimerCours,
 } = require("../controllers/courseController");
@@ -24,12 +25,26 @@ const upload = multer({
   },
 });
 
-router.use(proteger); // Toutes les routes nécessitent une auth
+// Validation
+const validerCours = [
+  body("titre").trim().isLength({ min: 1, max: 200 }).withMessage("Titre invalide (1-200 caractères)"),
+  body("matiere").trim().isLength({ min: 1, max: 100 }).withMessage("Matière invalide (1-100 caractères)"),
+];
+
+const validate = (req, res, next) => {
+  const errors = require("express-validator").validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+  next();
+};
+
+router.use(proteger);
 
 router.get("/", getCours);
 router.get("/:id", getCoursParId);
-router.post("/", upload.single("fichier"), creerCours);
-router.put("/:id", modifierCours);
+router.post("/", validerCours, validate, upload.single("fichier"), creerCours);
+router.put("/:id", validerCours, validate, modifierCours);
 router.delete("/:id", supprimerCours);
 
 module.exports = router;

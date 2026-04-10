@@ -6,6 +6,19 @@
  */
 
 const rateLimit = require("express-rate-limit");
+const crypto = require("crypto");
+
+// ── Validation au démarrage ───────────────────────────────────────
+// Vérifier JWT_SECRET
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error("❌ JWT_SECRET doit faire au moins 32 caractères!");
+  process.exit(1);
+}
+// Vérifier ANTHROPIC_API_KEY
+if (!process.env.ANTHROPIC_API_KEY || !process.env.ANTHROPIC_API_KEY.startsWith("sk-ant-")) {
+  console.error("❌ ANTHROPIC_API_KEY invalide!");
+  process.exit(1);
+}
 
 // ── Rate Limiting global ───────────────────────────────────────────
 const limiteurGlobal = rateLimit({

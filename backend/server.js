@@ -6,6 +6,8 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const { body, validationResult } = require("express-validator");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./src/config/db");
@@ -57,13 +59,24 @@ app.use(
   })
 );
 
-// ── Middlewares de sécurité ────────────────────────────────────────
-app.use(entetesSécurité);
+// ── Helmet + security middlewares ────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:"],
+      connectSrc: ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(limiteurGlobal);
 app.use(validerTaillePayload);
 
 // cookies
-app.use(cookieParser());
+app.use(cookieParser(process.env.COOKIE_SECRET || "default-secret-change-me"));
 
 // ── Parsing du corps ──────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
