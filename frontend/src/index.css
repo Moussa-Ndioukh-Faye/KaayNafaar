@@ -1,0 +1,219 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+
+  /* Scrollbar personnalisée — theme() au lieu de @apply pour les couleurs custom */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background-color: #f3f4f6; }
+  .dark ::-webkit-scrollbar-track { background-color: #1f2937; }
+  ::-webkit-scrollbar-thumb {
+    background-color: theme('colors.primary.400', #818cf8);
+    border-radius: 9999px;
+  }
+}
+
+@layer components {
+  /* ── Boutons ─────────────────────────────────────────────── */
+  /* Note: hover/active/focus sur les couleurs custom via CSS direct (pas @apply)  */
+  /* car @apply + state-variants + custom-colors ne fonctionne pas avec Tailwind JIT */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 text-white px-4 py-2
+           rounded-xl font-medium shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           transition-all duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: theme('colors.primary.600');
+    --tw-ring-color: theme('colors.primary.500');
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: theme('colors.primary.700');
+  }
+  .btn-primary:active:not(:disabled) {
+    background-color: theme('colors.primary.800');
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200
+           px-4 py-2 rounded-xl font-medium shadow-sm
+           hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           transition-all duration-150;
+    --tw-ring-color: theme('colors.primary.500');
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center gap-2 bg-red-50 text-red-600 border border-red-200
+           px-4 py-2 rounded-xl font-medium
+           hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400
+           transition-all duration-150;
+  }
+
+  /* ── Cartes ──────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+  }
+
+  /* hover:border-primary-100 remplacé par theme() pour éviter l'erreur JIT */
+  .card-hover {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6
+           transition-all duration-200 cursor-pointer;
+  }
+  .card-hover:hover {
+    @apply shadow-md;
+    border-color: theme('colors.primary.100', #e0e7ff);
+  }
+
+  /* ── Champs ──────────────────────────────────────────────── */
+  .input-field {
+    @apply w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm
+           bg-white shadow-sm
+           focus:outline-none focus:ring-2 focus:border-transparent
+           placeholder-gray-400 transition-all duration-150;
+    --tw-ring-color: theme('colors.primary.500');
+  }
+
+  /* ── Badges ──────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  /* ── Icônes Material Symbols Rounded (Google) ────────────── */
+  .icon {
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .icon-filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  /* ── Typing cursor ───────────────────────────────────────── */
+  .typing-cursor::after {
+    content: "▋";
+    color: theme('colors.primary.500', #6366f1);
+    @apply animate-pulse;
+  }
+
+  /* ── Titres de page ──────────────────────────────────────── */
+  .page-title {
+    @apply text-2xl font-bold text-gray-900;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-gray-500 mt-0.5;
+  }
+
+  /* ── Dark Mode ─────────────────────────────────────────── */
+  .dark {
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
+    --border-color: #374151;
+  }
+
+  .dark .btn-primary {
+    background-color: theme('colors.primary.500');
+  }
+  .dark .btn-primary:hover:not(:disabled) {
+    background-color: theme('colors.primary.600');
+  }
+
+  .dark .btn-secondary {
+    @apply bg-gray-800 text-gray-200 border-gray-600;
+  }
+  .dark .btn-secondary:hover:not(:disabled) {
+    @apply bg-gray-700 border-gray-500;
+  }
+
+  .dark .card {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .dark .input-field {
+    @apply bg-gray-800 border-gray-600 text-gray-100;
+  }
+
+  .dark .bg-gray-50 {
+    @apply bg-gray-900;
+  }
+
+  .dark .bg-white {
+    @apply bg-gray-800;
+  }
+
+  .dark .text-gray-900,
+  .dark .text-gray-800 {
+    @apply text-gray-100;
+  }
+
+  .dark .text-gray-700,
+  .dark .text-gray-600 {
+    @apply text-gray-300;
+  }
+
+  .dark .text-gray-500,
+  .dark .text-gray-400 {
+    @apply text-gray-400;
+  }
+
+  .dark .border-gray-200 {
+    @apply border-gray-700;
+  }
+
+  .dark .border-gray-100 {
+    @apply border-gray-700;
+  }
+
+  .dark .bg-primary-50,
+  .dark .bg-primary-100 {
+    @apply bg-gray-700;
+  }
+
+  .dark .text-primary-700 {
+    @apply text-primary-400;
+  }
+
+  .dark .hover\:bg-gray-50:hover {
+    @apply bg-gray-700;
+  }
+
+  .dark \.bg-gradient-to-r {
+    --tw-gradient-from: theme('colors.primary.700');
+    --tw-gradient-to: theme('colors.secondary.700');
+  }
+
+  .dark .animate-fade-in {
+    animation: fadeInDark 0.3s ease-out;
+  }
+
+  @keyframes fadeInDark {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
