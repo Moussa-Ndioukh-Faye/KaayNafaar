@@ -6,8 +6,9 @@
 
 import axios from "axios";
 
-// Vite utilise import.meta.env au lieu de process.env
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+// Utiliser le proxy Vite en développement pour éviter les problèmes CORS avec les cookies
+// En production, utiliser l'URL absolue
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Instance Axios configurée
 const api = axios.create({
@@ -139,7 +140,13 @@ export const iaAPI = {
 const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   const controller = new AbortController();
 
-  fetch(`${API_URL}${endpoint}`, {
+  // En développement, utiliser le chemin relatif (proxy Vite)
+  // En production, utiliser l'URL absolue
+  const baseURL = import.meta.env.VITE_API_URL?.startsWith("http") 
+    ? import.meta.env.VITE_API_URL 
+    : "";
+
+  fetch(`${baseURL}${endpoint}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
