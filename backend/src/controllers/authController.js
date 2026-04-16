@@ -43,7 +43,7 @@ const inscription = async (req, res) => {
     }
 
     // Vérifier si l'email existe déjà
-    const utilisateurExistant = await User.findOne({ email: email.toLowerCase() });
+    const utilisateurExistant = await User.findOne({ where: { email: email.toLowerCase() } });
     if (utilisateurExistant) {
       return res
         .status(400)
@@ -59,17 +59,16 @@ const inscription = async (req, res) => {
     });
 
     // Créer un profil de progression initial
-    await Progression.create({ utilisateur: utilisateur._id });
+    await Progression.create({ utilisateurId: utilisateur.id });
 
-    const token = genererToken(utilisateur._id);
+    const token = genererToken(utilisateur.id);
     envoyerTokenCookie(res, token);
 
     res.status(201).json({
       success: true,
       message: "Compte créé avec succès !",
-      token, // renvoyons encore le token pour compatibilité, mais le cookie est utilisé
       utilisateur: {
-        id: utilisateur._id,
+        id: utilisateur.id,
         nom: utilisateur.nom,
         email: utilisateur.email,
         niveauEtude: utilisateur.niveauEtude,
@@ -77,13 +76,13 @@ const inscription = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur inscription:", error);
-    // Email déjà pris (contrainte unique MongoDB — race condition)
-    if (error.code === 11000) {
+    // Email déjà pris (contrainte unique MySQL)
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(400).json({ success: false, message: "Cet email est déjà utilisé." });
     }
-    // Erreur de validation Mongoose — extraire le premier message explicite
-    if (error.name === "ValidationError") {
-      const msg = Object.values(error.errors)[0]?.message || "Données invalides.";
+    // Erreur de validation Sequelize
+    if (error.name === "SequelizeValidationError") {
+      const msg = error.errors[0]?.message || "Données invalides.";
       return res.status(400).json({ success: false, message: msg });
     }
     res.status(500).json({ success: false, message: "Erreur lors de la création du compte. Réessaie plus tard." });
@@ -102,8 +101,8 @@ const connexion = async (req, res) => {
       });
     }
 
-    // Récupérer l'utilisateur avec le mot de passe (select: false par défaut)
-    const utilisateur = await User.findOne({ email: email.toLowerCase().trim() }).select("+motDePasse");
+    // Récupérer l'utilisateur avec le mot de passe
+    const utilisateur = await User.findOne({ where: { email: email.toLowerCase().trim() } });
     if (!utilisateur) {
       return res
         .status(401)
@@ -118,19 +117,19 @@ const connexion = async (req, res) => {
     }
 
     // Mettre à jour la dernière connexion
-    await Progression.findOneAndUpdate(
-      { utilisateur: utilisateur._id },
-      { "stats.dernierConnexion": new Date() }
+    await Progression.update(
+      { stats: { dernierConnexion: new Date() } },
+      { where: { utilisateurId: utilisateur.id } }
     );
 
-    const token = genererToken(utilisateur._id);
+    const token = genererToken(utilisateur.id);
     envoyerTokenCookie(res, token);
 
     res.json({
       success: true,
-      token,
+      message: "Connexion réussie",
       utilisateur: {
-        id: utilisateur._id,
+        id: utilisateur.id,
         nom: utilisateur.nom,
         email: utilisateur.email,
         niveauEtude: utilisateur.niveauEtude,
@@ -139,10 +138,6 @@ const connexion = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur connexion:", error);
-    if (error.name === "ValidationError") {
-      const msg = Object.values(error.errors)[0]?.message || "Données invalides.";
-      return res.status(400).json({ success: false, message: msg });
-    }
     res.status(500).json({ success: false, message: "Erreur lors de la connexion. Réessaie plus tard." });
   }
 };
@@ -150,7 +145,10 @@ const connexion = async (req, res) => {
 // GET /api/auth/profil
 const getProfil = async (req, res) => {
   try {
-    const utilisateur = await User.findById(req.utilisateur._id);
+    const utilisateur = await User.findByPk(req.utilisateur.id);
+    if (!utilisateur) {
+      return res.status(404).json({ success: false, message: "Utilisateur non trouvé." });
+    }
     res.json({ success: true, utilisateur });
   } catch (error) {
     console.error("Erreur getProfil:", error);
@@ -163,31 +161,26 @@ const mettreAJourProfil = async (req, res) => {
   try {
     const { nom, niveauEtude, matieresFavorites } = req.body;
 
-    // N'écraser que les champs explicitement envoyés
-    const miseAJour = {};
+    const utilisateur = await User.findByPk(req.utilisateur.id);
+    if (!utilisateur) {
+      return res.status(404).json({ success: false, message: "Utilisateur non trouvé." });
+    }
+
     if (nom !== undefined) {
       if (nom.trim().length < 2) {
         return res.status(400).json({ success: false, message: "Le nom doit contenir au moins 2 caractères." });
       }
-      miseAJour.nom = nom.trim();
+      utilisateur.nom = nom.trim();
     }
-    if (niveauEtude !== undefined) miseAJour.niveauEtude = niveauEtude;
-    if (matieresFavorites !== undefined) miseAJour.matieresFavorites = matieresFavorites;
+    if (niveauEtude !== undefined) utilisateur.niveauEtude = niveauEtude;
+    if (matieresFavorites !== undefined) utilisateur.matieresFavorites = matieresFavorites;
 
-    const utilisateur = await User.findByIdAndUpdate(
-      req.utilisateur._id,
-      miseAJour,
-      { new: true, runValidators: true }
-    );
+    await utilisateur.save();
     res.json({ success: true, utilisateur });
   } catch (error) {
     console.error("Erreur mettreAJourProfil:", error);
-    if (error.code === 11000) {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(400).json({ success: false, message: "Cet email est déjà utilisé." });
-    }
-    if (error.name === "ValidationError") {
-      const msg = Object.values(error.errors)[0]?.message || "Données invalides.";
-      return res.status(400).json({ success: false, message: msg });
     }
     res.status(500).json({ success: false, message: "Impossible de mettre à jour le profil." });
   }
@@ -205,7 +198,7 @@ const changerMotDePasse = async (req, res) => {
       return res.status(400).json({ success: false, message: "Le nouveau mot de passe doit contenir au moins 8 caractères." });
     }
 
-    const utilisateur = await User.findById(req.utilisateur._id).select("+motDePasse");
+    const utilisateur = await User.findByPk(req.utilisateur.id);
     const motDePasseValide = await utilisateur.verifierMotDePasse(motDePasseActuel);
     if (!motDePasseValide) {
       return res.status(401).json({ success: false, message: "Mot de passe actuel incorrect." });
@@ -226,13 +219,22 @@ const supprimerCompte = async (req, res) => {
   try {
     const { motDePasse } = req.body;
 
-    const utilisateur = await User.findById(req.utilisateur._id).select("+motDePasse");
+    const utilisateur = await User.findByPk(req.utilisateur.id);
     const motDePasseValide = await utilisateur.verifierMotDePasse(motDePasse);
     if (!motDePasseValide) {
       return res.status(401).json({ success: false, message: "Mot de passe incorrect." });
     }
 
-    await User.findByIdAndDelete(req.utilisateur._id);
+    const userId = utilisateur.id;
+
+    await Promise.all([
+      User.destroy({ where: { id: userId } }),
+      require("../models/Progression").destroy({ where: { utilisateurId: userId } }),
+      require("../models/Course").destroy({ where: { utilisateurId: userId } }),
+      require("../models/Fiche").destroy({ where: { utilisateurId: userId } }),
+      require("../models/Quiz").destroy({ where: { utilisateurId: userId } }),
+    ]);
+
     res.clearCookie("token");
     res.json({ success: true, message: "Compte supprimé." });
   } catch (error) {

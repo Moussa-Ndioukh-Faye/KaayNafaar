@@ -3,7 +3,7 @@
  */
 
 import React from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useAuth, useDarkMode } from "../App";
 
 const titresPages = {
@@ -21,26 +21,44 @@ export default function Navbar({ ouvrir }) {
   const navigate = useNavigate();
   const { utilisateur } = useAuth();
   const { darkMode, setDarkMode } = useDarkMode();
-  const titre = titresPages[location.pathname] || "RévisionIA";
+  const titre = titresPages[location.pathname] || "";
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-      {/* Bouton menu hamburger (mobile) */}
+    <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+      {/* Logo + Menu hamburger */}
       <div className="flex items-center gap-4">
         <button
           onClick={ouvrir}
           className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label="Ouvrir le menu"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{titre}</h1>
+        
+        {/* Logo Kay Nafar avec animation */}
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-600 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
+            <span className="text-white font-bold text-lg">K</span>
+          </div>
+          <div className="hidden sm:block">
+            <h1 className="text-xl font-bold gradient-text leading-tight">Kay Nafar</h1>
+            <p className="text-xs text-gray-400 -mt-1">Assistant d'études</p>
+          </div>
+        </Link>
+
+        {/* Titre de la page */}
+        {titre && (
+          <div className="hidden md:block h-8 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
+        )}
+        {titre && (
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{titre}</h1>
+        )}
       </div>
 
       {/* Droite : salutation + dark mode */}

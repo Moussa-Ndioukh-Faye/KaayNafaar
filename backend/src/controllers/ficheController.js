@@ -4,18 +4,20 @@
 
 const Fiche = require("../models/Fiche");
 const Progression = require("../models/Progression");
+const { Op } = require("sequelize");
 
 // GET /api/fiches
 const getFiches = async (req, res) => {
   try {
     const { matiere, coursId } = req.query;
-    const filtre = { utilisateur: req.utilisateur._id };
-    if (matiere) filtre.matiere = matiere;
-    if (coursId) filtre.cours = coursId;
+    const where = { utilisateurId: req.utilisateur.id };
+    if (matiere) where.matiere = matiere;
+    if (coursId) where.coursId = coursId;
 
-    const fiches = await Fiche.find(filtre)
-      .populate("cours", "titre matiere")
-      .sort({ createdAt: -1 });
+    const fiches = await Fiche.findAll({
+      where,
+      order: [["createdAt", "DESC"]],
+    });
 
     res.json({ success: true, count: fiches.length, fiches });
   } catch (error) {
@@ -28,9 +30,11 @@ const getFiches = async (req, res) => {
 const getFicheParId = async (req, res) => {
   try {
     const fiche = await Fiche.findOne({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
-    }).populate("cours", "titre matiere");
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
+    });
 
     if (!fiche) {
       return res
@@ -48,23 +52,28 @@ const getFicheParId = async (req, res) => {
 // POST /api/fiches
 const creerFiche = async (req, res) => {
   try {
-    const { titre, matiere, contenu, flashcards, coursId, couleur } = req.body;
+    const { titre, matiere, resume, conceptsCles, explications, pointsImportants, flashcards, coursId, couleur } = req.body;
 
     const fiche = await Fiche.create({
       titre,
       matiere,
-      contenu,
+      resume: resume || "",
+      conceptsCles: conceptsCles || [],
+      explications: explications || {},
+      pointsImportants: pointsImportants || [],
       flashcards: flashcards || [],
-      cours: coursId || null,
+      coursId: coursId || null,
       couleur: couleur || "#6366f1",
-      utilisateur: req.utilisateur._id,
+      utilisateurId: req.utilisateur.id,
       genereeParIA: false,
     });
 
-    await Progression.findOneAndUpdate(
-      { utilisateur: req.utilisateur._id },
-      { $inc: { "stats.fichesTotal": 1 } }
-    );
+    const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
+    if (progression) {
+      const stats = progression.stats || {};
+      stats.fichesTotal = (stats.fichesTotal || 0) + 1;
+      await progression.update({ stats });
+    }
 
     res.status(201).json({ success: true, fiche });
   } catch (error) {
@@ -76,20 +85,14 @@ const creerFiche = async (req, res) => {
 // PUT /api/fiches/:id
 const modifierFiche = async (req, res) => {
   try {
-    // Whitelist des champs modifiables — évite l'injection de champs sensibles (utilisateur, _id...)
-    const { titre, matiere, contenu, flashcards, couleur } = req.body;
-    const miseAJour = {};
-    if (titre !== undefined) miseAJour.titre = titre;
-    if (matiere !== undefined) miseAJour.matiere = matiere;
-    if (contenu !== undefined) miseAJour.contenu = contenu;
-    if (flashcards !== undefined) miseAJour.flashcards = flashcards;
-    if (couleur !== undefined) miseAJour.couleur = couleur;
+    const { titre, matiere, resume, conceptsCles, explications, pointsImportants, flashcards, couleur } = req.body;
 
-    const fiche = await Fiche.findOneAndUpdate(
-      { _id: req.params.id, utilisateur: req.utilisateur._id },
-      miseAJour,
-      { new: true, runValidators: true }
-    );
+    const fiche = await Fiche.findOne({
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
+    });
 
     if (!fiche) {
       return res
@@ -97,6 +100,16 @@ const modifierFiche = async (req, res) => {
         .json({ success: false, message: "Fiche introuvable." });
     }
 
+    if (titre !== undefined) fiche.titre = titre;
+    if (matiere !== undefined) fiche.matiere = matiere;
+    if (resume !== undefined) fiche.resume = resume;
+    if (conceptsCles !== undefined) fiche.conceptsCles = conceptsCles;
+    if (explications !== undefined) fiche.explications = explications;
+    if (pointsImportants !== undefined) fiche.pointsImportants = pointsImportants;
+    if (flashcards !== undefined) fiche.flashcards = flashcards;
+    if (couleur !== undefined) fiche.couleur = couleur;
+
+    await fiche.save();
     res.json({ success: true, fiche });
   } catch (error) {
     console.error("Erreur modifierFiche:", error);
@@ -107,9 +120,11 @@ const modifierFiche = async (req, res) => {
 // DELETE /api/fiches/:id
 const supprimerFiche = async (req, res) => {
   try {
-    const fiche = await Fiche.findOneAndDelete({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
+    const fiche = await Fiche.destroy({
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
     });
 
     if (!fiche) {
@@ -134,26 +149,28 @@ const mettreAJourFlashcard = async (req, res) => {
     }
 
     const fiche = await Fiche.findOne({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
     });
 
     if (!fiche) {
       return res.status(404).json({ success: false, message: "Fiche introuvable." });
     }
 
-    const flashcard = fiche.flashcards.id(req.params.flashcardId);
-    if (!flashcard) {
+    const flashcards = fiche.flashcards || [];
+    const flashcardIndex = flashcards.findIndex((f, i) => i === parseInt(req.params.flashcardId));
+    if (flashcardIndex === -1) {
       return res.status(404).json({ success: false, message: "Flashcard introuvable." });
     }
 
-    flashcard.niveauMaitrise = niveauMaitrise;
-    // Algorithme de répétition espacée simplifié
+    flashcards[flashcardIndex].niveauMaitrise = niveauMaitrise;
     const joursAvant = Math.pow(2, niveauMaitrise);
-    flashcard.prochaineRevision = new Date(Date.now() + joursAvant * 86400000);
+    flashcards[flashcardIndex].prochaineRevision = new Date(Date.now() + joursAvant * 86400000);
 
-    await fiche.save();
-    res.json({ success: true, flashcard });
+    await fiche.update({ flashcards });
+    res.json({ success: true, flashcard: flashcards[flashcardIndex] });
   } catch (error) {
     console.error("Erreur mettreAJourFlashcard:", error);
     res.status(500).json({ success: false, message: "Impossible de mettre à jour la flashcard." });

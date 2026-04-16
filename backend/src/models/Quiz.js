@@ -1,63 +1,62 @@
-/**
- * Modèle Mongoose pour les Quiz
- */
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/dbMysql");
 
-const mongoose = require("mongoose");
-
-const questionSchema = new mongoose.Schema({
-  question: { type: String, required: true },
-  type: {
-    type: String,
-    enum: ["qcm", "vrai_faux", "texte_libre"],
-    default: "qcm",
-  },
-  options: [String], // Pour les QCM
-  reponseCorrecte: { type: String, required: true },
-  explication: { type: String, default: "" },
-});
-
-const quizSchema = new mongoose.Schema(
+const Quiz = sequelize.define(
+  "Quiz",
   {
-    titre: { type: String, required: true, trim: true },
-    cours: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
-      default: null,
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
     },
-    utilisateur: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+    titre: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    questions: [questionSchema],
-    matiere: { type: String, default: "" },
-    difficulte: {
-      type: String,
-      enum: ["facile", "moyen", "difficile"],
-      default: "moyen",
-    },
-    dureeMinutes: { type: Number, default: 10 },
-    // Résultats des sessions de quiz
-    sessions: [
-      {
-        date: { type: Date, default: Date.now },
-        score: Number,       // Nombre de bonnes réponses
-        total: Number,       // Nombre total de questions
-        tempsPasse: Number,  // Secondes
-        reponses: [
-          {
-            questionIndex: Number,
-            reponseUtilisateur: String,
-            estCorrecte: Boolean,
-          },
-        ],
+    coursId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "courses",
+        key: "id",
       },
-    ],
-    genereeParIA: { type: Boolean, default: false },
+    },
+    utilisateurId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
+    questions: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
+    matiere: {
+      type: DataTypes.STRING,
+      defaultValue: "",
+    },
+    difficulte: {
+      type: DataTypes.ENUM("facile", "moyen", "difficile"),
+      defaultValue: "moyen",
+    },
+    dureeMinutes: {
+      type: DataTypes.INTEGER,
+      defaultValue: 10,
+    },
+    sessions: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
+    genereeParIA: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
-    timestamps: true,
+    tableName: "quizzes",
   }
 );
 
-module.exports = mongoose.model("Quiz", quizSchema);
+module.exports = Quiz;

@@ -46,6 +46,8 @@ export default function Home() {
   const [planningDuJour, setPlanningDuJour] = useState([]);
 
   useEffect(() => {
+    let ignore = false;
+
     const chargerDonnees = async () => {
       try {
         const [coursRes, fichesRes, quizRes, progRes] = await Promise.allSettled([
@@ -54,6 +56,8 @@ export default function Home() {
           quizAPI.getQuiz(),
           progressionAPI.getProgression(),
         ]);
+
+        if (ignore) return;
 
         setStats({
           cours: coursRes.status === "fulfilled" ? coursRes.value.data.count : 0,
@@ -77,13 +81,15 @@ export default function Home() {
           );
         }
       } catch (_) {
-        // Erreur silencieuse, stats restent à 0
       } finally {
-        setChargement(false);
+        if (!ignore) setChargement(false);
       }
     };
 
     chargerDonnees();
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   if (chargement) {

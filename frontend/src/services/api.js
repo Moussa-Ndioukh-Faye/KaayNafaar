@@ -133,18 +133,18 @@ export const iaAPI = {
 
 /**
  * Fetch avec streaming SSE — gère les Server-Sent Events
+ * Le token JWT est automatiquement envoyé via le cookie httpOnly par le navigateur
  * Retourne une AbortController pour annuler le stream
  */
 const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   const controller = new AbortController();
-  const token = localStorage.getItem("token");
 
   fetch(`${API_URL}${endpoint}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
     },
+    credentials: "include",
     body: JSON.stringify(body),
     signal: controller.signal,
   })

@@ -5,18 +5,27 @@
 
 const Course = require("../models/Course");
 const Progression = require("../models/Progression");
+const { Op } = require("sequelize");
 
 // GET /api/courses — Lister les cours de l'utilisateur
 const getCours = async (req, res) => {
   try {
     const { matiere, niveau, search } = req.query;
-    const filtre = { utilisateur: req.utilisateur._id };
+    const where = { utilisateurId: req.utilisateur.id };
 
-    if (matiere) filtre.matiere = matiere;
-    if (niveau) filtre.niveau = niveau;
-    if (search) filtre.$text = { $search: search };
+    if (matiere) where.matiere = matiere;
+    if (niveau) where.niveau = niveau;
+    if (search) {
+      where[Op.or] = [
+        { titre: { [Op.like]: `%${search}%` } },
+        { contenu: { [Op.like]: `%${search}%` } },
+      ];
+    }
 
-    const cours = await Course.find(filtre).sort({ createdAt: -1 });
+    const cours = await Course.findAll({
+      where,
+      order: [["createdAt", "DESC"]],
+    });
     res.json({ success: true, count: cours.length, cours });
   } catch (error) {
     console.error("Erreur getCours:", error);
@@ -28,8 +37,10 @@ const getCours = async (req, res) => {
 const getCoursParId = async (req, res) => {
   try {
     const cours = await Course.findOne({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
     });
 
     if (!cours) {
@@ -57,24 +68,21 @@ const creerCours = async (req, res) => {
       niveau: niveau || "intermédiaire",
       tags: tags || [],
       dureeEstimee: dureeEstimee || 30,
-      utilisateur: req.utilisateur._id,
-      // Si un fichier PDF a été uploadé
+      utilisateurId: req.utilisateur.id,
       fichierPDF: req.file ? req.file.path : null,
     });
 
     // Mettre à jour le compteur de cours dans la progression
-    await Progression.findOneAndUpdate(
-      { utilisateur: req.utilisateur._id },
-      { $inc: { "stats.coursTotal": 1 } }
-    );
+    const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
+    if (progression) {
+      const stats = progression.stats || {};
+      stats.coursTotal = (stats.coursTotal || 0) + 1;
+      await progression.update({ stats });
+    }
 
     res.status(201).json({ success: true, cours });
   } catch (error) {
     console.error("Erreur creerCours:", error);
-    if (error.name === "ValidationError") {
-      const msg = Object.values(error.errors)[0]?.message || "Données invalides.";
-      return res.status(400).json({ success: false, message: msg });
-    }
     res.status(500).json({ success: false, message: "Erreur lors de la création du cours." });
   }
 };
@@ -82,21 +90,14 @@ const creerCours = async (req, res) => {
 // PUT /api/courses/:id — Modifier un cours
 const modifierCours = async (req, res) => {
   try {
-    // Whitelist des champs modifiables — évite l'injection de champs sensibles
     const { titre, matiere, contenu, niveau, tags, dureeEstimee } = req.body;
-    const miseAJour = {};
-    if (titre !== undefined) miseAJour.titre = titre;
-    if (matiere !== undefined) miseAJour.matiere = matiere;
-    if (contenu !== undefined) miseAJour.contenu = contenu;
-    if (niveau !== undefined) miseAJour.niveau = niveau;
-    if (tags !== undefined) miseAJour.tags = tags;
-    if (dureeEstimee !== undefined) miseAJour.dureeEstimee = dureeEstimee;
 
-    const cours = await Course.findOneAndUpdate(
-      { _id: req.params.id, utilisateur: req.utilisateur._id },
-      miseAJour,
-      { new: true, runValidators: true }
-    );
+    const cours = await Course.findOne({
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
+    });
 
     if (!cours) {
       return res
@@ -104,6 +105,14 @@ const modifierCours = async (req, res) => {
         .json({ success: false, message: "Cours introuvable." });
     }
 
+    if (titre !== undefined) cours.titre = titre;
+    if (matiere !== undefined) cours.matiere = matiere;
+    if (contenu !== undefined) cours.contenu = contenu;
+    if (niveau !== undefined) cours.niveau = niveau;
+    if (tags !== undefined) cours.tags = tags;
+    if (dureeEstimee !== undefined) cours.dureeEstimee = dureeEstimee;
+
+    await cours.save();
     res.json({ success: true, cours });
   } catch (error) {
     console.error("Erreur modifierCours:", error);
@@ -114,9 +123,11 @@ const modifierCours = async (req, res) => {
 // DELETE /api/courses/:id — Supprimer un cours
 const supprimerCours = async (req, res) => {
   try {
-    const cours = await Course.findOneAndDelete({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
+    const cours = await Course.destroy({
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
     });
 
     if (!cours) {

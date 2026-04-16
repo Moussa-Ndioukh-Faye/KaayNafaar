@@ -36,7 +36,6 @@ export default function Connexion() {
     setChargement(true);
     try {
       const { data } = await authAPI.connexion(form);
-      // token stocké en cookie par le backend, AuthProvider va l'ignorer
       connecter(data.token, data.utilisateur);
       navigate("/");
     } catch (error) {
@@ -53,14 +52,27 @@ export default function Connexion() {
   return (
     <div className="min-h-screen flex">
       {/* Panneau gauche décoratif (desktop) */}
-      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-primary-600 to-violet-700 flex-col items-center justify-center p-12 text-white">
-        <div className="max-w-xs text-center space-y-6">
-          <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center mx-auto backdrop-blur-sm">
-            <span className="icon icon-filled text-white" style={{ fontSize: 44 }}>school</span>
+      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-primary-600 to-violet-700 flex-col items-center justify-center p-12 text-white relative overflow-hidden">
+        {/* Animated background shapes */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full animate-pulse"></div>
+          <div className="absolute bottom-20 right-10 w-48 h-48 bg-white/5 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/10 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+        
+        <div className="relative z-10 max-w-xs text-center space-y-6">
+          {/* Animated Logo */}
+          <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mx-auto backdrop-blur-sm logo-animate">
+            <span className="text-5xl font-bold text-white">K</span>
           </div>
-          <h2 className="text-3xl font-bold leading-tight">Content de te revoir !</h2>
+          
+          <h2 className="text-4xl font-bold gradient-text bg-white bg-clip-text text-transparent">
+            Kay Nafar
+          </h2>
+          <p className="text-white/80 text-lg font-medium">Ton assistant d'études intelligent</p>
+          
           <p className="text-white/75 leading-relaxed">
-            Continue tes révisions là où tu t'étais arrêté.
+            Révise plus intelligemment avec l'IA.
           </p>
           <div className="space-y-3 pt-2">
             {[
@@ -78,20 +90,21 @@ export default function Connexion() {
       </div>
 
       {/* Panneau droit — formulaire */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50 overflow-y-auto">
+        <div className="w-full max-w-md py-8">
           {/* Logo mobile */}
           <div className="lg:hidden text-center mb-6">
-            <div className="w-12 h-12 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow">
-              <span className="icon icon-filled text-white" style={{ fontSize: 28 }}>school</span>
+            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg logo-animate">
+              <span className="text-3xl font-bold text-white">K</span>
             </div>
-            <p className="text-lg font-bold text-gray-900">RévisionIA</p>
+            <h2 className="text-2xl font-bold gradient-text">Kay Nafar</h2>
+            <p className="text-sm text-gray-500">Ton assistant d'études</p>
           </div>
 
           <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Connexion</h2>
-              <p className="text-gray-500 mt-1 text-sm">Accède à ton espace de révision</p>
+              <h2 className="text-2xl font-bold text-gray-900">Bienvenue</h2>
+              <p className="text-gray-500">Connecte-toi pour continuer</p>
             </div>
 
             {erreur && (

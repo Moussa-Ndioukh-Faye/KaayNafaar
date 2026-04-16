@@ -9,13 +9,14 @@ const Progression = require("../models/Progression");
 const getQuiz = async (req, res) => {
   try {
     const { matiere, difficulte } = req.query;
-    const filtre = { utilisateur: req.utilisateur._id };
-    if (matiere) filtre.matiere = matiere;
-    if (difficulte) filtre.difficulte = difficulte;
+    const where = { utilisateurId: req.utilisateur.id };
+    if (matiere) where.matiere = matiere;
+    if (difficulte) where.difficulte = difficulte;
 
-    const quizList = await Quiz.find(filtre)
-      .populate("cours", "titre")
-      .sort({ createdAt: -1 });
+    const quizList = await Quiz.findAll({
+      where,
+      order: [["createdAt", "DESC"]],
+    });
 
     res.json({ success: true, count: quizList.length, quizList });
   } catch (error) {
@@ -28,9 +29,11 @@ const getQuiz = async (req, res) => {
 const getQuizParId = async (req, res) => {
   try {
     const quiz = await Quiz.findOne({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
-    }).populate("cours", "titre matiere");
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
+    });
 
     if (!quiz) {
       return res.status(404).json({ success: false, message: "Quiz introuvable." });
@@ -51,17 +54,19 @@ const creerQuiz = async (req, res) => {
     const quiz = await Quiz.create({
       titre,
       matiere,
-      questions,
+      questions: questions || [],
       difficulte: difficulte || "moyen",
       dureeMinutes: dureeMinutes || 10,
-      cours: coursId || null,
-      utilisateur: req.utilisateur._id,
+      coursId: coursId || null,
+      utilisateurId: req.utilisateur.id,
     });
 
-    await Progression.findOneAndUpdate(
-      { utilisateur: req.utilisateur._id },
-      { $inc: { "stats.quizTotal": 1 } }
-    );
+    const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
+    if (progression) {
+      const stats = progression.stats || {};
+      stats.quizTotal = (stats.quizTotal || 0) + 1;
+      await progression.update({ stats });
+    }
 
     res.status(201).json({ success: true, quiz });
   } catch (error) {
@@ -76,15 +81,16 @@ const soumettreSession = async (req, res) => {
     const { reponses, tempsPasse } = req.body;
 
     const quiz = await Quiz.findOne({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
     });
 
     if (!quiz) {
       return res.status(404).json({ success: false, message: "Quiz introuvable." });
     }
 
-    // Valider que le tableau de réponses correspond au nombre de questions
     if (!Array.isArray(reponses) || reponses.length !== quiz.questions.length) {
       return res.status(400).json({
         success: false,
@@ -92,7 +98,6 @@ const soumettreSession = async (req, res) => {
       });
     }
 
-    // Calculer le score
     let score = 0;
     const reponsesAnnotees = reponses.map((rep, index) => {
       const question = quiz.questions[index];
@@ -103,26 +108,25 @@ const soumettreSession = async (req, res) => {
       return { questionIndex: index, reponseUtilisateur: rep.reponseUtilisateur, estCorrecte };
     });
 
-    // Enregistrer la session
-    quiz.sessions.push({
+    const sessions = quiz.sessions || [];
+    sessions.push({
+      date: new Date(),
       score,
       total: quiz.questions.length,
       tempsPasse,
       reponses: reponsesAnnotees,
     });
 
-    await quiz.save();
+    await quiz.update({ sessions });
 
-    // Mettre à jour le score moyen dans la progression
-    const toutesLesSessions = quiz.sessions;
-    const scoreMoyen =
-      toutesLesSessions.reduce((acc, s) => acc + (s.score / s.total) * 100, 0) /
-      toutesLesSessions.length;
+    const scoreMoyen = sessions.reduce((acc, s) => acc + (s.score / s.total) * 100, 0) / sessions.length;
 
-    await Progression.findOneAndUpdate(
-      { utilisateur: req.utilisateur._id },
-      { "stats.scoreMoyenQuiz": Math.round(scoreMoyen) }
-    );
+    const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
+    if (progression) {
+      const stats = progression.stats || {};
+      stats.scoreMoyenQuiz = Math.round(scoreMoyen);
+      await progression.update({ stats });
+    }
 
     res.json({
       success: true,
@@ -142,9 +146,11 @@ const soumettreSession = async (req, res) => {
 // DELETE /api/quiz/:id
 const supprimerQuiz = async (req, res) => {
   try {
-    const quiz = await Quiz.findOneAndDelete({
-      _id: req.params.id,
-      utilisateur: req.utilisateur._id,
+    const quiz = await Quiz.destroy({
+      where: {
+        id: req.params.id,
+        utilisateurId: req.utilisateur.id,
+      },
     });
 
     if (!quiz) {

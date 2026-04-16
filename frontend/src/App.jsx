@@ -81,18 +81,24 @@ const AuthProvider = ({ children }) => {
   }, [darkMode]);
 
   useEffect(() => {
-    // Restaurer la session depuis localStorage (seulement l'objet utilisateur)
-    // puis vérifier le cookie côté serveur via /auth/profil
     const restore = async () => {
       try {
         const userStr = localStorage.getItem("utilisateur");
-        if (userStr) {
-          setUtilisateur(JSON.parse(userStr));
+        const user = userStr ? JSON.parse(userStr) : null;
+
+        if (!user || !user._id) {
+          throw new Error("Session invalide");
         }
-        // vérifier que le cookie est valide
-        await import("./services/api").then(({ authAPI }) => authAPI.getProfil());
+
+        setUtilisateur(user);
+
+        const profil = await import("./services/api").then(({ authAPI }) => authAPI.getProfil());
+        if (profil.data.utilisateur._id !== user._id) {
+          throw new Error("Session corrompue");
+        }
+
+        setUtilisateur(profil.data.utilisateur);
       } catch (err) {
-        // échec : nettoyer
         localStorage.removeItem("utilisateur");
         setUtilisateur(null);
       } finally {

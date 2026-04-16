@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
+  darkMode: 'class',
   safelist: [
     // Couleurs primary utilisées dans @apply (CSS components)
     "bg-primary-600", "bg-primary-700", "bg-primary-800",

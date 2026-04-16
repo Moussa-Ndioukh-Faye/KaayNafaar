@@ -10,9 +10,9 @@ const Quiz = require("../models/Quiz");
 const Progression = require("../models/Progression");
 
 // Initialisation du client Anthropic
-const anthropic = new Anthropic.default({
+const anthropic = process.env.ANTHROPIC_API_KEY ? new Anthropic.default({
   apiKey: process.env.ANTHROPIC_API_KEY,
-});
+}) : null;
 
 // Prompt système commun pour tous les appels
 const SYSTEM_PROMPT = `Tu es un professeur expert et assistant d'étude pour étudiants en génie logiciel et systèmes d'information.
@@ -24,6 +24,9 @@ Sois précis, pédagogique et adapte ton langage au niveau étudiant.`;
  * Génère une fiche de révision complète à partir d'un texte de cours
  */
 const genererFiche = async (req, res) => {
+  if (!anthropic) {
+    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible. Crédits Anthropic épuisés." });
+  }
   try {
     const { contenuCours, titreCours, coursId } = req.body;
 
@@ -120,29 +123,29 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown) :
     // Sauvegarder la fiche en base de données
     const fiche = await Fiche.create({
       titre: ficheData.titre || titreCours || "Fiche générée",
-      cours: coursId || null,
-      utilisateur: req.utilisateur._id,
-      contenu: {
-        resume: ficheData.resume,
-        conceptsCles: ficheData.conceptsCles,
-        explications: ficheData.explications,
-        pointsImportants: ficheData.pointsImportants,
-      },
+      coursId: coursId || null,
+      utilisateurId: req.utilisateur.id,
+      resume: ficheData.resume,
+      conceptsCles: ficheData.conceptsCles || [],
+      explications: ficheData.explications || {},
+      pointsImportants: ficheData.pointsImportants || [],
       flashcards: ficheData.flashcards || [],
       genereeParIA: true,
     });
 
     // Mettre à jour la progression
-    await Progression.findOneAndUpdate(
-      { utilisateur: req.utilisateur._id },
-      { $inc: { "stats.fichesTotal": 1 } }
-    );
+    const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
+    if (progression) {
+      const stats = progression.stats || {};
+      stats.fichesTotal = (stats.fichesTotal || 0) + 1;
+      await progression.update({ stats });
+    }
 
     // Envoyer l'événement final avec l'ID de la fiche sauvegardée
     res.write(
       `data: ${JSON.stringify({
         done: true,
-        ficheId: fiche._id,
+        ficheId: fiche.id,
         fiche: ficheData,
       })}\n\n`
     );
@@ -164,6 +167,9 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown) :
  * Génère un quiz avec questions QCM à partir d'un cours
  */
 const genererQuiz = async (req, res) => {
+  if (!anthropic) {
+    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible. Crédits Anthropic épuisés." });
+  }
   try {
     const { contenuCours, titreCours, nombreQuestions, difficulte, coursId } =
       req.body;
@@ -249,18 +255,20 @@ Format JSON strict :
       matiere: titreCours || "",
       questions: quizData.questions,
       difficulte: difficulte || "moyen",
-      cours: coursId || null,
-      utilisateur: req.utilisateur._id,
+      coursId: coursId || null,
+      utilisateurId: req.utilisateur.id,
       genereeParIA: true,
     });
 
-    await Progression.findOneAndUpdate(
-      { utilisateur: req.utilisateur._id },
-      { $inc: { "stats.quizTotal": 1 } }
-    );
+    const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
+    if (progression) {
+      const stats = progression.stats || {};
+      stats.quizTotal = (stats.quizTotal || 0) + 1;
+      await progression.update({ stats });
+    }
 
     res.write(
-      `data: ${JSON.stringify({ done: true, quizId: quiz._id, quiz: quizData })}\n\n`
+      `data: ${JSON.stringify({ done: true, quizId: quiz.id, quiz: quizData })}\n\n`
     );
     res.end();
   } catch (error) {
@@ -280,6 +288,9 @@ Format JSON strict :
  * Demande une explication simple d'un concept (stream temps réel)
  */
 const expliquerConcept = async (req, res) => {
+  if (!anthropic) {
+    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible. Crédits Anthropic épuisés." });
+  }
   try {
     const { concept, contexte, niveauEtude } = req.body;
 
@@ -338,6 +349,9 @@ Structure ta réponse avec :
  * Génère un planning de révision personnalisé
  */
 const genererPlanning = async (req, res) => {
+  if (!anthropic) {
+    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible. Crédits Anthropic épuisés." });
+  }
   try {
     const { cours, dateDebut, dateFin, disponibilite } = req.body;
 
@@ -395,6 +409,9 @@ Format JSON :
  * Chat avec l'assistant IA (streaming)
  */
 const chat = async (req, res) => {
+  if (!anthropic) {
+    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible. Crédits Anthropic épuisés." });
+  }
   try {
     const { messages, contexte } = req.body;
 

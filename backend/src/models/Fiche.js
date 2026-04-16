@@ -1,60 +1,74 @@
-/**
- * Modèle Mongoose pour les Fiches de révision
- */
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/dbMysql");
 
-const mongoose = require("mongoose");
-
-const ficheSchema = new mongoose.Schema(
+const Fiche = sequelize.define(
+  "Fiche",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     titre: {
-      type: String,
-      required: true,
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    // Cours source
-    cours: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
-      default: null,
-    },
-    utilisateur: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    // Contenu structuré de la fiche (généré par IA ou manuel)
-    contenu: {
-      resume: { type: String, default: "" },
-      conceptsCles: [String],
-      explications: { type: Map, of: String },
-      pointsImportants: [String],
-    },
-    // Flashcards associées
-    flashcards: [
-      {
-        question: { type: String, required: true },
-        reponse: { type: String, required: true },
-        niveauMaitrise: {
-          type: Number,
-          min: 0,
-          max: 5,
-          default: 0,
-        },
-        prochaineRevision: { type: Date, default: Date.now },
+    coursId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: "courses",
+        key: "id",
       },
-    ],
-    matiere: { type: String, default: "" },
-    couleur: {
-      type: String,
-      default: "#6366f1", // indigo par défaut
     },
-    // Générée par IA ou créée manuellement
-    genereeParIA: { type: Boolean, default: false },
-    estPublique: { type: Boolean, default: false },
+    utilisateurId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+    },
+    resume: {
+      type: DataTypes.TEXT,
+      defaultValue: "",
+    },
+    conceptsCles: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
+    explications: {
+      type: DataTypes.JSON,
+      defaultValue: {},
+    },
+    pointsImportants: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
+    flashcards: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
+    matiere: {
+      type: DataTypes.STRING,
+      defaultValue: "",
+    },
+    couleur: {
+      type: DataTypes.STRING,
+      defaultValue: "#6366f1",
+    },
+    genereeParIA: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    estPublique: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
-    timestamps: true,
+    tableName: "fiches",
   }
 );
 
-module.exports = mongoose.model("Fiche", ficheSchema);
+module.exports = Fiche;

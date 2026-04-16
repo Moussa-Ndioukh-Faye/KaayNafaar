@@ -10,7 +10,8 @@ const helmet = require("helmet");
 const { body, validationResult } = require("express-validator");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const connectDB = require("./src/config/db");
+const { connectDB } = require("./src/config/dbMysql");
+require("./src/models/associations");
 
 // Import des routes
 const authRoutes = require("./src/routes/auth");
@@ -26,33 +27,18 @@ const {
   entetesSécurité,
   sanitiserInputs,
   validerTaillePayload,
+  validerCSRF,
 } = require("./src/middleware/securite");
 
 const app = express();
 
-// Connexion à MongoDB
+// Connexion à MySQL
 connectDB();
 
-// ── CORS EN PREMIER — doit précéder tous les autres middlewares ────
-// FRONTEND_URL peut contenir plusieurs origines séparées par des virgules
-// Ex: FRONTEND_URL=http://localhost:5173,http://localhost:3000
-const originesAutorisees = (process.env.FRONTEND_URL || "http://localhost:5173,http://localhost:3000")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
-
+// ── CORS — Autoriser tous les localhost en développement ────
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Autoriser les requêtes sans origin (Postman, curl, tests)
-      if (!origin) return callback(null, true);
-      if (originesAutorisees.includes(origin)) return callback(null, true);
-      // En développement, autoriser tous les localhost
-      if (process.env.NODE_ENV !== "production" && /^http:\/\/localhost:\d+$/.test(origin)) {
-        return callback(null, true);
-      }
-      callback(new Error(`Origine non autorisée par CORS : ${origin}`));
-    },
+    origin: true, // Autoriser toutes les origines en développement
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -88,13 +74,13 @@ app.use(sanitiserInputs);
 // Dossier uploads statique
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Routes API — rate limiter spécifique sur auth et IA
-app.use("/api/auth", limiteurAuth, authRoutes);
-app.use("/api/courses", courseRoutes);
-app.use("/api/fiches", ficheRoutes);
-app.use("/api/quiz", quizRoutes);
-app.use("/api/ai", limiteurIA, aiRoutes);
-app.use("/api/progression", progressionRoutes);
+// Routes API — rate limiter spécifique sur auth et IA + validation CSRF
+app.use("/api/auth", validerCSRF, limiteurAuth, authRoutes);
+app.use("/api/courses", validerCSRF, courseRoutes);
+app.use("/api/fiches", validerCSRF, ficheRoutes);
+app.use("/api/quiz", validerCSRF, quizRoutes);
+app.use("/api/ai", validerCSRF, limiteurIA, aiRoutes);
+app.use("/api/progression", validerCSRF, progressionRoutes);
 
 // Route de santé
 app.get("/api/health", (req, res) => {

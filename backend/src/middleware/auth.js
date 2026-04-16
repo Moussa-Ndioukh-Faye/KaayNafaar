@@ -33,7 +33,7 @@ const proteger = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Récupérer l'utilisateur (sans le mot de passe)
-    req.utilisateur = await User.findById(decoded.id);
+    req.utilisateur = await User.findByPk(decoded.id);
 
     if (!req.utilisateur) {
       return res.status(401).json({

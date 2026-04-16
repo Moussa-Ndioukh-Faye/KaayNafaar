@@ -1,62 +1,65 @@
-/**
- * Modèle Mongoose pour les Cours
- */
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../config/dbMysql");
 
-const mongoose = require("mongoose");
-
-const courseSchema = new mongoose.Schema(
+const Course = sequelize.define(
+  "Course",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     titre: {
-      type: String,
-      required: [true, "Le titre est requis"],
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: { msg: "Le titre est requis" },
+      },
     },
     matiere: {
-      type: String,
-      required: [true, "La matière est requise"],
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
     },
     contenu: {
-      type: String,
-      required: [true, "Le contenu est requis"],
+      type: DataTypes.TEXT,
+      allowNull: false,
     },
-    // Résumé généré par l'IA
     resumeIA: {
-      type: String,
-      default: null,
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
-    // Concepts clés extraits par l'IA
-    conceptsCles: [String],
-    // Niveau de difficulté
+    conceptsCles: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
     niveau: {
-      type: String,
-      enum: ["débutant", "intermédiaire", "avancé"],
-      default: "intermédiaire",
+      type: DataTypes.ENUM("débutant", "intermédiaire", "avancé"),
+      defaultValue: "intermédiaire",
     },
-    tags: [String],
-    // Fichier PDF uploadé (chemin)
+    tags: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
     fichierPDF: {
-      type: String,
-      default: null,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
-    // Utilisateur propriétaire
-    utilisateur: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+    utilisateurId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
     },
-    // Durée estimée de révision (en minutes)
     dureeEstimee: {
-      type: Number,
-      default: 30,
+      type: DataTypes.INTEGER,
+      defaultValue: 30,
     },
   },
   {
-    timestamps: true,
+    tableName: "courses",
   }
 );
 
-// Index de recherche textuelle
-courseSchema.index({ titre: "text", contenu: "text", matiere: "text" });
-
-module.exports = mongoose.model("Course", courseSchema);
+module.exports = Course;

@@ -1,7 +1,7 @@
 {
-  "name": "revision-backend",
+  "name": "kay_nafar-backend",
   "version": "1.0.0",
-  "description": "Backend API pour l'application de révision étudiante",
+  "description": "Backend API pour Kay_Nafar",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -21,9 +21,11 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.4.0",
     "multer": "^2.0.0",
+    "mysql2": "^3.22.0",
     "pdf-parse": "^1.1.1",
     "rxdb": "^16.21.1",
-    "rxjs": "^7.8.2"
+    "rxjs": "^7.8.2",
+    "sequelize": "^6.37.8"
   },
   "devDependencies": {
     "jest": "^29.0.0",

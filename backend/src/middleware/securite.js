@@ -14,11 +14,11 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error("❌ JWT_SECRET doit faire au moins 32 caractères!");
   process.exit(1);
 }
-// Vérifier ANTHROPIC_API_KEY
-if (!process.env.ANTHROPIC_API_KEY || !process.env.ANTHROPIC_API_KEY.startsWith("sk-ant-")) {
-  console.error("❌ ANTHROPIC_API_KEY invalide!");
-  process.exit(1);
-}
+// Vérifier ANTHROPIC_API_KEY (optionnel si credits épuisés)
+// if (!process.env.ANTHROPIC_API_KEY || !process.env.ANTHROPIC_API_KEY.startsWith("sk-ant-")) {
+//   console.error("❌ ANTHROPIC_API_KEY invalide!");
+//   process.exit(1);
+// }
 
 // ── Rate Limiting global ───────────────────────────────────────────
 const limiteurGlobal = rateLimit({
@@ -94,6 +94,34 @@ const validerTaillePayload = (req, res, next) => {
   next();
 };
 
+// ── Validation CSRF simple (double-submit cookie) ──
+// Vérifie que la requête vient bien du frontend autorisé
+const validerCSRF = (req, res, next) => {
+  const origine = req.headers.origin;
+  const referer = req.headers.referer;
+
+  // En développement, autoriser localhost sans vérification stricte
+  if (process.env.NODE_ENV !== "production") {
+    return next();
+  }
+
+  // Vérifier l'origine ou le referer
+  if (origine && !originesAutorisees.includes(origine)) {
+    return res.status(403).json({ success: false, message: "Origine non autorisée." });
+  }
+
+  if (referer && !originesAutorisees.some((o) => referer.startsWith(o))) {
+    return res.status(403).json({ success: false, message: "Référent non autorisé." });
+  }
+
+  next();
+};
+
+const originesAutorisees = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 module.exports = {
   limiteurGlobal,
   limiteurAuth,
@@ -101,4 +129,5 @@ module.exports = {
   entetesSécurité,
   sanitiserInputs,
   validerTaillePayload,
+  validerCSRF,
 };

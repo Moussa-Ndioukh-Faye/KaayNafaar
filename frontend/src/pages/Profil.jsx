@@ -69,10 +69,11 @@ export default function Profil() {
   };
 
   const supprimerCompte = async () => {
+    const motDePasse = window.prompt("Entrez votre mot de passe pour confirmer :");
+    if (!motDePasse) return;
     if (!window.confirm("Êtes-vous sûr ? Cette action est irréversible.")) return;
-    if (!window.confirm("Confirmer la suppression du compte ?")) return;
     try {
-      await authAPI.supprimerCompte();
+      await authAPI.supprimerCompte({ motDePasse });
       deconnecter();
       window.location.href = "/";
     } catch (_) {

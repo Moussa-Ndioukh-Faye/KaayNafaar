@@ -1,56 +1,69 @@
-/**
- * Modèle Mongoose pour les Utilisateurs
- */
-
-const mongoose = require("mongoose");
+const { DataTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
+const { sequelize } = require("../config/dbMysql");
 
-const userSchema = new mongoose.Schema(
+const User = sequelize.define(
+  "User",
   {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     nom: {
-      type: String,
-      required: [true, "Le nom est requis"],
-      trim: true,
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notEmpty: { msg: "Le nom est requis" },
+      },
     },
     email: {
-      type: String,
-      required: [true, "L'email est requis"],
+      type: DataTypes.STRING,
+      allowNull: false,
       unique: true,
-      lowercase: true,
-      trim: true,
+      validate: {
+        isEmail: { msg: "Email invalide" },
+      },
     },
     motDePasse: {
-      type: String,
-      required: [true, "Le mot de passe est requis"],
-      minlength: 6,
-      select: false, // Jamais renvoyé dans les requêtes par défaut
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        len: { args: [6], msg: "Le mot de passe doit contenir au moins 6 caractères" },
+      },
     },
     avatar: {
-      type: String,
-      default: null,
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     niveauEtude: {
-      type: String,
-      enum: ["lycée", "licence", "master", "doctorat", "autre"],
-      default: "autre",
+      type: DataTypes.ENUM("lycée", "licence", "master", "doctorat", "autre"),
+      defaultValue: "autre",
     },
-    matieresFavorites: [String],
+    matieresFavorites: {
+      type: DataTypes.JSON,
+      defaultValue: [],
+    },
   },
   {
-    timestamps: true, // createdAt, updatedAt automatiques
+    tableName: "users",
+    hooks: {
+      beforeCreate: async (user) => {
+        if (user.motDePasse) {
+          user.motDePasse = await bcrypt.hash(user.motDePasse, 12);
+        }
+      },
+      beforeUpdate: async (user) => {
+        if (user.changed("motDePasse")) {
+          user.motDePasse = await bcrypt.hash(user.motDePasse, 12);
+        }
+      },
+    },
   }
 );
 
-// Hash du mot de passe avant sauvegarde
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("motDePasse")) return next();
-  this.motDePasse = await bcrypt.hash(this.motDePasse, 12);
-  next();
-});
-
-// Méthode pour vérifier le mot de passe
-userSchema.methods.verifierMotDePasse = async function (motDePasseSaisi) {
+User.prototype.verifierMotDePasse = async function (motDePasseSaisi) {
   return await bcrypt.compare(motDePasseSaisi, this.motDePasse);
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = User;

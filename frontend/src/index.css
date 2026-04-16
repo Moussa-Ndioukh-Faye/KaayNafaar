@@ -9,14 +9,11 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  .dark body {
+:root.dark body {
     @apply bg-gray-900 text-gray-100;
   }
 
-  /* Scrollbar personnalisée — theme() au lieu de @apply pour les couleurs custom */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background-color: #f3f4f6; }
-  .dark ::-webkit-scrollbar-track { background-color: #1f2937; }
+  :root.dark ::-webkit-scrollbar-track { background-color: #1f2937; }
   ::-webkit-scrollbar-thumb {
     background-color: theme('colors.primary.400', #818cf8);
     border-radius: 9999px;
@@ -129,7 +126,7 @@
   }
 
   /* ── Dark Mode ─────────────────────────────────────────── */
-  .dark {
+  :root.dark {
     --bg-primary: #111827;
     --bg-secondary: #1f2937;
     --text-primary: #f9fafb;
@@ -137,21 +134,21 @@
     --border-color: #374151;
   }
 
-  .dark .btn-primary {
+  :root.dark .btn-primary {
     background-color: theme('colors.primary.500');
   }
-  .dark .btn-primary:hover:not(:disabled) {
+  :root.dark .btn-primary:hover:not(:disabled) {
     background-color: theme('colors.primary.600');
   }
 
-  .dark .btn-secondary {
+  :root.dark .btn-secondary {
     @apply bg-gray-800 text-gray-200 border-gray-600;
   }
-  .dark .btn-secondary:hover:not(:disabled) {
+  :root.dark .btn-secondary:hover:not(:disabled) {
     @apply bg-gray-700 border-gray-500;
   }
 
-  .dark .card {
+  :root.dark .card {
     @apply bg-gray-800 border-gray-700;
   }
 
@@ -177,10 +174,10 @@
     @apply text-gray-300;
   }
 
-  .dark .text-gray-500,
-  .dark .text-gray-400 {
-    @apply text-gray-400;
-  }
+.dark .text-gray-500,
+    .dark .text-gray-400 {
+      @apply text-gray-300;
+    }
 
   .dark .border-gray-200 {
     @apply border-gray-700;
@@ -199,16 +196,16 @@
     @apply text-primary-400;
   }
 
-  .dark .hover\:bg-gray-50:hover {
+  :root.dark .hover\:bg-gray-50:hover {
     @apply bg-gray-700;
   }
 
-  .dark \.bg-gradient-to-r {
+  :root.dark .bg-gradient-to-r {
     --tw-gradient-from: theme('colors.primary.700');
     --tw-gradient-to: theme('colors.secondary.700');
   }
 
-  .dark .animate-fade-in {
+  :root.dark .animate-fade-in {
     animation: fadeInDark 0.3s ease-out;
   }
 
