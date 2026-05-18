@@ -3,13 +3,26 @@
  */
 
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { 
+  Mail, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  LogIn, 
+  AlertCircle,
+  TrendingUp,
+  Zap,
+  Award,
+  Sparkles
+} from "lucide-react";
 import { authAPI } from "../services/api";
 import { useAuth } from "../App";
 
 export default function Connexion() {
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ email: "", motDePasse: "" });
-  const [erreur, setErreur] = useState("");
+  const [erreur, setErreur] = useState(searchParams.get("session") === "expiree" ? "Ta session a expiré. Connecte-toi à nouveau." : "");
   const [chargement, setChargement] = useState(false);
   const [voirMotDePasse, setVoirMotDePasse] = useState(false);
   const { connecter } = useAuth();
@@ -36,7 +49,7 @@ export default function Connexion() {
     setChargement(true);
     try {
       const { data } = await authAPI.connexion(form);
-      connecter(data.token, data.utilisateur);
+      connecter(null, data.utilisateur);
       navigate("/");
     } catch (error) {
       if (!error.response) {
@@ -52,7 +65,7 @@ export default function Connexion() {
   return (
     <div className="min-h-screen flex">
       {/* Panneau gauche décoratif (desktop) */}
-      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-primary-600 to-violet-700 flex-col items-center justify-center p-12 text-white relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-primary-600 to-secondary-600 flex-col items-center justify-center p-12 text-white relative overflow-hidden">
         {/* Animated background shapes */}
         <div className="absolute inset-0">
           <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full animate-pulse"></div>
@@ -62,27 +75,26 @@ export default function Connexion() {
         
         <div className="relative z-10 max-w-xs text-center space-y-6">
           {/* Animated Logo */}
-          <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center mx-auto backdrop-blur-sm logo-animate">
-            <span className="text-5xl font-bold text-white">K</span>
+          <div className="w-24 h-24 bg-white/20 rounded-[2.5rem] flex items-center justify-center mx-auto backdrop-blur-sm shadow-2xl border border-white/20">
+            <Sparkles className="w-12 h-12 text-white fill-current" />
           </div>
           
-          <h2 className="text-4xl font-bold gradient-text bg-white bg-clip-text text-transparent">
-            Kay Nafar
+          <h2 className="text-4xl font-black tracking-tight">
+            Kaay Nafaar
           </h2>
-          <p className="text-white/80 text-lg font-medium">Ton assistant d'études intelligent</p>
+          <p className="text-white/80 text-lg font-medium italic">Études 2.0 augmentées par l'IA</p>
           
-          <p className="text-white/75 leading-relaxed">
-            Révise plus intelligemment avec l'IA.
-          </p>
-          <div className="space-y-3 pt-2">
+          <div className="space-y-4 pt-4">
             {[
-              { icon: "trending_up", text: "Suis ta progression en temps réel" },
-              { icon: "bolt", text: "Génération de fiches en quelques secondes" },
-              { icon: "workspace_premium", text: "Flashcards et quiz adaptatifs" },
-            ].map(({ icon, text }) => (
-              <div key={icon} className="flex items-center gap-3 bg-white/15 rounded-xl px-4 py-3 backdrop-blur-sm text-left">
-                <span className="icon icon-filled text-white/90" style={{ fontSize: 20 }}>{icon}</span>
-                <p className="text-sm text-white/90">{text}</p>
+              { icon: TrendingUp, text: "Suis ta progression en temps réel" },
+              { icon: Zap, text: "Génération de fiches en quelques secondes" },
+              { icon: Award, text: "Flashcards et quiz adaptatifs" },
+            ].map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-center gap-4 bg-white/10 hover:bg-white/20 rounded-2xl px-5 py-4 backdrop-blur-md text-left transition-all duration-300 border border-white/5 shadow-lg group">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                   <Icon className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-sm font-semibold text-white/90">{text}</p>
               </div>
             ))}
           </div>
@@ -90,42 +102,42 @@ export default function Connexion() {
       </div>
 
       {/* Panneau droit — formulaire */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-gray-50 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 overflow-y-auto">
         <div className="w-full max-w-md py-8">
           {/* Logo mobile */}
-          <div className="lg:hidden text-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg logo-animate">
-              <span className="text-3xl font-bold text-white">K</span>
+          <div className="lg:hidden text-center mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-primary-200">
+              <Sparkles className="w-10 h-10 text-white fill-current" />
             </div>
-            <h2 className="text-2xl font-bold gradient-text">Kay Nafar</h2>
-            <p className="text-sm text-gray-500">Ton assistant d'études</p>
+            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Kaay Nafaar</h2>
+            <p className="text-sm font-bold text-primary-600 uppercase tracking-widest mt-1">Études 2.0</p>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Bienvenue</h2>
-              <p className="text-gray-500">Connecte-toi pour continuer</p>
+          <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-10">
+            <div className="mb-8">
+              <h2 className="text-3xl font-black text-gray-900 tracking-tight">Bienvenue</h2>
+              <p className="text-slate-500 mt-1 font-medium">Connecte-toi pour continuer tes révisions</p>
             </div>
 
             {erreur && (
-              <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-5" role="alert">
-                <span className="icon icon-filled text-red-500" style={{ fontSize: 18 }}>error</span>
-                <span>{erreur}</span>
+              <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-700 px-5 py-4 rounded-2xl text-sm mb-6 animate-shake" role="alert">
+                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                <span className="font-semibold">{erreur}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-bold text-gray-700 ml-1">
                   Adresse email
                 </label>
-                <div className="relative">
-                  <span className="icon absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" style={{ fontSize: 18 }}>mail</span>
+                <div className="relative group">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="email" name="email" type="email"
                     autoComplete="email" required
-                    className="input-field pl-10"
+                    className="input-field pl-12 h-14"
                     placeholder="ton@email.com"
                     value={form.email} onChange={handleChange}
                     maxLength={254}
@@ -134,17 +146,17 @@ export default function Connexion() {
               </div>
 
               {/* Mot de passe */}
-              <div>
-                <label htmlFor="motDePasse" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <div className="space-y-2">
+                <label htmlFor="motDePasse" className="block text-sm font-bold text-gray-700 ml-1">
                   Mot de passe
                 </label>
-                <div className="relative">
-                  <span className="icon absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" style={{ fontSize: 18 }}>lock</span>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="motDePasse" name="motDePasse"
                     type={voirMotDePasse ? "text" : "password"}
                     autoComplete="current-password" required
-                    className="input-field pl-10 pr-11"
+                    className="input-field pl-12 pr-12 h-14"
                     placeholder="••••••••"
                     value={form.motDePasse} onChange={handleChange}
                     maxLength={128}
@@ -152,37 +164,37 @@ export default function Connexion() {
                   <button
                     type="button"
                     onClick={() => setVoirMotDePasse(!voirMotDePasse)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 focus:outline-none transition-colors"
                     tabIndex={-1}
                   >
-                    <span className="icon" style={{ fontSize: 18 }}>
-                      {voirMotDePasse ? "visibility_off" : "visibility"}
-                    </span>
+                    {voirMotDePasse ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
-              <button type="submit" disabled={chargement} className="btn-primary w-full py-3 justify-center text-base">
+              <button type="submit" disabled={chargement} className="btn-primary w-full py-4 justify-center text-lg shadow-primary-500/20 mt-2">
                 {chargement ? (
-                  <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                    Connexion…
-                  </>
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                    <span>Connexion…</span>
+                  </div>
                 ) : (
-                  <>
-                    <span className="icon">login</span>
-                    Se connecter
-                  </>
+                  <div className="flex items-center gap-2">
+                    <LogIn className="w-5 h-5" />
+                    <span>Se connecter</span>
+                  </div>
                 )}
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-5">
-              Pas encore de compte ?{" "}
-              <Link to="/inscription" className="text-primary-600 font-semibold hover:underline">
-                Créer un compte
-              </Link>
-            </p>
+            <div className="mt-8 pt-8 border-t border-slate-100 text-center">
+              <p className="text-sm text-slate-500 font-medium">
+                Pas encore de compte ?{" "}
+                <Link to="/inscription" className="text-primary-600 font-bold hover:text-primary-700 transition-colors ml-1">
+                  Créer un compte
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ const api = axios.create({
   withCredentials: true, // ✅ Envoyer/recevoir les cookies httpOnly
 });
 
-// Note : le token est désormais stocké en cookie httpOnly. Axios n'a plus besoin d'ajouter
+// Note: le token est désormais stocké en cookie httpOnly. Axios n'a plus besoin d'ajouter
 // l'en-tête Authorization puisque le navigateur enverra automatiquement le cookie.
 // L'intercepteur request disparaît.
 
@@ -28,10 +28,9 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // On supprime les infos utilisateur et on force la page de connexion
+    if (error.response?.status === 401 && !window.location.pathname.includes("/connexion")) {
       localStorage.removeItem("utilisateur");
-      window.location.href = "/connexion";
+      window.location.href = "/connexion?session=expiree";
     }
     return Promise.reject(error);
   }
@@ -74,6 +73,7 @@ export const coursAPI = {
 // ═══════════════════════════════════════════════
 export const fichesAPI = {
   getFiches: (params) => api.get("/fiches", { params }),
+  getFichesPubliques: (params) => api.get("/fiches/publique", { params }),
   getFicheParId: (id) => api.get(`/fiches/${id}`),
   creerFiche: (data) => api.post("/fiches", data),
   modifierFiche: (id, data) => api.put(`/fiches/${id}`, data),
@@ -99,6 +99,7 @@ export const quizAPI = {
 export const progressionAPI = {
   getProgression: () => api.get("/progression"),
   ajouterPlanning: (data) => api.post("/progression/planning", data),
+  ajouterPlanningBulk: (data) => api.post("/progression/planning/bulk", data),
   completerSession: (id, data) => api.put(`/progression/planning/${id}`, data),
 };
 
@@ -114,19 +115,19 @@ export const iaAPI = {
    * @param {function} onError - Callback d'erreur
    */
   genererFicheStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/generer-fiche", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/generer-fiche", data, onDelta, onDone, onError);
   },
 
   genererQuizStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/generer-quiz", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/generer-quiz", data, onDelta, onDone, onError);
   },
 
   expliquerStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/expliquer", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/expliquer", data, onDelta, onDone, onError);
   },
 
   chatStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/chat", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/chat", data, onDelta, onDone, onError);
   },
 
   genererPlanning: (data) => api.post("/ai/planning", data),
@@ -140,13 +141,12 @@ export const iaAPI = {
 const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   const controller = new AbortController();
 
-  // En développement, utiliser le chemin relatif (proxy Vite)
-  // En production, utiliser l'URL absolue
-  const baseURL = import.meta.env.VITE_API_URL?.startsWith("http") 
+  // Déterminer la base URL (soit l'URL absolue, soit rien si on utilise le proxy Vite)
+  const base = import.meta.env.VITE_API_URL?.startsWith("http") 
     ? import.meta.env.VITE_API_URL 
     : "";
 
-  fetch(`${baseURL}${endpoint}`, {
+  fetch(`${base}${endpoint}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

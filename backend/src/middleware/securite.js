@@ -6,7 +6,6 @@
  */
 
 const rateLimit = require("express-rate-limit");
-const crypto = require("crypto");
 
 // ── Validation au démarrage ───────────────────────────────────────
 // Vérifier JWT_SECRET
@@ -14,6 +13,11 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   console.error("❌ JWT_SECRET doit faire au moins 32 caractères!");
   process.exit(1);
 }
+
+const originesAutorisees = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 // Vérifier ANTHROPIC_API_KEY (optionnel si credits épuisés)
 // if (!process.env.ANTHROPIC_API_KEY || !process.env.ANTHROPIC_API_KEY.startsWith("sk-ant-")) {
 //   console.error("❌ ANTHROPIC_API_KEY invalide!");
@@ -43,25 +47,6 @@ const limiteurIA = rateLimit({
   max: 10,              // 10 appels IA par minute par IP
   message: { success: false, message: "Limite d'appels IA atteinte. Réessaie dans 1 minute." },
 });
-
-// ── En-têtes de sécurité HTTP ─────────────────────────────────────
-const entetesSécurité = (req, res, next) => {
-  // Empêcher le clickjacking
-  res.setHeader("X-Frame-Options", "DENY");
-  // Empêcher la détection de MIME type
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  // Content Security Policy (API JSON uniquement — pas d'HTML servi)
-  res.setHeader("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'");
-  // HSTS (forcer HTTPS en production)
-  if (process.env.NODE_ENV === "production") {
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-  }
-  // Referrer policy
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  // Supprimer la signature du serveur
-  res.removeHeader("X-Powered-By");
-  next();
-};
 
 // ── Sanitisation contre les injections NoSQL ─────────────────────
 // Empêche les opérateurs MongoDB ($gt, $ne...) dans les inputs utilisateur
@@ -105,28 +90,32 @@ const validerCSRF = (req, res, next) => {
     return next();
   }
 
+  // Normaliser les origines (ajouter http://localhost si http://localhost:80 est présent)
+  const expandedOrigins = [...originesAutorisees];
+  originesAutorisees.forEach(o => {
+    if (o.endsWith(":80")) expandedOrigins.push(o.replace(":80", ""));
+    if (o.endsWith(":443")) expandedOrigins.push(o.replace(":443", ""));
+    if (!o.includes(":") && o.startsWith("http")) expandedOrigins.push(`${o}:80`);
+  });
+
   // Vérifier l'origine ou le referer
-  if (origine && !originesAutorisees.includes(origine)) {
+  if (origine && !expandedOrigins.includes(origine)) {
+    console.warn(`[CSRF] Origine bloquée : ${origine}`);
     return res.status(403).json({ success: false, message: "Origine non autorisée." });
   }
 
-  if (referer && !originesAutorisees.some((o) => referer.startsWith(o))) {
+  if (referer && !expandedOrigins.some((o) => referer.startsWith(o))) {
+    console.warn(`[CSRF] Référent bloqué : ${referer}`);
     return res.status(403).json({ success: false, message: "Référent non autorisé." });
   }
 
   next();
 };
 
-const originesAutorisees = (process.env.FRONTEND_URL || "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
-
 module.exports = {
   limiteurGlobal,
   limiteurAuth,
   limiteurIA,
-  entetesSécurité,
   sanitiserInputs,
   validerTaillePayload,
   validerCSRF,

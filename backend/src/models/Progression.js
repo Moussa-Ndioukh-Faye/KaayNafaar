@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../config/dbMysql");
+const { sequelize } = require("../config/database");
 
 const Progression = sequelize.define(
   "Progression",
@@ -19,7 +19,7 @@ const Progression = sequelize.define(
       },
     },
     stats: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: {
         coursTotal: 0,
         fichesTotal: 0,
@@ -31,15 +31,15 @@ const Progression = sequelize.define(
       },
     },
     planning: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
     matieres: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
     activiteJournaliere: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
   },

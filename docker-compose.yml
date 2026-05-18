@@ -1,47 +1,94 @@
-version: "3.8"
-
 services:
-  mongodb:
-    image: mongo:7
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: revision-postgres
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      POSTGRES_USER: ${DB_USER:-user_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password_secret}
+      POSTGRES_DB: ${DB_NAME:-kaay_nafaar}
     ports:
-      - "27017:27017"
+      - "${DB_PORT:-5434}:5432"
     volumes:
-      - mongodb_data:/data/db
-    networks:
-      - revision-network
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user_admin} -d ${DB_NAME:-kaay_nafaar}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
+    container_name: revision-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
-      MONGO_URI: mongodb://mongodb:27017/revision
-      JWT_SECRET: ${JWT_SECRET}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      FRONTEND_URL: http://localhost:3000
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      NODE_ENV: production
+      PORT: "5001"
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost,https://localhost}
+    ports:
+      - "${BACKEND_PORT:-5001}:5001"
     depends_on:
-      - mongodb
-    networks:
-      - revision-network
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - backend-uploads:/app/uploads
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
+    container_name: revision-frontend
+    restart: unless-stopped
+    expose:
+      - "80"
     environment:
-      VITE_API_URL: http://localhost:5000/api
+      BACKEND_URL: http://backend:5001
     depends_on:
       - backend
-    networks:
-      - revision-network
 
-networks:
-  revision-network:
-    driver: bridge
+  caddy:
+    image: caddy:2-alpine
+    container_name: revision-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      DOMAIN: ${CADDY_DOMAIN:-localhost}
+    depends_on:
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    container_name: revision-redis
+    restart: unless-stopped
+    expose:
+      - "6379"
+    volumes:
+      - redis-data:/data
 
 volumes:
-  mongodb_data:
+  postgres-data:
+  backend-uploads:
+  redis-data:
+  caddy-data:
+  caddy-config:

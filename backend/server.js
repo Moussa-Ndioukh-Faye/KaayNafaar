@@ -1,16 +1,16 @@
 /**
  * Point d'entrée du serveur backend
- * Express + MongoDB + Claude API
+ * Express + PostgreSQL + Claude API
  */
 
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const { body, validationResult } = require("express-validator");
 const path = require("path");
 const cookieParser = require("cookie-parser");
-const { connectDB } = require("./src/config/dbMysql");
+const { connectDB } = require("./src/config/database");
+const { redis, waitForRedis } = require("./src/config/redis");
 require("./src/models/associations");
 
 // Import des routes
@@ -24,7 +24,6 @@ const {
   limiteurGlobal,
   limiteurAuth,
   limiteurIA,
-  entetesSécurité,
   sanitiserInputs,
   validerTaillePayload,
   validerCSRF,
@@ -32,13 +31,20 @@ const {
 
 const app = express();
 
-// Connexion à MySQL
+// Logger de requêtes simple
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
+// Connexion à PostgreSQL
 connectDB();
 
-// ── CORS — Autoriser tous les localhost en développement ────
+// ── CORS — Whitelist depuis .env ─────────────────────────────
+const corsOrigins = (process.env.FRONTEND_URL || "http://localhost:3000").split(",").map(s => s.trim());
 app.use(
   cors({
-    origin: true, // Autoriser toutes les origines en développement
+    origin: corsOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -88,7 +94,7 @@ app.get("/api/health", (req, res) => {
 });
 
 // Middleware de gestion d'erreurs global
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error("Erreur serveur:", err.stack);
   res.status(err.status || 500).json({
     success: false,
@@ -101,14 +107,35 @@ app.use("*", (req, res) => {
   res.status(404).json({ success: false, message: "Route introuvable" });
 });
 
-const PORT = process.env.PORT || 5001; // 5001 = cohérent avec VITE_API_URL du frontend
+const { worker } = require("./src/utils/worker");
+const PORT = process.env.PORT || 5001;
 
 // Si le fichier est exécuté directement, démarrer le serveur.
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`✅ Serveur démarré sur le port ${PORT}`);
-    console.log(`📚 Environnement : ${process.env.NODE_ENV || "development"}`);
-  });
+  (async () => {
+    try {
+      await waitForRedis(15000);
+    } catch (err) {
+      console.error("⚠️", err.message, "— BullMQ ne pourra pas traiter de jobs");
+    }
+
+    const server = app.listen(PORT, () => {
+      console.log(`✅ Serveur démarré sur le port ${PORT}`);
+      console.log(`📚 Environnement : ${process.env.NODE_ENV || "development"}`);
+    });
+
+    // ── Graceful Shutdown ──────────────────────────────────────────
+    const arreter = async (signal) => {
+      console.log(`\n🛑 Signal ${signal} reçu, arrêt gracieux...`);
+      server.close();
+      await worker.close();
+      await redis.quit();
+      console.log("👋 Arrêt terminé");
+      process.exit(0);
+    };
+    process.on("SIGTERM", () => arreter("SIGTERM"));
+    process.on("SIGINT", () => arreter("SIGINT"));
+  })();
 }
 
 module.exports = app; // export pour les tests

@@ -3,214 +3,122 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 243 75% 59%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 84% 4.9%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 243 75% 59%;
+
+    --radius: 1.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 243 75% 59%;
+    --primary-foreground: 222.2 84% 4.9%;
+
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 222.2 84% 4.9%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 243 75% 59%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-background text-foreground antialiased leading-relaxed;
     font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-:root.dark body {
-    @apply bg-gray-900 text-gray-100;
+  ::-webkit-scrollbar-track { 
+    @apply bg-transparent;
   }
-
-  :root.dark ::-webkit-scrollbar-track { background-color: #1f2937; }
   ::-webkit-scrollbar-thumb {
-    background-color: theme('colors.primary.400', #818cf8);
-    border-radius: 9999px;
+    @apply bg-primary/20 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/40;
   }
 }
 
 @layer components {
-  /* ── Boutons ─────────────────────────────────────────────── */
-  /* Note: hover/active/focus sur les couleurs custom via CSS direct (pas @apply)  */
-  /* car @apply + state-variants + custom-colors ne fonctionne pas avec Tailwind JIT */
+  /* ── Custom Utility Classes (Legacy support & extra polish) ── */
   .btn-primary {
-    @apply inline-flex items-center gap-2 text-white px-4 py-2
-           rounded-xl font-medium shadow-sm
-           focus:outline-none focus:ring-2 focus:ring-offset-2
-           transition-all duration-150
+    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3
+           rounded-xl font-bold shadow-lg shadow-primary/20
+           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+           transition-all duration-200 active:scale-95
            disabled:opacity-50 disabled:cursor-not-allowed;
-    background-color: theme('colors.primary.600');
-    --tw-ring-color: theme('colors.primary.500');
   }
   .btn-primary:hover:not(:disabled) {
-    background-color: theme('colors.primary.700');
-  }
-  .btn-primary:active:not(:disabled) {
-    background-color: theme('colors.primary.800');
+    @apply shadow-xl shadow-primary/30 brightness-110;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center gap-2 bg-white text-gray-700 border border-gray-200
-           px-4 py-2 rounded-xl font-medium shadow-sm
-           hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100
-           focus:outline-none focus:ring-2 focus:ring-offset-2
-           transition-all duration-150;
-    --tw-ring-color: theme('colors.primary.500');
+    @apply inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground
+           px-6 py-3 rounded-xl font-bold shadow-sm
+           hover:brightness-110 active:scale-95
+           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+           transition-all duration-200;
   }
 
-  .btn-danger {
-    @apply inline-flex items-center gap-2 bg-red-50 text-red-600 border border-red-200
-           px-4 py-2 rounded-xl font-medium
-           hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400
-           transition-all duration-150;
+  .card-bento {
+    @apply bg-card rounded-3xl shadow-xl shadow-slate-200/50 border border-border p-6 transition-all duration-300;
+  }
+  .dark .card-bento {
+    @apply shadow-none;
   }
 
-  /* ── Cartes ──────────────────────────────────────────────── */
-  .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
-  }
-
-  /* hover:border-primary-100 remplacé par theme() pour éviter l'erreur JIT */
-  .card-hover {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6
-           transition-all duration-200 cursor-pointer;
-  }
-  .card-hover:hover {
-    @apply shadow-md;
-    border-color: theme('colors.primary.100', #e0e7ff);
-  }
-
-  /* ── Champs ──────────────────────────────────────────────── */
   .input-field {
-    @apply w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm
-           bg-white shadow-sm
-           focus:outline-none focus:ring-2 focus:border-transparent
-           placeholder-gray-400 transition-all duration-150;
-    --tw-ring-color: theme('colors.primary.500');
-  }
-
-  /* ── Badges ──────────────────────────────────────────────── */
-  .badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  /* ── Icônes Material Symbols Rounded (Google) ────────────── */
-  .icon {
-    font-family: 'Material Symbols Rounded';
-    font-weight: normal;
-    font-style: normal;
-    font-size: 20px;
-    line-height: 1;
-    letter-spacing: normal;
-    text-transform: none;
-    display: inline-block;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-smoothing: antialiased;
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-    vertical-align: middle;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  .icon-filled {
-    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-
-  /* ── Typing cursor ───────────────────────────────────────── */
-  .typing-cursor::after {
-    content: "▋";
-    color: theme('colors.primary.500', #6366f1);
-    @apply animate-pulse;
-  }
-
-  /* ── Titres de page ──────────────────────────────────────── */
-  .page-title {
-    @apply text-2xl font-bold text-gray-900;
-  }
-
-  .page-subtitle {
-    @apply text-sm text-gray-500 mt-0.5;
-  }
-
-  /* ── Dark Mode ─────────────────────────────────────────── */
-  :root.dark {
-    --bg-primary: #111827;
-    --bg-secondary: #1f2937;
-    --text-primary: #f9fafb;
-    --text-secondary: #9ca3af;
-    --border-color: #374151;
-  }
-
-  :root.dark .btn-primary {
-    background-color: theme('colors.primary.500');
-  }
-  :root.dark .btn-primary:hover:not(:disabled) {
-    background-color: theme('colors.primary.600');
-  }
-
-  :root.dark .btn-secondary {
-    @apply bg-gray-800 text-gray-200 border-gray-600;
-  }
-  :root.dark .btn-secondary:hover:not(:disabled) {
-    @apply bg-gray-700 border-gray-500;
-  }
-
-  :root.dark .card {
-    @apply bg-gray-800 border-gray-700;
-  }
-
-  .dark .input-field {
-    @apply bg-gray-800 border-gray-600 text-gray-100;
-  }
-
-  .dark .bg-gray-50 {
-    @apply bg-gray-900;
-  }
-
-  .dark .bg-white {
-    @apply bg-gray-800;
-  }
-
-  .dark .text-gray-900,
-  .dark .text-gray-800 {
-    @apply text-gray-100;
-  }
-
-  .dark .text-gray-700,
-  .dark .text-gray-600 {
-    @apply text-gray-300;
-  }
-
-.dark .text-gray-500,
-    .dark .text-gray-400 {
-      @apply text-gray-300;
-    }
-
-  .dark .border-gray-200 {
-    @apply border-gray-700;
-  }
-
-  .dark .border-gray-100 {
-    @apply border-gray-700;
-  }
-
-  .dark .bg-primary-50,
-  .dark .bg-primary-100 {
-    @apply bg-gray-700;
-  }
-
-  .dark .text-primary-700 {
-    @apply text-primary-400;
-  }
-
-  :root.dark .hover\:bg-gray-50:hover {
-    @apply bg-gray-700;
-  }
-
-  :root.dark .bg-gradient-to-r {
-    --tw-gradient-from: theme('colors.primary.700');
-    --tw-gradient-to: theme('colors.secondary.700');
-  }
-
-  :root.dark .animate-fade-in {
-    animation: fadeInDark 0.3s ease-out;
-  }
-
-  @keyframes fadeInDark {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    @apply w-full border-2 border-border rounded-2xl px-4 py-3 text-sm
+           bg-muted/50 shadow-inner
+           focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-background
+           placeholder-slate-400 transition-all duration-200;
   }
 }

@@ -20,8 +20,9 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (ext === ".pdf" || ext === ".txt") return cb(null, true);
-    cb(new Error("Seuls les fichiers PDF et TXT sont acceptés."));
+    const allowedExts = [".pdf", ".txt", ".jpg", ".jpeg", ".png"];
+    if (allowedExts.includes(ext)) return cb(null, true);
+    cb(new Error("Fichiers acceptés : PDF, TXT, JPG, PNG."));
   },
 });
 
@@ -43,7 +44,7 @@ router.use(proteger);
 
 router.get("/", getCours);
 router.get("/:id", getCoursParId);
-router.post("/", validerCours, validate, upload.single("fichier"), creerCours);
+router.post("/", upload.single("fichier"), validerCours, validate, creerCours);
 router.put("/:id", validerCours, validate, modifierCours);
 router.delete("/:id", supprimerCours);
 

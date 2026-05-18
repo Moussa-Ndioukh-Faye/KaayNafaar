@@ -1,11 +1,23 @@
-/**
- * Page Planning — Gestion du planning de révision + Génération IA
- */
-
 import React, { useState, useEffect } from "react";
+import { 
+  Calendar as CalendarIcon, 
+  Sparkles, 
+  Plus, 
+  CheckCircle2, 
+  Clock, 
+  BookOpen, 
+  AlertCircle, 
+  ChevronRight, 
+  Lightbulb,
+  X,
+  CalendarDays,
+  Target,
+  ArrowRight
+} from "lucide-react";
 import { progressionAPI, coursAPI, iaAPI } from "../services/api";
-
-const JOURS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { cn } from "../lib/utils";
 
 export default function Planning() {
   const [planning, setPlanning] = useState([]);
@@ -29,13 +41,14 @@ export default function Planning() {
   const [enGeneration, setEnGeneration] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState("");
+  const [succes, setSucces] = useState("");
 
   useEffect(() => {
     const charger = async () => {
       try {
         const [prog, c] = await Promise.all([progressionAPI.getProgression(), coursAPI.getCours()]);
         setPlanning(prog.data.progression?.planning || []);
-        setCours(c.data.cours);
+        setCours(c.data.cours ?? []);
       } catch (_) {
         setErreur("Impossible de charger le planning.");
       } finally {
@@ -49,6 +62,7 @@ export default function Planning() {
     e.preventDefault();
     if (!form.matiere.trim() || !form.date) { setErreur("Date et matière requises."); return; }
     setEnvoi(true);
+    setErreur("");
     try {
       const { data } = await progressionAPI.ajouterPlanning({
         date: form.date,
@@ -59,6 +73,8 @@ export default function Planning() {
       });
       setPlanning(data.planning);
       setAfficherFormulaire(false);
+      setSucces("Session planifiée !");
+      setTimeout(() => setSucces(""), 3000);
       setForm({ date: new Date().toISOString().split("T")[0], matiere: "", coursId: "", dureeMinutes: 30, notes: "" });
     } catch (_) {
       setErreur("Erreur lors de l'ajout.");
@@ -71,7 +87,7 @@ export default function Planning() {
     try {
       await progressionAPI.completerSession(id, { estComplete: true });
       setPlanning((prev) =>
-        prev.map((s) => (s._id === id ? { ...s, estComplete: true } : s))
+        prev.map((s) => (s.id === id ? { ...s, estComplete: true } : s))
       );
     } catch (_) {
       setErreur("Erreur lors de la mise à jour.");
@@ -102,7 +118,23 @@ export default function Planning() {
     }
   };
 
-  // Grouper le planning par date
+  const sauvegarderPlanningGenere = async () => {
+    if (!planningGenere?.planning || planningGenere.planning.length === 0) return;
+    setEnvoi(true);
+    try {
+      const { data } = await progressionAPI.ajouterPlanningBulk({ sessions: planningGenere.planning });
+      setPlanning(data.planning);
+      setAfficherGenerateur(false);
+      setPlanningGenere(null);
+      setSucces("Planning IA enregistré !");
+      setTimeout(() => setSucces(""), 3000);
+    } catch (_) {
+      setErreur("Erreur lors de la sauvegarde du planning.");
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
   const planningTrié = [...planning].sort((a, b) => new Date(a.date) - new Date(b.date));
   const parDate = planningTrié.reduce((acc, session) => {
     const date = new Date(session.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
@@ -111,181 +143,322 @@ export default function Planning() {
     return acc;
   }, {});
 
-  const prioritéCouleur = { haute: "bg-red-100 text-red-700", moyenne: "bg-yellow-100 text-yellow-700", faible: "bg-green-100 text-green-700" };
+  const prioriteStyles = { 
+    haute: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30", 
+    moyenne: "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-900/30", 
+    faible: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" 
+  };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      {/* En-tête */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 max-w-6xl mx-auto pb-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">📅 Mon Planning de révision</h2>
-          <p className="text-gray-500 text-sm">{planning.length} sessions planifiées</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
+              <CalendarIcon className="w-6 h-6 text-primary-600" />
+            </div>
+            Mon Planning
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">{planning.length} sessions de révision programmées</p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setAfficherGenerateur(true)} className="btn-secondary text-sm">
-            🤖 Générer avec IA
-          </button>
-          <button onClick={() => setAfficherFormulaire(true)} className="btn-primary text-sm">
-            + Ajouter
-          </button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setAfficherGenerateur(true)} className="rounded-xl h-11 px-6 font-bold border-2 border-primary-100 dark:border-primary-900/30">
+            <Sparkles className="w-5 h-5 mr-2 text-primary-600" />
+            Générer avec IA
+          </Button>
+          <Button onClick={() => setAfficherFormulaire(true)} className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary-100 dark:shadow-none transition-transform active:scale-95">
+            <Plus className="w-5 h-5 mr-2" />
+            Planifier
+          </Button>
         </div>
       </div>
 
-      {erreur && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">{erreur}</div>
-      )}
+      {/* Messages */}
+      <div className="space-y-4">
+        {erreur && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 text-red-700 dark:text-red-400 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 animate-fade-in" role="alert">
+            <AlertCircle className="w-4 h-4" />
+            {erreur}
+          </div>
+        )}
+        {succes && (
+          <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 animate-fade-in" role="alert">
+            <CheckCircle2 className="w-4 h-4" />
+            {succes}
+          </div>
+        )}
+      </div>
 
-      {/* Formulaire génération IA */}
+      {/* AI Generator Card */}
       {afficherGenerateur && (
-        <div className="card border-2 border-purple-200 animate-slide-up">
-          <h3 className="font-semibold text-gray-900 mb-4">🤖 Générer un planning intelligent</h3>
-          <form onSubmit={genererPlanningIA} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
-                <input type="date" className="input-field" value={genForm.dateDebut}
+        <Card className="rounded-[2rem] shadow-xl border-2 border-primary-100 dark:border-primary-900/30 overflow-hidden animate-slide-up">
+          <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-8 border-b border-gray-100 dark:border-gray-700">
+             <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                   <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
+                      <Sparkles className="w-6 h-6" />
+                   </div>
+                   <div>
+                      <CardTitle className="text-xl">Planning Intelligent</CardTitle>
+                      <CardDescription>Laisse l'IA organiser tes révisions en fonction de tes cours.</CardDescription>
+                   </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => { setAfficherGenerateur(false); setPlanningGenere(null); }} className="rounded-full">
+                   <X className="w-5 h-5" />
+                </Button>
+             </div>
+          </CardHeader>
+          <CardContent className="p-8 space-y-8">
+            <form onSubmit={genererPlanningIA} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date de début</label>
+                <input type="date" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                  value={genForm.dateDebut}
                   onChange={(e) => setGenForm({ ...genForm, dateDebut: e.target.value })} required />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date de fin</label>
-                <input type="date" className="input-field" value={genForm.dateFin} required
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date de fin</label>
+                <input type="date" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                  value={genForm.dateFin} required
                   min={genForm.dateDebut}
                   onChange={(e) => setGenForm({ ...genForm, dateFin: e.target.value })} />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Heures disponibles/jour</label>
-                <select className="input-field" value={genForm.disponibilite}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Heures par jour</label>
+                <select className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" 
+                  value={genForm.disponibilite}
                   onChange={(e) => setGenForm({ ...genForm, disponibilite: parseInt(e.target.value) })}>
-                  {[1, 2, 3, 4, 6, 8].map((h) => <option key={h} value={h}>{h}h/jour</option>)}
+                  {[1, 2, 3, 4, 6, 8].map((h) => <option key={h} value={h}>{h}h / jour</option>)}
                 </select>
               </div>
-            </div>
-            <div className="flex gap-3">
-              <button type="submit" disabled={enGeneration} className="btn-primary">
-                {enGeneration ? <span className="flex items-center gap-2"><span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />Génération…</span> : "✨ Générer"}
-              </button>
-              <button type="button" onClick={() => { setAfficherGenerateur(false); setPlanningGenere(null); }} className="btn-secondary">Fermer</button>
-            </div>
-          </form>
+              <div className="md:col-span-3">
+                 <Button type="submit" disabled={enGeneration} className="w-full h-14 rounded-2xl font-black text-lg">
+                   {enGeneration ? (
+                     <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                        Calcul de l'itinéraire optimal...
+                     </div>
+                   ) : <><Sparkles className="w-6 h-6 mr-2" /> Générer mon programme</>}
+                 </Button>
+              </div>
+            </form>
 
-          {/* Affichage du planning généré */}
-          {planningGenere && (
-            <div className="mt-4 space-y-2 border-t pt-4">
-              <h4 className="font-medium text-gray-900 mb-3">Planning suggéré :</h4>
-              {planningGenere.planning?.map((session, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg text-sm">
-                  <span className="text-gray-500 w-24 flex-shrink-0">
-                    {new Date(session.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })}
-                  </span>
-                  <span className="font-medium text-gray-900 flex-1">{session.sujet}</span>
-                  <span className={`badge ${prioritéCouleur[session.priorite] || "bg-gray-100 text-gray-600"}`}>{session.priorite}</span>
-                  <span className="text-gray-500">{session.dureeMinutes}min</span>
+            {planningGenere && (
+              <div className="space-y-6 pt-4 animate-fade-in">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-2">
+                   <div className="flex items-center gap-2">
+                      <CalendarDays className="w-5 h-5 text-primary-600" />
+                      <h4 className="text-lg font-black text-gray-900 dark:text-white">Suggestions de l'IA :</h4>
+                   </div>
+                   <Button onClick={sauvegarderPlanningGenere} disabled={envoi} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 rounded-xl font-bold">
+                      {envoi ? "Enregistrement..." : "Sauvegarder tout le programme"}
+                   </Button>
                 </div>
-              ))}
-              {planningGenere.conseils_generaux && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 mb-1">💡 Conseils :</p>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    {planningGenere.conseils_generaux.map((c, i) => <li key={i}>• {c}</li>)}
-                  </ul>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {planningGenere.planning?.map((session, i) => (
+                    <Card key={i} className="rounded-2xl border-none bg-gray-50 dark:bg-gray-900 shadow-none hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      <CardContent className="p-4 flex items-center gap-4">
+                         <div className="text-center w-12 flex-shrink-0">
+                            <p className="text-[10px] font-black uppercase text-gray-400">
+                               {new Date(session.date).toLocaleDateString("fr-FR", { weekday: "short" })}
+                            </p>
+                            <p className="text-lg font-black text-primary-600">
+                               {new Date(session.date).getDate()}
+                            </p>
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <p className="font-bold text-gray-900 dark:text-white truncate">{session.sujet}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                               <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
+                                  <Clock className="w-3 h-3" /> {session.dureeMinutes}min
+                               </span>
+                               <span className={cn("text-[8px] font-black uppercase px-2 py-0.5 rounded-full border", prioriteStyles[session.priorite] || prioriteStyles.moyenne)}>
+                                  {session.priorite}
+                               </span>
+                            </div>
+                         </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              )}
-            </div>
-          )}
-        </div>
+                
+                {planningGenere.conseils_generaux && (
+                  <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-[2rem] border border-blue-100 dark:border-blue-900/30">
+                    <p className="text-sm font-black text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5" />
+                      Conseils de préparation :
+                    </p>
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
+                      {planningGenere.conseils_generaux.map((c, i) => (
+                         <li key={i} className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2 leading-relaxed">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                            {c}
+                         </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
-      {/* Formulaire ajout manuel */}
+      {/* Manual Form Card */}
       {afficherFormulaire && (
-        <div className="card border-2 border-primary-200 animate-slide-up">
-          <h3 className="font-semibold text-gray-900 mb-4">Nouvelle session de révision</h3>
-          <form onSubmit={ajouterSession} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
-                <input type="date" className="input-field" value={form.date} required
-                  onChange={(e) => setForm({ ...form, date: e.target.value })} />
+        <Card className="rounded-[2rem] shadow-xl border-2 border-primary-100 dark:border-primary-900/30 overflow-hidden animate-slide-up">
+           <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-8 border-b border-gray-100 dark:border-gray-700">
+              <div className="flex justify-between items-center">
+                 <CardTitle className="text-xl">Planifier une session</CardTitle>
+                 <Button variant="ghost" size="icon" onClick={() => setAfficherFormulaire(false)} className="rounded-full">
+                    <X className="w-5 h-5" />
+                 </Button>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Matière *</label>
-                <input className="input-field" placeholder="ex: Mathématiques" required maxLength={100}
-                  value={form.matiere} onChange={(e) => setForm({ ...form, matiere: e.target.value })} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cours associé</label>
-                <select className="input-field" value={form.coursId} onChange={(e) => setForm({ ...form, coursId: e.target.value })}>
-                  <option value="">-- Aucun --</option>
-                  {cours.map((c) => <option key={c._id} value={c._id}>{c.titre}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Durée (minutes)</label>
-                <input type="number" min="5" max="480" className="input-field"
-                  value={form.dureeMinutes} onChange={(e) => setForm({ ...form, dureeMinutes: parseInt(e.target.value) || 30 })} />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <input className="input-field" placeholder="ex: Chapitres 1 à 3" maxLength={300}
-                value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            </div>
-            <div className="flex gap-3">
-              <button type="submit" disabled={envoi} className="btn-primary">
-                {envoi ? "Ajout…" : "Ajouter la session"}
-              </button>
-              <button type="button" onClick={() => setAfficherFormulaire(false)} className="btn-secondary">Annuler</button>
-            </div>
-          </form>
-        </div>
+           </CardHeader>
+           <form onSubmit={ajouterSession}>
+             <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date *</label>
+                    <input type="date" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" value={form.date} required
+                      onChange={(e) => setForm({ ...form, date: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Matière *</label>
+                    <input className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                      placeholder="ex: Mathématiques" required maxLength={100}
+                      value={form.matiere} onChange={(e) => setForm({ ...form, matiere: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Cours associé</label>
+                    <select className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" value={form.coursId} onChange={(e) => setForm({ ...form, coursId: e.target.value })}>
+                      <option value="">-- Aucun --</option>
+                      {cours.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Durée (minutes)</label>
+                    <input type="number" min="5" max="480" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500"
+                      value={form.dureeMinutes} onChange={(e) => setForm({ ...form, dureeMinutes: parseInt(e.target.value) || 30 })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Notes ou objectifs</label>
+                  <input className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                    placeholder="ex: Réviser les chapitres 1 à 3" maxLength={300}
+                    value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                </div>
+             </CardContent>
+             <CardFooter className="p-8 pt-0 flex gap-4">
+                <Button type="submit" disabled={envoi} className="flex-1 h-12 rounded-2xl font-black shadow-lg shadow-primary-100 dark:shadow-none">
+                  {envoi ? "Enregistrement..." : "Planifier la session"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setAfficherFormulaire(false)} className="h-12 px-8 rounded-2xl font-bold">
+                   Annuler
+                </Button>
+             </CardFooter>
+           </form>
+        </Card>
       )}
 
-      {/* Planning */}
+      {/* Main List Section */}
       {chargement ? (
-        <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" /></div>
+        <div className="space-y-10">
+           {[1, 2].map(i => (
+              <div key={i} className="space-y-4">
+                 <div className="h-4 w-32 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+                 <div className="h-20 bg-gray-100 dark:bg-gray-800 rounded-3xl animate-pulse" />
+              </div>
+           ))}
+        </div>
       ) : Object.keys(parDate).length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
-          <p className="text-5xl mb-4">📅</p>
-          <p className="font-medium">Aucune session planifiée.</p>
-          <button onClick={() => setAfficherFormulaire(true)} className="btn-primary mt-4">Ajouter une session</button>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <CalendarIcon className="w-10 h-10 text-gray-300" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Ton planning est vide</h3>
+          <p className="text-gray-500 dark:text-gray-400 max-w-sm mt-2">Commence par planifier manuellement tes sessions ou laisse l'IA le faire pour toi.</p>
+          <div className="mt-8 flex gap-4">
+             <Button onClick={() => setAfficherFormulaire(true)} variant="outline" className="rounded-xl font-bold">Planifier manuellement</Button>
+             <Button onClick={() => setAfficherGenerateur(true)} className="rounded-xl font-bold bg-primary-600">Essayer le générateur IA</Button>
+          </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-12">
           {Object.entries(parDate).map(([date, sessions]) => (
-            <div key={date}>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+            <div key={date} className="relative pl-6 border-l-2 border-gray-100 dark:border-gray-800 pb-2">
+              <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-gray-900 border-4 border-primary-500" />
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 pl-2">
                 {date}
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {sessions.map((s) => (
-                  <div key={s._id}
-                    className={`card flex items-center gap-4 py-3 transition-all ${s.estComplete ? "opacity-60" : ""}`}
+                  <Card key={s.id}
+                    className={cn(
+                       "group transition-all rounded-[1.5rem] hover:shadow-lg hover:border-primary-100 dark:hover:border-primary-900/30 overflow-hidden",
+                       s.estComplete ? "opacity-60 bg-gray-50/50 dark:bg-gray-800/30" : "bg-white dark:bg-gray-800"
+                    )}
                   >
-                    <button
-                      onClick={() => !s.estComplete && completerSession(s._id)}
-                      className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all ${
-                        s.estComplete
-                          ? "bg-green-500 border-green-500"
-                          : "border-gray-300 hover:border-primary-500"
-                      }`}
-                      aria-label={s.estComplete ? "Complété" : "Marquer comme complété"}
-                    >
-                      {s.estComplete && <span className="text-white text-xs flex items-center justify-center h-full">✓</span>}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-medium text-gray-900 ${s.estComplete ? "line-through" : ""}`}>
-                        {s.matiere}
-                      </p>
-                      {s.notes && <p className="text-sm text-gray-500 truncate">{s.notes}</p>}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="badge bg-blue-100 text-blue-700 text-xs">⏱️ {s.dureeMinutes}min</span>
-                      {s.estComplete && <span className="badge bg-green-100 text-green-700 text-xs">✓ Fait</span>}
-                    </div>
-                  </div>
+                    <CardContent className="p-5 flex items-center gap-5">
+                       <button
+                          onClick={() => !s.estComplete && completerSession(s.id)}
+                          className={cn(
+                             "w-8 h-8 rounded-xl border-2 flex-shrink-0 transition-all flex items-center justify-center group/check",
+                             s.estComplete
+                               ? "bg-emerald-500 border-emerald-500 text-white"
+                               : "border-gray-200 dark:border-gray-700 hover:border-primary-500 bg-white dark:bg-gray-800"
+                          )}
+                          disabled={s.estComplete}
+                       >
+                          {s.estComplete ? <CheckCircle2 className="w-5 h-5" /> : <div className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700 group-hover/check:bg-primary-500 transition-colors" />}
+                       </button>
+                       
+                       <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                             <p className={cn("text-lg font-black text-gray-900 dark:text-white truncate", s.estComplete && "line-through text-gray-400")}>
+                               {s.matiere}
+                             </p>
+                             {s.coursId && (
+                                <div className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
+                                   <BookOpen className="w-2.5 h-2.5" /> lié
+                                </div>
+                             )}
+                          </div>
+                          {s.notes && <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5">{s.notes}</p>}
+                       </div>
+
+                       <div className="flex items-center gap-4 flex-shrink-0">
+                          <div className="flex flex-col items-end">
+                             <div className="flex items-center gap-1 text-[10px] font-black uppercase text-gray-400">
+                                <Clock className="w-3 h-3" /> Durée
+                             </div>
+                             <p className="text-sm font-black text-gray-700 dark:text-gray-200">{s.dureeMinutes} min</p>
+                          </div>
+                          <ChevronRight className={cn("w-5 h-5 text-gray-200 transition-all", !s.estComplete && "group-hover:text-primary-500 group-hover:translate-x-1")} />
+                       </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             </div>
           ))}
+          
+          {/* Motivation Widget */}
+          <Card className="rounded-[2.5rem] border-none bg-gradient-to-br from-primary-600 to-secondary-600 p-1">
+             <div className="bg-white dark:bg-gray-900 rounded-[2.4rem] p-8 flex flex-col md:flex-row items-center gap-8">
+                <div className="w-20 h-20 rounded-[2rem] bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
+                   <Target className="w-10 h-10 text-orange-500" />
+                </div>
+                <div className="flex-1 text-center md:text-left">
+                   <h3 className="text-2xl font-black text-gray-900 dark:text-white">Cap sur la réussite !</h3>
+                   <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md">Chaque session terminée te rapproche de ton objectif. Garde le rythme et n'oublie pas de faire des pauses régulières.</p>
+                </div>
+                <Button className="rounded-2xl h-14 px-10 font-black text-lg shadow-xl shadow-primary-200 dark:shadow-none">
+                   Continuer <ArrowRight className="ml-2 w-6 h-6" />
+                </Button>
+             </div>
+          </Card>
         </div>
       )}
     </div>

@@ -6,6 +6,10 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Progression = require("../models/Progression");
+const Course = require("../models/Course");
+const Fiche = require("../models/Fiche");
+const Quiz = require("../models/Quiz");
+const { Op } = require("sequelize");
 
 // Générer un JWT
 const genererToken = (id) => {
@@ -15,58 +19,58 @@ const genererToken = (id) => {
 };
 
 // Helper pour envoyer le token en cookie httpOnly
-const envoyerTokenCookie = (res, token) => {
+const envoyerTokenCookie = (res, token, req) => {
+  const isLocalhost = req.get("host")?.includes("localhost");
   const options = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    // Secure seulement en prod ET si ce n'est pas localhost (pour test Docker local)
+    secure: process.env.NODE_ENV === "production" && !isLocalhost,
+    sameSite: "lax", // 'lax' est plus tolérant pour les redirections et les ports différents
+    path: "/",
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 jours
   };
   res.cookie("token", token, options);
 };
-
 
 // POST /api/auth/inscription
 const inscription = async (req, res) => {
   try {
     const { nom, email, motDePasse, niveauEtude } = req.body;
 
-    // Validation serveur
-    if (!nom || nom.trim().length < 2) {
-      return res.status(400).json({ success: false, message: "Le nom doit contenir au moins 2 caractères." });
-    }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ success: false, message: "Adresse email invalide." });
-    }
-    if (!motDePasse || motDePasse.length < 6) {
-      return res.status(400).json({ success: false, message: "Le mot de passe doit contenir au moins 6 caractères." });
+    if (!nom || !email || !motDePasse) {
+      return res.status(400).json({
+        success: false,
+        message: "Nom, email et mot de passe sont requis.",
+      });
     }
 
-    // Vérifier si l'email existe déjà
-    const utilisateurExistant = await User.findOne({ where: { email: email.toLowerCase() } });
-    if (utilisateurExistant) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Cet email est déjà utilisé." });
+    const emailNettoye = email.toLowerCase().trim();
+
+    const existe = await User.findOne({ where: { email: emailNettoye } });
+    if (existe) {
+      return res.status(409).json({
+        success: false,
+        message: "Un compte avec cet email existe déjà.",
+      });
     }
 
-    // Créer l'utilisateur
     const utilisateur = await User.create({
       nom: nom.trim(),
-      email: email.toLowerCase(),
+      email: emailNettoye,
       motDePasse,
-      niveauEtude: niveauEtude || "autre",
+      niveauEtude: niveauEtude || "licence",
     });
 
-    // Créer un profil de progression initial
-    await Progression.create({ utilisateurId: utilisateur.id });
+    await Progression.create({
+      utilisateurId: utilisateur.id,
+    });
 
     const token = genererToken(utilisateur.id);
-    envoyerTokenCookie(res, token);
+    envoyerTokenCookie(res, token, req);
 
     res.status(201).json({
       success: true,
-      message: "Compte créé avec succès !",
+      message: "Compte créé avec succès",
       utilisateur: {
         id: utilisateur.id,
         nom: utilisateur.nom,
@@ -76,16 +80,7 @@ const inscription = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur inscription:", error);
-    // Email déjà pris (contrainte unique MySQL)
-    if (error.name === "SequelizeUniqueConstraintError") {
-      return res.status(400).json({ success: false, message: "Cet email est déjà utilisé." });
-    }
-    // Erreur de validation Sequelize
-    if (error.name === "SequelizeValidationError") {
-      const msg = error.errors[0]?.message || "Données invalides.";
-      return res.status(400).json({ success: false, message: msg });
-    }
-    res.status(500).json({ success: false, message: "Erreur lors de la création du compte. Réessaie plus tard." });
+    res.status(500).json({ success: false, message: "Erreur serveur lors de l'inscription." });
   }
 };
 
@@ -101,29 +96,31 @@ const connexion = async (req, res) => {
       });
     }
 
+    const emailNettoye = email.toLowerCase().trim();
+
     // Récupérer l'utilisateur avec le mot de passe
-    const utilisateur = await User.findOne({ where: { email: email.toLowerCase().trim() } });
+    const utilisateur = await User.findOne({ where: { email: emailNettoye } });
+    
+    // Message générique pour éviter le user enumeration
+    const erreurAuth = { success: false, message: "Email ou mot de passe incorrect." };
+
     if (!utilisateur) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Email ou mot de passe incorrect." });
+      return res.status(401).json(erreurAuth);
     }
 
     const motDePasseValide = await utilisateur.verifierMotDePasse(motDePasse);
     if (!motDePasseValide) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Email ou mot de passe incorrect." });
+      return res.status(401).json(erreurAuth);
     }
 
-    // Mettre à jour la dernière connexion
-    await Progression.update(
+    // Mettre à jour la dernière connexion (optionnel, sans bloquer)
+    Progression.update(
       { stats: { dernierConnexion: new Date() } },
       { where: { utilisateurId: utilisateur.id } }
-    );
+    ).catch(err => console.error("Erreur update last login:", err));
 
     const token = genererToken(utilisateur.id);
-    envoyerTokenCookie(res, token);
+    envoyerTokenCookie(res, token, req);
 
     res.json({
       success: true,
@@ -138,105 +135,123 @@ const connexion = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur connexion:", error);
-    res.status(500).json({ success: false, message: "Erreur lors de la connexion. Réessaie plus tard." });
+    res.status(500).json({ success: false, message: "Erreur serveur lors de la connexion." });
   }
 };
 
 // GET /api/auth/profil
 const getProfil = async (req, res) => {
   try {
-    const utilisateur = await User.findByPk(req.utilisateur.id);
+    const utilisateur = await User.findByPk(req.utilisateur.id, {
+      attributes: { exclude: ["motDePasse"] },
+    });
+
     if (!utilisateur) {
-      return res.status(404).json({ success: false, message: "Utilisateur non trouvé." });
+      return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
     }
+
     res.json({ success: true, utilisateur });
   } catch (error) {
     console.error("Erreur getProfil:", error);
-    res.status(500).json({ success: false, message: "Impossible de récupérer le profil." });
+    res.status(500).json({ success: false, message: "Erreur lors de la récupération du profil." });
   }
 };
 
 // PUT /api/auth/profil
 const mettreAJourProfil = async (req, res) => {
   try {
-    const { nom, niveauEtude, matieresFavorites } = req.body;
+    const { nom, email } = req.body;
 
-    const utilisateur = await User.findByPk(req.utilisateur.id);
-    if (!utilisateur) {
-      return res.status(404).json({ success: false, message: "Utilisateur non trouvé." });
-    }
-
-    if (nom !== undefined) {
-      if (nom.trim().length < 2) {
-        return res.status(400).json({ success: false, message: "Le nom doit contenir au moins 2 caractères." });
+    if (email) {
+      const emailNettoye = email.toLowerCase().trim();
+      const existe = await User.findOne({
+        where: {
+          email: emailNettoye,
+          id: { [Op.ne]: req.utilisateur.id },
+        },
+      });
+      if (existe) {
+        return res.status(409).json({ success: false, message: "Cet email est déjà utilisé." });
       }
-      utilisateur.nom = nom.trim();
     }
-    if (niveauEtude !== undefined) utilisateur.niveauEtude = niveauEtude;
-    if (matieresFavorites !== undefined) utilisateur.matieresFavorites = matieresFavorites;
 
-    await utilisateur.save();
+    const champs = {};
+    if (nom) champs.nom = nom.trim();
+    if (email) champs.email = email.toLowerCase().trim();
+
+    await req.utilisateur.update(champs);
+
+    const utilisateur = await User.findByPk(req.utilisateur.id, {
+      attributes: { exclude: ["motDePasse"] },
+    });
+
     res.json({ success: true, utilisateur });
   } catch (error) {
     console.error("Erreur mettreAJourProfil:", error);
-    if (error.name === "SequelizeUniqueConstraintError") {
-      return res.status(400).json({ success: false, message: "Cet email est déjà utilisé." });
-    }
-    res.status(500).json({ success: false, message: "Impossible de mettre à jour le profil." });
+    res.status(500).json({ success: false, message: "Erreur lors de la mise à jour du profil." });
   }
 };
 
-// POST /api/auth/changer-mot-de-passe
+// PUT /api/auth/changer-mot-de-passe
 const changerMotDePasse = async (req, res) => {
   try {
     const { motDePasseActuel, nouveauMotDePasse } = req.body;
 
-    if (!motDePasseActuel || !nouveauMotDePasse) {
-      return res.status(400).json({ success: false, message: "Les deux mots de passe sont requis." });
-    }
-    if (nouveauMotDePasse.length < 8) {
-      return res.status(400).json({ success: false, message: "Le nouveau mot de passe doit contenir au moins 8 caractères." });
+    const utilisateur = await User.findByPk(req.utilisateur.id);
+    if (!utilisateur) {
+      return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
     }
 
-    const utilisateur = await User.findByPk(req.utilisateur.id);
-    const motDePasseValide = await utilisateur.verifierMotDePasse(motDePasseActuel);
-    if (!motDePasseValide) {
+    const valide = await utilisateur.verifierMotDePasse(motDePasseActuel);
+    if (!valide) {
       return res.status(401).json({ success: false, message: "Mot de passe actuel incorrect." });
     }
 
     utilisateur.motDePasse = nouveauMotDePasse;
     await utilisateur.save();
 
-    res.json({ success: true, message: "Mot de passe changé avec succès." });
+    res.json({ success: true, message: "Mot de passe modifié avec succès." });
   } catch (error) {
     console.error("Erreur changerMotDePasse:", error);
     res.status(500).json({ success: false, message: "Erreur lors du changement de mot de passe." });
   }
 };
 
-// DELETE /api/auth/supprimer-compte
+// DELETE /api/auth/compte
 const supprimerCompte = async (req, res) => {
   try {
     const { motDePasse } = req.body;
 
+    if (!motDePasse) {
+      return res.status(400).json({ success: false, message: "Mot de passe requis pour supprimer le compte." });
+    }
+
     const utilisateur = await User.findByPk(req.utilisateur.id);
-    const motDePasseValide = await utilisateur.verifierMotDePasse(motDePasse);
-    if (!motDePasseValide) {
+    if (!utilisateur) {
+      return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
+    }
+
+    const valide = await utilisateur.verifierMotDePasse(motDePasse);
+    if (!valide) {
       return res.status(401).json({ success: false, message: "Mot de passe incorrect." });
     }
 
-    const userId = utilisateur.id;
-
     await Promise.all([
-      User.destroy({ where: { id: userId } }),
-      require("../models/Progression").destroy({ where: { utilisateurId: userId } }),
-      require("../models/Course").destroy({ where: { utilisateurId: userId } }),
-      require("../models/Fiche").destroy({ where: { utilisateurId: userId } }),
-      require("../models/Quiz").destroy({ where: { utilisateurId: userId } }),
+      Course.destroy({ where: { utilisateurId: utilisateur.id } }),
+      Fiche.destroy({ where: { utilisateurId: utilisateur.id } }),
+      Quiz.destroy({ where: { utilisateurId: utilisateur.id } }),
+      Progression.destroy({ where: { utilisateurId: utilisateur.id } }),
+      utilisateur.destroy(),
     ]);
 
-    res.clearCookie("token");
-    res.json({ success: true, message: "Compte supprimé." });
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
+
+    res.json({ success: true, message: "Compte supprimé définitivement." });
   } catch (error) {
     console.error("Erreur supprimerCompte:", error);
     res.status(500).json({ success: false, message: "Erreur lors de la suppression du compte." });
@@ -245,7 +260,12 @@ const supprimerCompte = async (req, res) => {
 
 // POST /api/auth/logout
 const logout = (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+  });
   res.json({ success: true, message: "Déconnecté avec succès." });
 };
 

@@ -25,18 +25,29 @@ const getQuiz = async (req, res) => {
   }
 };
 
+const { Op } = require("sequelize");
+
+// ...
+
 // GET /api/quiz/:id
 const getQuizParId = async (req, res) => {
   try {
-    const quiz = await Quiz.findOne({
-      where: {
-        id: req.params.id,
-        utilisateurId: req.utilisateur.id,
-      },
-    });
+    const userId = req.utilisateur?.id;
+    const where = { id: req.params.id };
+    
+    if (!userId) {
+      where.estPublique = true;
+    } else {
+      where[Op.or] = [
+        { utilisateurId: userId },
+        { estPublique: true }
+      ];
+    }
+
+    const quiz = await Quiz.findOne({ where });
 
     if (!quiz) {
-      return res.status(404).json({ success: false, message: "Quiz introuvable." });
+      return res.status(404).json({ success: false, message: "Quiz introuvable ou privé." });
     }
 
     res.json({ success: true, quiz });
@@ -79,13 +90,16 @@ const creerQuiz = async (req, res) => {
 const soumettreSession = async (req, res) => {
   try {
     const { reponses, tempsPasse } = req.body;
+    const userId = req.utilisateur?.id;
 
-    const quiz = await Quiz.findOne({
-      where: {
-        id: req.params.id,
-        utilisateurId: req.utilisateur.id,
-      },
-    });
+    const where = { id: req.params.id };
+    if (!userId) {
+      where.estPublique = true;
+    } else {
+      where[Op.or] = [{ utilisateurId: userId }, { estPublique: true }];
+    }
+
+    const quiz = await Quiz.findOne({ where });
 
     if (!quiz) {
       return res.status(404).json({ success: false, message: "Quiz introuvable." });
@@ -94,7 +108,7 @@ const soumettreSession = async (req, res) => {
     if (!Array.isArray(reponses) || reponses.length !== quiz.questions.length) {
       return res.status(400).json({
         success: false,
-        message: `Le nombre de réponses (${reponses?.length ?? 0}) ne correspond pas au nombre de questions (${quiz.questions.length}).`,
+        message: `Nombre de réponses invalide.`,
       });
     }
 
@@ -108,24 +122,27 @@ const soumettreSession = async (req, res) => {
       return { questionIndex: index, reponseUtilisateur: rep.reponseUtilisateur, estCorrecte };
     });
 
-    const sessions = quiz.sessions || [];
-    sessions.push({
-      date: new Date(),
-      score,
-      total: quiz.questions.length,
-      tempsPasse,
-      reponses: reponsesAnnotees,
-    });
+    // Sauvegarder uniquement si l'utilisateur est authentifié et propriétaire du quiz
+    if (userId && quiz.utilisateurId === userId) {
+      const sessions = quiz.sessions || [];
+      sessions.push({
+        date: new Date(),
+        score,
+        total: quiz.questions.length,
+        tempsPasse,
+        reponses: reponsesAnnotees,
+      });
 
-    await quiz.update({ sessions });
+      await quiz.update({ sessions });
 
-    const scoreMoyen = sessions.reduce((acc, s) => acc + (s.score / s.total) * 100, 0) / sessions.length;
+      const scoreMoyen = sessions.reduce((acc, s) => acc + (s.score / s.total) * 100, 0) / sessions.length;
 
-    const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
-    if (progression) {
-      const stats = progression.stats || {};
-      stats.scoreMoyenQuiz = Math.round(scoreMoyen);
-      await progression.update({ stats });
+      const progression = await Progression.findOne({ where: { utilisateurId: userId } });
+      if (progression) {
+        const stats = progression.stats || {};
+        stats.scoreMoyenQuiz = Math.round(scoreMoyen);
+        await progression.update({ stats });
+      }
     }
 
     res.json({
@@ -139,7 +156,7 @@ const soumettreSession = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur soumettreSession:", error);
-    res.status(500).json({ success: false, message: "Erreur lors de l'enregistrement des résultats." });
+    res.status(500).json({ success: false, message: "Erreur lors du calcul des résultats." });
   }
 };
 

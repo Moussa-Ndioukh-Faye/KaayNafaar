@@ -48,3 +48,17 @@ jobs:
         working-directory: backend
       - run: npm run lint
         working-directory: backend
+
+  lint-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          path: frontend
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run lint
+        working-directory: frontend

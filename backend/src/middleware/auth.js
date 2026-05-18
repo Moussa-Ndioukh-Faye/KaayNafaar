@@ -8,45 +8,50 @@ const User = require("../models/User");
 const proteger = async (req, res, next) => {
   let token;
 
-  // Vérifier le header Authorization
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
-  ) {
+  // 1. Vérifier le header Authorization (prioritaire pour les API mobiles/externes)
+  if (req.headers.authorization?.startsWith("Bearer ")) {
     token = req.headers.authorization.split(" ")[1];
   }
 
-  // Si pas de header, essayer le cookie
-  if (!token && req.cookies && req.cookies.token) {
+  // 2. Si pas de header, utiliser le cookie httpOnly (standard web sécurisé)
+  if (!token && req.cookies?.token) {
     token = req.cookies.token;
   }
 
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Accès refusé. Token manquant.",
+      message: "Accès non autorisé. Veuillez vous connecter.",
     });
   }
 
   try {
-    // Vérifier et décoder le token
+    // Vérifier le token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Récupérer l'utilisateur (sans le mot de passe)
-    req.utilisateur = await User.findByPk(decoded.id);
+    // Récupérer l'utilisateur
+    const utilisateur = await User.findByPk(decoded.id, {
+      attributes: { exclude: ["motDePasse"] } // Sécurité supplémentaire
+    });
 
-    if (!req.utilisateur) {
+    if (!utilisateur) {
       return res.status(401).json({
         success: false,
-        message: "Utilisateur introuvable. Token invalide.",
+        message: "Session invalide. Utilisateur non trouvé.",
       });
     }
 
+    req.utilisateur = utilisateur;
     next();
   } catch (error) {
+    console.error("Erreur Auth Middleware:", error.name);
+    
+    let msg = "Session expirée ou invalide.";
+    if (error.name === "TokenExpiredError") msg = "Votre session a expiré. Veuillez vous reconnecter.";
+
     return res.status(401).json({
       success: false,
-      message: "Token invalide ou expiré.",
+      message: msg,
     });
   }
 };

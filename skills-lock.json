@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "skills": {
+    "analyse-problem": {
+      "source": "neolabhq/context-engineering-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/kaizen/skills/analyse-problem/SKILL.md",
+      "computedHash": "a51c4b065e347f14bf1d145ac1ade7945b9f76f969a618a63f26219d8a6e61ff"
+    },
+    "design-review": {
+      "source": "nexu-io/open-design",
+      "sourceType": "github",
+      "skillPath": "skills/design-review/SKILL.md",
+      "computedHash": "d7cb3690ec6548fee96c287a831de3833b63314679b83e2931ee04c09cb3d079"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "516bd2154eb843a8240e43d5b285229129853114ad7075a5e141e1c08e408c84"
+    },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "computedHash": "2da1d23b8f53cfe67f2e0b68924ab9f4ec400bb6480de097007eeaeb517d1722"
+    },
+    "mongodb-query-optimizer": {
+      "source": "mongodb/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mongodb-query-optimizer/SKILL.md",
+      "computedHash": "f9fdb2012f8d7963e19f861a7708c9b1c0c91240aa5d27d235cca44827ab0de1"
+    },
+    "mongodb-schema-design": {
+      "source": "mongodb/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mongodb-schema-design/SKILL.md",
+      "computedHash": "8ee5178f2a8086235c38cbbd2ddb93bdced35af80102abd2deedcc0cc56bc964"
+    },
+    "mysql-patterns": {
+      "source": "joneqian/claude-skills-suite",
+      "sourceType": "github",
+      "skillPath": "skills/mysql-patterns/SKILL.md",
+      "computedHash": "7f308cd890b07241b3556b2ff30428fddede37f36c4b0f4440c118584d9e5fb4"
+    },
+    "owasp-llm-top10": {
+      "source": "mastepanoski/claude-skills",
+      "sourceType": "github",
+      "skillPath": "skills/owasp-llm-top10/SKILL.md",
+      "computedHash": "b95e733fe280ef0d0258231fcaec88ef12a64d35b96022c04cc76a3b341630c4"
+    },
+    "owasp-security": {
+      "source": "hoodini/ai-agents-skills",
+      "sourceType": "github",
+      "skillPath": "skills/owasp-security/SKILL.md",
+      "computedHash": "880d7aa73b001e7e28b9562639defeff11c073d958fe5a253eeea572539439a2"
+    },
+    "shadcn-ui": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-typescript/skills/shadcn-ui/SKILL.md",
+      "computedHash": "5264d0399edb2e9cb517c722067fea44657a35ece43407a3aaa9e3ba9bd7f670"
+    },
+    "sql-optimization": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/sql-optimization/SKILL.md",
+      "computedHash": "47c930907f25d67454ac8c2d155785eae3dce72242960d0c0e9ebf2ced9cd231"
+    },
+    "tdd": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/tdd/SKILL.md",
+      "computedHash": "78b31b2120c5fe7aced1cebfd4c7c94acb0037fd4f89c83c67584414aa4173bd"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
+    },
+    "vllm-server": {
+      "source": "bagelhole/devops-security-agent-skills",
+      "sourceType": "github",
+      "skillPath": "infrastructure/local-ai/vllm-server/SKILL.md",
+      "computedHash": "41e441a189b074b889b9934d7ce6312c7634b6d13874bb107b133e6aa6d8e842"
+    },
+    "webapp-testing": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/webapp-testing/SKILL.md",
+      "computedHash": "3f14af7f5690695209c22fbf8c8d133769a86d64892602c09bb13f135e14e857"
+    }
+  }
+}

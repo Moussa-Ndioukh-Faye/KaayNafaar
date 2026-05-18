@@ -1,10 +1,23 @@
-/**
- * Page Profil — Paramètres utilisateur et تغيير mot de passe
- */
-
 import React, { useState } from "react";
+import { 
+  User, 
+  Settings, 
+  Mail, 
+  Lock, 
+  ShieldAlert, 
+  LogOut, 
+  CheckCircle2, 
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Trash2,
+  ChevronRight
+} from "lucide-react";
 import { useAuth } from "../App";
 import { authAPI } from "../services/api";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { cn } from "../lib/utils";
 
 export default function Profil() {
   const { utilisateur, connecter, deconnecter } = useAuth();
@@ -19,7 +32,7 @@ export default function Profil() {
   });
   const [envoi, setEnvoi] = useState(false);
   const [message, setMessage] = useState({ type: "", texte: "" });
-  const [afficherMDP, setAfficherMDP] = useState(false);
+  const [voirMDP, setVoirMDP] = useState(false);
 
   const mettreAJourProfil = async (e) => {
     e.preventDefault();
@@ -28,11 +41,12 @@ export default function Profil() {
       return;
     }
     setEnvoi(true);
+    setMessage({ type: "", texte: "" });
     try {
       const { data } = await authAPI.updateProfil({ nom: form.nom.trim(), email: form.email.trim() });
       if (data.success) {
         connecter(null, data.utilisateur);
-        setMessage({ type: "success", texte: "Profil mis à jour." });
+        setMessage({ type: "success", texte: "Profil mis à jour avec succès !" });
       }
     } catch (_) {
       setMessage({ type: "error", texte: "Erreur lors de la mise à jour." });
@@ -52,6 +66,7 @@ export default function Profil() {
       return;
     }
     setEnvoi(true);
+    setMessage({ type: "", texte: "" });
     try {
       const { data } = await authAPI.changerMotDePasse({
         motDePasseActuel: motDePasse.actuel,
@@ -59,7 +74,7 @@ export default function Profil() {
       });
       if (data.success) {
         setMotDePasse({ actuel: "", nouveau: "", confirmation: "" });
-        setMessage({ type: "success", texte: "Mot de passe changé." });
+        setMessage({ type: "success", texte: "Ton mot de passe a été modifié." });
       }
     } catch (_) {
       setMessage({ type: "error", texte: "Mot de passe actuel incorrect." });
@@ -69,110 +84,187 @@ export default function Profil() {
   };
 
   const supprimerCompte = async () => {
-    const motDePasse = window.prompt("Entrez votre mot de passe pour confirmer :");
-    if (!motDePasse) return;
-    if (!window.confirm("Êtes-vous sûr ? Cette action est irréversible.")) return;
+    const mdp = window.prompt("Pour confirmer la suppression, entre ton mot de passe actuel :");
+    if (!mdp) return;
+    if (!window.confirm("Attention : cette action supprimera définitivement tes cours, fiches et progression. Continuer ?")) return;
     try {
-      await authAPI.supprimerCompte({ motDePasse });
+      await authAPI.supprimerCompte({ motDePasse: mdp });
       deconnecter();
       window.location.href = "/";
-    } catch (_) {
-      setMessage({ type: "error", texte: "Erreur lors de la suppression." });
+    } catch (err) {
+      setMessage({ type: "error", texte: err.response?.data?.message || "Erreur lors de la suppression." });
     }
   };
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h2 className="text-xl font-bold text-gray-900">⚙️ Mon Profil</h2>
+    <div className="space-y-8 max-w-3xl mx-auto pb-20">
+      {/* Header Profile */}
+      <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl shadow-gray-100 dark:shadow-none border-none">
+         <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white shadow-lg">
+            <User className="w-12 h-12" />
+         </div>
+         <div className="flex-1 text-center md:text-left">
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white">{utilisateur?.nom}</h2>
+            <p className="text-gray-500 dark:text-gray-400 font-medium flex items-center justify-center md:justify-start gap-2 mt-1">
+               <Mail className="w-4 h-4" />
+               {utilisateur?.email}
+            </p>
+         </div>
+         <Button variant="outline" onClick={deconnecter} className="rounded-xl font-bold border-2 text-red-500 border-red-50 hover:bg-red-50 dark:border-red-900/20 dark:hover:bg-red-900/30">
+            <LogOut className="w-4 h-4 mr-2" />
+            Déconnexion
+         </Button>
+      </div>
 
       {message.texte && (
-        <div className={`px-4 py-3 rounded-lg text-sm ${
-          message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
-        }`}>
+        <div className={cn(
+          "px-6 py-4 rounded-2xl text-sm font-bold flex items-center gap-3 animate-fade-in border-2",
+          message.type === "success" 
+            ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" 
+            : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border-red-100 dark:border-red-900/30"
+        )}>
+          {message.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
           {message.texte}
         </div>
       )}
 
-      {/* Informations personnelles */}
-      <div className="card">
-        <h3 className="font-semibold text-gray-900 mb-4">Informations personnelles</h3>
-        <form onSubmit={mettreAJourProfil} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-            <input
-              type="text"
-              className="input-field"
-              value={form.nom}
-              onChange={(e) => setForm({ ...form, nom: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              className="input-field"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              required
-            />
-          </div>
-          <button type="submit" disabled={envoi} className="btn-primary">
-            {envoi ? "Mise à jour..." : "Enregistrer"}
-          </button>
-        </form>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+         {/* Informations personnelles */}
+         <Card className="rounded-[2rem] shadow-lg border-none overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800">
+            <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-6 border-b border-gray-100 dark:border-gray-700">
+               <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                     <Settings className="w-4 h-4" />
+                  </div>
+                  <CardTitle className="text-lg">Paramètres du profil</CardTitle>
+               </div>
+            </CardHeader>
+            <form onSubmit={mettreAJourProfil} className="flex-1 flex flex-col">
+               <CardContent className="p-6 space-y-4 flex-1">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Nom complet</label>
+                    <div className="relative">
+                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                       <input
+                         type="text"
+                         className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                         value={form.nom}
+                         onChange={(e) => setForm({ ...form, nom: e.target.value })}
+                         required
+                       />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Adresse email</label>
+                    <div className="relative">
+                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                       <input
+                         type="email"
+                         className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                         value={form.email}
+                         onChange={(e) => setForm({ ...form, email: e.target.value })}
+                         required
+                       />
+                    </div>
+                  </div>
+               </CardContent>
+               <CardFooter className="p-6 pt-0">
+                  <Button type="submit" disabled={envoi} className="w-full rounded-xl font-bold h-11">
+                    {envoi ? "Mise à jour..." : "Enregistrer les modifications"}
+                  </Button>
+               </CardFooter>
+            </form>
+         </Card>
+
+         {/* Mot de passe */}
+         <Card className="rounded-[2rem] shadow-lg border-none overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800">
+            <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-6 border-b border-gray-100 dark:border-gray-700">
+               <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
+                     <Lock className="w-4 h-4" />
+                  </div>
+                  <CardTitle className="text-lg">Sécurité</CardTitle>
+               </div>
+            </CardHeader>
+            <form onSubmit={changerMotDePasse} className="flex-1 flex flex-col">
+               <CardContent className="p-6 space-y-4 flex-1">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Mot de passe actuel</label>
+                    <input
+                      type={voirMDP ? "text" : "password"}
+                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                      value={motDePasse.actuel}
+                      onChange={(e) => setMotDePasse({ ...motDePasse, actuel: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Nouveau mot de passe</label>
+                    <div className="relative">
+                       <input
+                         type={voirMDP ? "text" : "password"}
+                         className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                         value={motDePasse.nouveau}
+                         onChange={(e) => setMotDePasse({ ...motDePasse, nouveau: e.target.value })}
+                         required
+                         minLength={8}
+                       />
+                       <button 
+                         type="button" 
+                         onClick={() => setVoirMDP(!voirMDP)}
+                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                       >
+                          {voirMDP ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                       </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Confirmation</label>
+                    <input
+                      type={voirMDP ? "text" : "password"}
+                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                      value={motDePasse.confirmation}
+                      onChange={(e) => setMotDePasse({ ...motDePasse, confirmation: e.target.value })}
+                      required
+                    />
+                  </div>
+               </CardContent>
+               <CardFooter className="p-6 pt-0">
+                  <Button type="submit" disabled={envoi} variant="secondary" className="w-full rounded-xl font-bold h-11">
+                    {envoi ? "Changement..." : "Mettre à jour le secret"}
+                  </Button>
+               </CardFooter>
+            </form>
+         </Card>
       </div>
 
-      {/* Changer mot de passe */}
-      <div className="card">
-        <h3 className="font-semibold text-gray-900 mb-4">Changer mon mot de passe</h3>
-        <form onSubmit={changerMotDePasse} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-            <input
-              type="password"
-              className="input-field"
-              value={motDePasse.actuel}
-              onChange={(e) => setMotDePasse({ ...motDePasse, actuel: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
-            <input
-              type="password"
-              className="input-field"
-              value={motDePasse.nouveau}
-              onChange={(e) => setMotDePasse({ ...motDePasse, nouveau: e.target.value })}
-              required
-              minLength={8}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
-            <input
-              type="password"
-              className="input-field"
-              value={motDePasse.confirmation}
-              onChange={(e) => setMotDePasse({ ...motDePasse, confirmation: e.target.value })}
-              required
-            />
-          </div>
-          <button type="submit" disabled={envoi} className="btn-primary">
-            {envoi ? "Changement..." : "Changer le mot de passe"}
-          </button>
-        </form>
-      </div>
+      {/* Danger Zone */}
+      <Card className="rounded-[2.5rem] border-2 border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10 overflow-hidden">
+         <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8">
+            <div className="w-20 h-20 rounded-[2rem] bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0 text-red-600">
+               <ShieldAlert className="w-10 h-10" />
+            </div>
+            <div className="flex-1 text-center md:text-left">
+               <h3 className="text-2xl font-black text-red-900 dark:text-red-400">Zone de danger</h3>
+               <p className="text-red-700 dark:text-red-500/70 mt-2 font-medium">
+                  La suppression de ton compte est irréversible. Toutes tes fiches, quiz et ta progression seront supprimés de nos serveurs sans possibilité de récupération.
+               </p>
+            </div>
+            <Button 
+               onClick={supprimerCompte} 
+               className="rounded-2xl h-14 px-8 font-black bg-red-600 hover:bg-red-700 shadow-xl shadow-red-200 dark:shadow-none transition-transform active:scale-95"
+            >
+               <Trash2 className="w-5 h-5 mr-2" />
+               Supprimer le compte
+            </Button>
+         </CardContent>
+      </Card>
 
-      {/* Supprimer compte */}
-      <div className="card border-red-200">
-        <h3 className="font-semibold text-red-700 mb-4">Zone dangereuse</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          La suppression de votre compte est irréversible. Toutes vos données seront perdues.
-        </p>
-        <button onClick={supprimerCompte} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
-          Supprimer mon compte
-        </button>
+      {/* Version Info */}
+      <div className="text-center pt-10">
+         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 dark:text-gray-700">
+             Kaay Nafaar — Version 2.0.0
+         </p>
       </div>
     </div>
   );

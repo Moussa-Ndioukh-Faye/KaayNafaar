@@ -1,20 +1,31 @@
-/**
- * Sidebar — Navigation latérale
- * Responsive : drawer sur mobile, fixe sur desktop
- */
-
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  BookOpen, 
+  FileText, 
+  BrainCircuit, 
+  Calendar, 
+  MessageSquare, 
+  Settings,
+  LogOut,
+  ChevronRight,
+  Sparkles,
+  Globe
+} from "lucide-react";
 import { useAuth } from "../App";
+import { cn } from "../lib/utils";
+import { Button } from "./ui/button";
 
 const navigation = [
-  { nom: "Tableau de bord", href: "/", emoji: "🏠" },
-  { nom: "Mes Cours", href: "/mes-cours", emoji: "📚" },
-  { nom: "Fiches de révision", href: "/fiches", emoji: "📋" },
-  { nom: "Quiz", href: "/quiz", emoji: "🧠" },
-  { nom: "Planning", href: "/planning", emoji: "📅" },
-  { nom: "Assistant IA", href: "/assistant", emoji: "🤖" },
-  { nom: "Mon Profil", href: "/profil", emoji: "⚙️" },
+  { nom: "Tableau de bord", href: "/", icon: LayoutDashboard },
+  { nom: "Mes Cours", href: "/mes-cours", icon: BookOpen },
+  { nom: "Fiches de révision", href: "/fiches", icon: FileText },
+  { nom: "Bibliothèque", href: "/bibliotheque", icon: Globe },
+  { nom: "Quiz", href: "/quiz", icon: BrainCircuit },
+  { nom: "Planning", href: "/planning", icon: Calendar },
+  { nom: "Assistant IA", href: "/assistant", icon: MessageSquare },
+  { nom: "Mon Profil", href: "/profil", icon: Settings },
 ];
 
 export default function Sidebar({ ouverte, fermer }) {
@@ -27,82 +38,89 @@ export default function Sidebar({ ouverte, fermer }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
-        <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-          R
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 transition-colors">
+      <div className="flex items-center gap-3 px-8 py-8">
+        <div className="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-200 dark:shadow-none">
+          <Sparkles className="w-6 h-6 fill-current" />
         </div>
         <div>
-          <p className="font-bold text-gray-900 text-sm">RévisionIA</p>
-          <p className="text-xs text-gray-500">Apprends mieux, plus vite</p>
+          <p className="font-black text-gray-900 dark:text-white text-xl tracking-tight leading-none">Kaay Nafaar</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary-600 mt-1">Études 2.0</p>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navigation.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            end={item.href === "/"}
-            onClick={fermer}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isActive
-                  ? "bg-primary-50 text-primary-700 border border-primary-200"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              }`
-            }
-          >
-            <span className="text-lg">{item.emoji}</span>
-            {item.nom}
-          </NavLink>
-        ))}
+      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-none">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.href}
+              to={item.href}
+              end={item.href === "/"}
+              onClick={fermer}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all group relative",
+                  isActive
+                    ? "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon className={cn("w-5 h-5 transition-colors", isActive ? "text-primary-600" : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300")} />
+                  <span className="flex-1">{item.nom}</span>
+                  {isActive && <ChevronRight className="w-4 h-4" />}
+                </>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
-      {/* Profil utilisateur */}
-      <div className="border-t border-gray-200 p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-semibold text-sm">
-            {utilisateur?.nom?.charAt(0)?.toUpperCase() || "?"}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {utilisateur?.nom || "Étudiant"}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {utilisateur?.email || ""}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={handleDeconnexion}
-          className="w-full text-left text-sm text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
-        >
-          🚪 Déconnexion
-        </button>
+      <div className="p-6 mt-auto">
+         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-5 border border-gray-100 dark:border-gray-800">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-white dark:bg-gray-700 rounded-xl flex items-center justify-center text-primary-600 font-black shadow-sm">
+                {utilisateur?.nom?.charAt(0)?.toUpperCase() || "?"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-gray-900 dark:text-white truncate">
+                  {utilisateur?.nom || "Étudiant"}
+                </p>
+                <p className="text-[10px] font-bold text-gray-400 truncate">
+                  {utilisateur?.email || ""}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={handleDeconnexion}
+              variant="ghost"
+              aria-label="Se déconnecter"
+              className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-bold px-3"
+            >
+              <LogOut className="w-4 h-4" />
+              Déconnexion
+            </Button>
+         </div>
       </div>
     </div>
   );
 
   return (
     <>
-      {/* Desktop : sidebar fixe */}
-      <div className="hidden md:flex md:w-64 md:flex-shrink-0">
+      <div className="hidden md:flex md:w-72 md:flex-shrink-0 sticky top-0 h-screen">
         <SidebarContent />
       </div>
 
-      {/* Mobile : overlay + drawer */}
       {ouverte && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          {/* Overlay semi-transparent */}
+        <div className="fixed inset-0 z-50 md:hidden animate-fade-in">
           <div
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={fermer}
           />
-          {/* Drawer */}
-          <div className="absolute left-0 top-0 h-full w-64 shadow-xl">
+          <div className="absolute left-0 top-0 h-full w-72 shadow-2xl animate-slide-right">
             <SidebarContent />
           </div>
         </div>

@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../config/dbMysql");
+const { sequelize } = require("../config/database");
 
 const Quiz = sequelize.define(
   "Quiz",
@@ -30,7 +30,7 @@ const Quiz = sequelize.define(
       },
     },
     questions: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
     matiere: {
@@ -46,10 +46,14 @@ const Quiz = sequelize.define(
       defaultValue: 10,
     },
     sessions: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
     genereeParIA: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    estPublique: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },

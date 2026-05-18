@@ -1,12 +1,33 @@
-/**
- * Page Fiches — Fiches de révision + Flashcards + Génération IA
- * + Vue détail HTML + Téléchargement HTML / impression PDF
- */
-
 import React, { useState, useEffect, useRef } from "react";
+import { 
+  FileText, 
+  Sparkles, 
+  Trash2, 
+  Download, 
+  Printer, 
+  BrainCircuit, 
+  ArrowLeft, 
+  ArrowRight, 
+  RotateCcw,
+  CheckCircle2,
+  BookOpen,
+  Star,
+  Key,
+  MessageSquare,
+  ChevronRight,
+  Clock,
+  Globe,
+  Lock as LockIcon,
+  Copy,
+  AlertCircle
+} from "lucide-react";
 import { fichesAPI, coursAPI, iaAPI } from "../services/api";
+import { exporterFichePro } from "../utils/pdfPro";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { cn } from "../lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 
-// ── Échappement HTML pour éviter le XSS dans le HTML généré ─────────────────
 const escHtml = (str) =>
   String(str ?? "")
     .replace(/&/g, "&amp;")
@@ -15,7 +36,6 @@ const escHtml = (str) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 
-// ── Génération du HTML complet de la fiche ────────────────────────────────────
 const genererHTMLFiche = (fiche) => {
   const dateStr = new Date(fiche.createdAt).toLocaleDateString("fr-FR", {
     day: "numeric", month: "long", year: "numeric",
@@ -62,8 +82,8 @@ const genererHTMLFiche = (fiche) => {
     .concept-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin-bottom: 0.8rem; }
     .concept-card h4 { color: #4f46e5; margin-bottom: 0.4rem; font-size: 0.95rem; font-weight: 600; }
     .flashcard { border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 0.8rem; overflow: hidden; }
-    .flashcard .question { background: #eef2ff; padding: 0.8rem 1rem; font-weight: 500; color: #1e1b4b; }
-    .flashcard .reponse { background: #f0fdf4; padding: 0.8rem 1rem; color: #14532d; }
+    .flashcard .question { background: #eef2ff; padding: 0.8rem 1rem; font-weight: 500; color: #1e1b4b; display: flex; align-items: center; gap: 0.5rem; }
+    .flashcard .reponse { background: #f0fdf4; padding: 0.8rem 1rem; color: #14532d; display: flex; align-items: center; gap: 0.5rem; }
     footer { text-align: center; color: #9ca3af; font-size: 0.8rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; }
     @media print {
       body { background: white; padding: 1rem; }
@@ -86,12 +106,11 @@ const genererHTMLFiche = (fiche) => {
   ${explications ? `<section><h2>📖 Explications détaillées</h2>${explications}</section>` : ""}
   ${flashcards ? `<section><h2>🃏 Flashcards (${fiche.flashcards.length})</h2>${flashcards}</section>` : ""}
 
-  <footer>Fiche de révision · RévisionIA · ${new Date().getFullYear()}</footer>
+  <footer>Fiche de révision · Kaay Nafaar · ${new Date().getFullYear()}</footer>
 </body>
 </html>`;
 };
 
-// ── Téléchargement HTML (côté client, aucune dépendance) ──────────────────────
 const telechargerHTML = (fiche) => {
   const html = genererHTMLFiche(fiche);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
@@ -103,7 +122,6 @@ const telechargerHTML = (fiche) => {
   URL.revokeObjectURL(url);
 };
 
-// ── Impression / PDF via fenêtre de navigation ────────────────────────────────
 const imprimerFiche = (fiche) => {
   const html = genererHTMLFiche(fiche);
   const fenetre = window.open("", "_blank", "width=960,height=750");
@@ -114,13 +132,11 @@ const imprimerFiche = (fiche) => {
   setTimeout(() => fenetre.print(), 400);
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-
 export default function Fiches() {
   const [fiches, setFiches] = useState([]);
   const [cours, setCours] = useState([]);
   const [chargement, setChargement] = useState(true);
-  const [vue, setVue] = useState("liste"); // "liste" | "detail" | "generer" | "flashcards"
+  const [vue, setVue] = useState("liste");
   const [ficheSelectionnee, setFicheSelectionnee] = useState(null);
   const [generation, setGeneration] = useState({ coursId: "", contenu: "", titre: "" });
   const [enGeneration, setEnGeneration] = useState(false);
@@ -151,8 +167,8 @@ export default function Fiches() {
 
   const handleCoursChange = (e) => {
     const coursId = e.target.value;
-    const c = cours.find((x) => x._id === coursId);
-    setGeneration({ coursId, contenu: c?.contenu || "", titre: c?.titre || "" });
+    const c = cours.find((x) => x.id === coursId);
+    setGeneration({ coursId, contenu: c?.contenu || "", titre: c?.titre ? `Fiche - ${c.titre}` : "" });
   };
 
   const lancerGeneration = () => {
@@ -178,8 +194,8 @@ export default function Fiches() {
     if (!window.confirm("Supprimer cette fiche ?")) return;
     try {
       await fichesAPI.supprimerFiche(id);
-      setFiches((prev) => prev.filter((f) => f._id !== id));
-      if (ficheSelectionnee?._id === id) setVue("liste");
+      setFiches((prev) => prev.filter((f) => f.id !== id));
+      if (ficheSelectionnee?.id === id) setVue("liste");
     } catch (_) {
       setErreur("Impossible de supprimer la fiche.");
     }
@@ -193,63 +209,127 @@ export default function Fiches() {
     setVue("flashcards");
   };
 
-  // ── Vue Flashcards ──────────────────────────────────────────────────────────
+  const basculerVisibilite = async (fiche) => {
+    try {
+      const nouvelleValeur = !fiche.estPublique;
+      await fichesAPI.modifierFiche(fiche.id, { estPublique: nouvelleValeur });
+      setFicheSelectionnee({ ...fiche, estPublique: nouvelleValeur });
+      setFiches(prev => prev.map(f => f.id === fiche.id ? { ...f, estPublique: nouvelleValeur } : f));
+      
+      if (nouvelleValeur) {
+        const url = `${window.location.origin}/partage/fiche/${fiche.id}`;
+        await navigator.clipboard.writeText(url);
+        alert("Fiche rendue publique ! Le lien de partage a été copié dans ton presse-papiers.");
+      }
+    } catch (_) {
+      setErreur("Erreur lors de la modification de la visibilité.");
+    }
+  };
+
   if (vue === "flashcards" && ficheSelectionnee) {
     const flashcards = ficheSelectionnee.flashcards || [];
     const card = flashcards[indexFlashcard];
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-8 pb-10">
         <div className="flex items-center gap-4">
-          <button onClick={() => setVue("detail")} className="btn-secondary text-sm">← Retour</button>
-          <h2 className="font-bold text-gray-900">🃏 Flashcards — {ficheSelectionnee.titre}</h2>
+          <Button variant="ghost" onClick={() => setVue("detail")} className="rounded-xl font-bold">
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Retour
+          </Button>
+          <div className="flex-1">
+             <h2 className="text-xl font-extrabold text-gray-900 dark:text-white truncate">
+               Flashcards : {ficheSelectionnee.titre}
+             </h2>
+             <div className="flex items-center gap-2 mt-0.5">
+                <div className="h-1.5 flex-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                   <div 
+                      className="h-full bg-primary-600 transition-all duration-300" 
+                      style={{ width: `${((indexFlashcard + 1) / flashcards.length) * 100}%` }}
+                   />
+                </div>
+                <span className="text-xs font-bold text-gray-400">{indexFlashcard + 1} / {flashcards.length}</span>
+             </div>
+          </div>
         </div>
 
         {flashcards.length === 0 ? (
-          <div className="card text-center py-10 text-gray-500">Aucune flashcard dans cette fiche.</div>
+          <Card className="text-center py-20 border-dashed">
+            <CardContent>
+              <BrainCircuit className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500 font-medium">Aucune flashcard dans cette fiche.</p>
+            </CardContent>
+          </Card>
         ) : (
-          <>
-            <div className="text-sm text-gray-500 text-center">{indexFlashcard + 1} / {flashcards.length}</div>
+          <div className="perspective-1000">
             <div
-              className="card min-h-48 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-lg transition-shadow"
+              className={cn(
+                "relative h-80 w-full transition-all duration-500 transform-style-3d cursor-pointer group",
+                reponseMontree ? "rotate-y-180" : ""
+              )}
               onClick={() => setReponseMontree(!reponseMontree)}
             >
-              {reponseMontree ? (
-                <div className="space-y-3">
-                  <p className="text-xs uppercase tracking-wider text-primary-600 font-semibold">Réponse</p>
-                  <p className="text-lg font-medium text-gray-900">{card.reponse}</p>
-                  <p className="text-xs text-gray-400 mt-4">(Clique pour voir la question)</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">Question</p>
-                  <p className="text-xl font-semibold text-gray-900">{card.question}</p>
-                  <p className="text-xs text-gray-400 mt-4">(Clique pour voir la réponse)</p>
-                </div>
-              )}
+              {/* Front side */}
+              <Card className={cn(
+                "absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-gray-800 backface-hidden shadow-xl rounded-[2rem] border-2",
+                reponseMontree ? "pointer-events-none opacity-0" : "opacity-100"
+              )}>
+                 <span className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-widest text-primary-600/50 bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded-lg">Question</span>
+                 <p className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{card.question}</p>
+                 <div className="mt-10 text-gray-400 group-hover:text-primary-500 transition-colors flex items-center gap-2">
+                    <RotateCcw className="w-4 h-4 animate-spin-slow" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Clique pour voir la réponse</span>
+                 </div>
+              </Card>
+
+              {/* Back side */}
+              <Card className={cn(
+                "absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-emerald-50 dark:bg-emerald-900/10 backface-hidden shadow-xl rounded-[2rem] border-2 border-emerald-100 dark:border-emerald-900/30 transform rotate-y-180",
+                reponseMontree ? "opacity-100" : "pointer-events-none opacity-0"
+              )}>
+                 <span className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-widest text-emerald-600/50 bg-emerald-100/50 dark:bg-emerald-900/30 px-3 py-1 rounded-lg">Réponse</span>
+                 <p className="text-xl font-bold text-emerald-900 dark:text-emerald-100 leading-relaxed">{card.reponse}</p>
+                 <div className="mt-10 text-emerald-600/60 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Bien compris !</span>
+                 </div>
+              </Card>
             </div>
 
-            <div className="flex gap-3 justify-center">
-              <button disabled={indexFlashcard === 0}
-                onClick={() => { setIndexFlashcard((i) => i - 1); setReponseMontree(false); }}
-                className="btn-secondary disabled:opacity-30">← Précédente</button>
+            <div className="flex gap-4 justify-center mt-12">
+              <Button 
+                variant="outline"
+                disabled={indexFlashcard === 0}
+                onClick={(e) => { e.stopPropagation(); setIndexFlashcard((i) => i - 1); setReponseMontree(false); }}
+                className="rounded-xl h-12 px-6 font-bold"
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Précédente
+              </Button>
               {indexFlashcard < flashcards.length - 1 ? (
-                <button onClick={() => { setIndexFlashcard((i) => i + 1); setReponseMontree(false); }} className="btn-primary">
-                  Suivante →
-                </button>
+                <Button 
+                  onClick={(e) => { e.stopPropagation(); setIndexFlashcard((i) => i + 1); setReponseMontree(false); }} 
+                  className="rounded-xl h-12 px-8 font-bold shadow-lg shadow-primary-200 dark:shadow-none"
+                >
+                  Suivante
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
               ) : (
-                <button onClick={() => { setIndexFlashcard(0); setReponseMontree(false); }} className="btn-primary">
-                  🔄 Recommencer
-                </button>
+                <Button 
+                  onClick={(e) => { e.stopPropagation(); setIndexFlashcard(0); setReponseMontree(false); }} 
+                  className="rounded-xl h-12 px-8 font-bold bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <RotateCcw className="w-5 h-5 mr-2" />
+                  Recommencer
+                </Button>
               )}
             </div>
-          </>
+          </div>
         )}
       </div>
     );
   }
 
-  // ── Vue Détail (HTML rendu) ─────────────────────────────────────────────────
   if (vue === "detail" && ficheSelectionnee) {
     const fiche = ficheSelectionnee;
     const conceptsCles = fiche.contenu?.conceptsCles || [];
@@ -257,247 +337,393 @@ export default function Fiches() {
     const explications = fiche.contenu?.explications || {};
 
     return (
-      <div className="max-w-3xl space-y-6">
-        {/* En-tête actions */}
+      <div className="max-w-4xl mx-auto space-y-8 pb-10">
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setVue("liste")} className="btn-secondary text-sm">← Retour</button>
-            <h2 className="font-bold text-gray-900">{fiche.titre}</h2>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => setVue("liste")} className="rounded-xl font-bold">
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Toutes les fiches
+            </Button>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <button onClick={() => telechargerHTML(fiche)} className="btn-secondary text-sm" title="Télécharger en HTML">
-              ⬇️ HTML
-            </button>
-            <button onClick={() => imprimerFiche(fiche)} className="btn-secondary text-sm" title="Enregistrer en PDF">
-              🖨️ PDF
-            </button>
+            <Button 
+               variant="outline" 
+               size="sm" 
+               onClick={() => basculerVisibilite(fiche)} 
+               className={cn("rounded-xl font-bold transition-all", fiche.estPublique ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "")}
+            >
+              {fiche.estPublique ? <Globe className="w-4 h-4 mr-2" /> : <LockIcon className="w-4 h-4 mr-2" />}
+              {fiche.estPublique ? "Partagée" : "Partager"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exporterFichePro(fiche)} className="rounded-xl font-bold">
+              <Download className="w-4 h-4 mr-2" />
+              PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => imprimerFiche(fiche)} className="rounded-xl font-bold">
+              <Printer className="w-4 h-4 mr-2" />
+              Imprimer
+            </Button>
             {fiche.flashcards?.length > 0 && (
-              <button onClick={() => ouvrirFlashcards(fiche)} className="btn-primary text-sm">🃏 Réviser</button>
+              <Button size="sm" onClick={() => ouvrirFlashcards(fiche)} className="rounded-xl font-bold bg-primary-600">
+                <BrainCircuit className="w-4 h-4 mr-2" />
+                Réviser
+              </Button>
             )}
-            <button onClick={() => supprimerFiche(fiche._id)} className="text-red-500 hover:text-red-700 text-sm px-2" title="Supprimer">
-              🗑️
-            </button>
+            <Button variant="ghost" size="sm" onClick={() => supprimerFiche(fiche.id)} className="rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+              <Trash2 className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 
-        {fiche.genereeParIA && <span className="badge bg-purple-100 text-purple-700 inline-block">✨ Générée par IA</span>}
-
-        {/* Résumé */}
-        {fiche.contenu?.resume && (
-          <div className="card border-l-4 border-primary-500">
-            <h3 className="font-semibold text-primary-700 mb-2">📝 Résumé</h3>
-            <p className="text-gray-700 leading-relaxed">{fiche.contenu.resume}</p>
-          </div>
-        )}
-
-        {/* Concepts clés */}
-        {conceptsCles.length > 0 && (
-          <div className="card">
-            <h3 className="font-semibold text-gray-900 mb-3">🔑 Concepts clés</h3>
-            <div className="flex flex-wrap gap-2">
-              {conceptsCles.map((c, i) => (
-                <span key={i} className="badge bg-primary-100 text-primary-700 text-sm px-3 py-1">{c}</span>
-              ))}
+        {/* Fiche Content Card */}
+        <Card className="rounded-[2rem] border-none shadow-xl shadow-gray-100 dark:shadow-none overflow-hidden bg-white dark:bg-gray-800">
+          <div className="h-3 bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-500" />
+          <CardHeader className="p-8 pb-4">
+            <div className="flex items-center gap-3 mb-4">
+               {fiche.genereeParIA && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-purple-100 dark:border-purple-900/50">
+                     <Sparkles className="w-3 h-3" />
+                     Générée par IA
+                  </div>
+               )}
+               {fiche.cours && (
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-blue-100 dark:border-blue-900/50">
+                     <BookOpen className="w-3 h-3" />
+                     {fiche.cours.titre}
+                  </div>
+               )}
             </div>
-          </div>
-        )}
+            <CardTitle className="text-3xl font-black text-gray-900 dark:text-white leading-tight">
+               {fiche.titre}
+            </CardTitle>
+          </CardHeader>
+          
+          <CardContent className="p-8 pt-4 space-y-10">
+            {fiche.contenu?.resume && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-orange-600" />
+                  </div>
+                  Résumé synthétique
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-base italic border-l-4 border-orange-200 dark:border-orange-900 pl-6">
+                  {fiche.contenu.resume}
+                </p>
+              </div>
+            )}
 
-        {/* Points importants */}
-        {pointsImportants.length > 0 && (
-          <div className="card">
-            <h3 className="font-semibold text-gray-900 mb-3">⭐ Points importants</h3>
-            <ul className="space-y-2">
-              {pointsImportants.map((p, i) => (
-                <li key={i} className="flex gap-2 text-gray-700">
-                  <span className="text-primary-500 flex-shrink-0 mt-1">•</span>
-                  <span className="leading-relaxed">{p}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Explications détaillées */}
-        {Object.keys(explications).length > 0 && (
-          <div className="card">
-            <h3 className="font-semibold text-gray-900 mb-3">📖 Explications détaillées</h3>
-            <div className="space-y-3">
-              {Object.entries(explications).map(([nom, expl], i) => (
-                <div key={i} className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-primary-700 mb-1">{nom}</h4>
-                  <p className="text-gray-600 text-sm leading-relaxed">{expl}</p>
+            {conceptsCles.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                    <Key className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  Concepts fondamentaux
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {conceptsCles.map((c, i) => (
+                    <span key={`concept-${i}`} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold border border-gray-100 dark:border-gray-700">
+                      {c}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Flashcards aperçu + révision */}
-        {fiche.flashcards?.length > 0 && (
-          <div className="card">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-gray-900">🃏 Flashcards ({fiche.flashcards.length})</h3>
-              <button onClick={() => ouvrirFlashcards(fiche)} className="text-primary-600 text-sm font-medium hover:underline">
-                Réviser →
-              </button>
-            </div>
-            <div className="space-y-2 max-h-72 overflow-y-auto">
-              {fiche.flashcards.map((fc, i) => (
-                <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="bg-primary-50 px-3 py-2 text-sm font-medium text-primary-900">❓ {fc.question}</div>
-                  <div className="bg-green-50 px-3 py-2 text-sm text-green-800">✅ {fc.reponse}</div>
+            {pointsImportants.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Star className="w-4 h-4 text-blue-600" />
+                  </div>
+                  Points à retenir
+                </h3>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {pointsImportants.map((p, i) => (
+                    <li key={`point-${i}`} className="flex gap-3 p-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+                      <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[10px] text-blue-600">
+                         {i + 1}
+                      </div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {Object.keys(explications).length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-purple-600" />
+                  </div>
+                  Explications détaillées
+                </h3>
+                <div className="grid gap-4">
+                  {Object.entries(explications).map(([nom, expl], i) => (
+                    <div key={`expl-${i}-${nom}`} className="group p-6 bg-white dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-700 rounded-3xl hover:border-primary-100 dark:hover:border-primary-900/30 transition-all">
+                      <h4 className="font-black text-primary-600 dark:text-primary-400 mb-2 uppercase text-xs tracking-widest">{nom}</h4>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{expl}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
+            )}
 
-        {/* Téléchargement bas de page */}
-        <div className="card bg-gray-50 flex gap-3 flex-wrap items-center">
-          <p className="text-sm text-gray-600 flex-1">Exporter cette fiche :</p>
-          <button onClick={() => telechargerHTML(fiche)} className="btn-secondary text-sm">⬇️ Télécharger HTML</button>
-          <button onClick={() => imprimerFiche(fiche)} className="btn-primary text-sm">🖨️ Imprimer / PDF</button>
-        </div>
+            {fiche.flashcards?.length > 0 && (
+              <div className="pt-8 border-t border-gray-100 dark:border-gray-700 flex flex-col items-center text-center">
+                <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-4">
+                   <BrainCircuit className="w-8 h-8 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">Prêt pour une session flash ?</h3>
+                <p className="text-sm text-gray-500 mb-6">Tu as {fiche.flashcards.length} flashcards générées pour cette fiche.</p>
+                <Button onClick={() => ouvrirFlashcards(fiche)} size="lg" className="rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 h-12 px-10">
+                   Démarrer les flashcards
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // ── Vue Génération IA ───────────────────────────────────────────────────────
   if (vue === "generer") {
     return (
-      <div className="max-w-3xl space-y-6">
+      <div className="max-w-4xl mx-auto space-y-8 pb-10">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => { setVue("liste"); setTexteStream(""); setEnGeneration(false); controllerRef.current?.abort?.(); }}
-            className="btn-secondary text-sm"
+          <Button 
+             variant="ghost" 
+             onClick={() => { setVue("liste"); setTexteStream(""); setEnGeneration(false); controllerRef.current?.abort?.(); }}
+             className="rounded-xl font-bold"
           >
-            ← Retour
-          </button>
-          <h2 className="font-bold text-gray-900">✨ Générer une fiche avec l'IA</h2>
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Retour
+          </Button>
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+             <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-purple-600" />
+             </div>
+             Générer une fiche IA
+          </h2>
         </div>
 
         {erreur && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">{erreur}</div>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 text-red-700 dark:text-red-400 px-4 py-3 rounded-2xl text-sm flex items-center gap-2 animate-fade-in" role="alert">
+             <AlertCircle className="w-4 h-4" />
+             {erreur}
+          </div>
         )}
 
-        <div className="card space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Choisir un cours existant (optionnel)</label>
-            <select className="input-field" onChange={handleCoursChange} value={generation.coursId}>
-              <option value="">-- Sélectionner un cours --</option>
-              {cours.map((c) => <option key={c._id} value={c._id}>{c.titre} — {c.matiere}</option>)}
-            </select>
-          </div>
+        <Card className="rounded-[2rem] shadow-xl overflow-hidden">
+          <CardHeader className="p-8 pb-4">
+             <CardTitle className="text-xl">Configuration de la génération</CardTitle>
+             <CardDescription>L'IA analysera ton cours pour créer une synthèse structurée et des flashcards.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+               <div className="space-y-2">
+                 <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Cours source (optionnel)</label>
+                 <select 
+                    className="w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none" 
+                    onChange={handleCoursChange} 
+                    value={generation.coursId}
+                 >
+                   <option value="">-- Sélectionner un cours --</option>
+                   {cours.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}
+                 </select>
+               </div>
+               <div className="space-y-2">
+                 <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Titre de la fiche</label>
+                 <input 
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all" 
+                    placeholder="ex: Fiche - Algorithmes de tri" 
+                    maxLength={200}
+                    value={generation.titre}
+                    onChange={(e) => setGeneration({ ...generation, titre: e.target.value })}
+                 />
+               </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Titre de la fiche</label>
-            <input className="input-field" placeholder="ex: Fiche - Algorithmes de tri" maxLength={200}
-              value={generation.titre}
-              onChange={(e) => setGeneration({ ...generation, titre: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contenu du cours * <span className="text-gray-400 text-xs">({generation.contenu.length}/50000 caractères)</span>
-            </label>
-            <textarea
-              className="input-field h-48 resize-none" placeholder="Colle le texte de ton cours ici…"
-              value={generation.contenu} maxLength={50000}
-              onChange={(e) => setGeneration({ ...generation, contenu: e.target.value })}
-            />
-          </div>
-
-          <button
-            onClick={lancerGeneration}
-            disabled={enGeneration || !generation.contenu.trim()}
-            className="btn-primary"
-          >
-            {enGeneration ? (
-              <span className="flex items-center gap-2">
-                <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                Génération en cours…
-              </span>
-            ) : "✨ Générer la fiche avec Claude"}
-          </button>
-        </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
+                Texte du cours à analyser * <span className="text-gray-400 font-normal">({generation.contenu.length}/50 000)</span>
+              </label>
+              <textarea
+                className="w-full px-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all h-64 resize-none" 
+                placeholder="Colle ici le contenu complet de ton cours…"
+                value={generation.contenu} 
+                maxLength={50000}
+                onChange={(e) => setGeneration({ ...generation, contenu: e.target.value })}
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="p-8 pt-0 flex gap-4">
+            <Button
+              onClick={lancerGeneration}
+              disabled={enGeneration || !generation.contenu.trim()}
+              className="flex-1 h-14 rounded-2xl font-black text-lg shadow-lg shadow-primary-200 dark:shadow-none transition-transform active:scale-95"
+            >
+              {enGeneration ? (
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  Génération intelligente...
+                </div>
+              ) : (
+                <><Sparkles className="w-6 h-6 mr-2" /> Générer ma fiche</>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
 
         {texteStream && (
-          <div className="card bg-gray-50">
-            <p className="text-xs text-primary-600 font-semibold mb-2 flex items-center gap-1">
-              <span className="animate-pulse">●</span> Claude génère ta fiche…
-            </p>
-            <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono overflow-auto max-h-96">{texteStream}</pre>
-          </div>
+          <Card className="rounded-3xl bg-gray-900 border-none shadow-2xl overflow-hidden">
+             <CardHeader className="bg-gray-800/50 p-4 border-b border-gray-700">
+                <div className="flex items-center gap-2">
+                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">IA en direct</span>
+                </div>
+             </CardHeader>
+             <CardContent className="p-6">
+                <pre className="text-xs text-emerald-400/90 whitespace-pre-wrap font-mono leading-relaxed max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-800">
+                   {texteStream}
+                </pre>
+             </CardContent>
+          </Card>
         )}
       </div>
     );
   }
 
-  // ── Vue Liste ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 max-w-5xl">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-8 max-w-6xl mx-auto pb-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">📋 Mes Fiches</h2>
-          <p className="text-gray-500 text-sm">{fiches.length} fiche(s)</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
+              <FileText className="w-6 h-6 text-emerald-600" />
+            </div>
+            Mes Fiches
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">{fiches.length} fiches de révision structurées</p>
         </div>
-        <button onClick={() => setVue("generer")} className="btn-primary">✨ Générer avec IA</button>
+        <Button onClick={() => setVue("generer")} className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary-100 dark:shadow-none transition-transform active:scale-95">
+          <Sparkles className="w-5 h-5 mr-2" />
+          Générer avec IA
+        </Button>
       </div>
 
       {erreur && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">{erreur}</div>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 text-red-700 dark:text-red-400 px-4 py-3 rounded-2xl text-sm animate-fade-in" role="alert">{erreur}</div>
       )}
 
       {chargement ? (
-        <div className="flex justify-center py-10"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" /></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+             <div key={i} className="h-64 bg-gray-100 dark:bg-gray-800 rounded-3xl animate-pulse" />
+          ))}
+        </div>
       ) : fiches.length === 0 ? (
-        <div className="text-center py-16 text-gray-500">
-          <p className="text-5xl mb-4">📋</p>
-          <p className="font-medium">Aucune fiche encore.</p>
-          <button onClick={() => setVue("generer")} className="btn-primary mt-4">✨ Générer ma première fiche</button>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+            <FileText className="w-10 h-10 text-gray-300" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Aucune fiche disponible</h3>
+          <p className="text-gray-500 dark:text-gray-400 max-w-sm mt-2">Transforme tes cours en fiches de synthèse intelligentes pour réviser plus efficacement.</p>
+          <Button onClick={() => setVue("generer")} variant="outline" className="mt-6 rounded-xl font-bold">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Générer ma première fiche
+          </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {fiches.map((fiche) => (
-            <div key={fiche._id} className="card hover:shadow-md transition-shadow group flex flex-col">
-              <div style={{ borderTop: `4px solid ${fiche.couleur || "#6366f1"}` }} className="rounded-t-lg -mx-6 -mt-6 mb-4 px-6 pt-4">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-semibold text-gray-900 truncate flex-1 pr-2">{fiche.titre}</h3>
-                  <button onClick={() => supprimerFiche(fiche._id)}
-                    className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-                    aria-label="Supprimer">🗑️</button>
+            <Card key={fiche.id} className="group relative rounded-[2rem] overflow-hidden hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-2 bg-white dark:bg-gray-800">
+              <div 
+                 className="h-2 w-full" 
+                 style={{ backgroundColor: fiche.couleur || "#6366f1" }} 
+              />
+              <CardHeader className="pb-4">
+                <div className="flex justify-between items-start mb-2">
+                   <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-400 group-hover:text-primary-600 transition-colors">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      {fiche.genereeParIA && (
+                        <div className="p-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg" title="Générée par IA">
+                           <Sparkles className="w-3 h-3" />
+                        </div>
+                      )}
+                      {fiche.estPublique && (
+                        <div className="p-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-lg" title="Publique">
+                           <Globe className="w-3 h-3" />
+                        </div>
+                      )}
+                   </div>
+                   <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={(e) => { e.stopPropagation(); supprimerFiche(fiche.id); }}
+                      className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                   >
+                     <Trash2 className="w-4 h-4" />
+                   </Button>
                 </div>
-              </div>
-
-              {fiche.genereeParIA && (
-                <span className="badge bg-purple-100 text-purple-700 mb-2 inline-block text-xs">✨ IA</span>
-              )}
-
-              {fiche.contenu?.conceptsCles?.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-3">
-                  {fiche.contenu.conceptsCles.slice(0, 3).map((c, i) => (
-                    <span key={i} className="badge bg-gray-100 text-gray-600 text-xs">{c}</span>
-                  ))}
-                  {fiche.contenu.conceptsCles.length > 3 && (
-                    <span className="badge bg-gray-100 text-gray-500 text-xs">+{fiche.contenu.conceptsCles.length - 3}</span>
-                  )}
+                <CardTitle className="text-lg font-black leading-tight truncate pr-4 group-hover:text-primary-600 transition-colors">
+                   {fiche.titre}
+                </CardTitle>
+                <div className="flex items-center gap-2 mt-2">
+                   <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-gray-400">
+                      <Clock className="w-3 h-3" />
+                      {new Date(fiche.createdAt).toLocaleDateString("fr-FR")}
+                   </div>
+                   {fiche.flashcards?.length > 0 && (
+                      <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                         <BrainCircuit className="w-3 h-3" />
+                         {fiche.flashcards.length} cards
+                      </div>
+                   )}
                 </div>
-              )}
+              </CardHeader>
 
-              <p className="text-sm text-gray-600 line-clamp-2 mb-4 flex-1">
-                {fiche.contenu?.resume || "Pas de résumé."}
-              </p>
+              <CardContent>
+                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed min-h-[4.5rem]">
+                  {fiche.contenu?.resume || "Pas de résumé disponible pour cette fiche."}
+                </p>
+                {fiche.contenu?.conceptsCles?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-4">
+                    {fiche.contenu.conceptsCles.slice(0, 2).map((c, i) => (
+                      <span key={`cc-${i}`} className="text-[9px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-400 rounded-full border border-gray-100 dark:border-gray-700">
+                        {c}
+                      </span>
+                    ))}
+                    {fiche.contenu.conceptsCles.length > 2 && (
+                      <span className="text-[9px] font-bold px-2 py-0.5 text-gray-300">+{fiche.contenu.conceptsCles.length - 2}</span>
+                    )}
+                  </div>
+                )}
+              </CardContent>
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-100 gap-1">
-                <span className="text-xs text-gray-400 flex-shrink-0">🃏 {fiche.flashcards?.length || 0}</span>
-                <div className="flex gap-2 items-center">
-                  <button onClick={() => telechargerHTML(fiche)} className="text-gray-400 hover:text-gray-600 text-xs" title="Télécharger HTML">⬇️</button>
-                  <button onClick={() => imprimerFiche(fiche)} className="text-gray-400 hover:text-gray-600 text-xs" title="PDF">🖨️</button>
-                  <button onClick={() => ouvrirDetail(fiche)} className="text-primary-600 text-sm font-medium hover:underline">Voir →</button>
+              <CardFooter className="pt-2 border-t border-gray-50 dark:border-gray-700 mt-2 flex justify-between items-center group-hover:bg-gray-50/50 dark:group-hover:bg-gray-900/30 transition-colors">
+                <div className="flex gap-1">
+                   <Button variant="ghost" size="icon" onClick={() => telechargerHTML(fiche)} className="w-8 h-8 rounded-lg text-gray-400 hover:text-primary-600">
+                      <Download className="w-4 h-4" />
+                   </Button>
+                   <Button variant="ghost" size="icon" onClick={() => imprimerFiche(fiche)} className="w-8 h-8 rounded-lg text-gray-400 hover:text-primary-600">
+                      <Printer className="w-4 h-4" />
+                   </Button>
                 </div>
-              </div>
-            </div>
+                <Button 
+                   onClick={() => ouvrirDetail(fiche)} 
+                   variant="ghost" 
+                   className="text-xs font-black uppercase tracking-widest text-primary-600 hover:bg-transparent hover:translate-x-1 transition-all"
+                >
+                   Ouvrir <ChevronRight className="w-4 h-4 ml-1" />
+                </Button>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}

@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const { sequelize } = require("../config/dbMysql");
+const { sequelize } = require("../config/database");
 
 const Fiche = sequelize.define(
   "Fiche",
@@ -34,19 +34,19 @@ const Fiche = sequelize.define(
       defaultValue: "",
     },
     conceptsCles: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
     explications: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: {},
     },
     pointsImportants: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
     flashcards: {
-      type: DataTypes.JSON,
+      type: DataTypes.JSONB,
       defaultValue: [],
     },
     matiere: {
