@@ -1,5 +1,10 @@
 const Redis = require("ioredis");
-const RedisMock = require("ioredis-mock");
+let RedisMock;
+try {
+  RedisMock = require("ioredis-mock");
+} catch (_) {
+  RedisMock = null;
+}
 
 const redisConfig = {
   host: process.env.REDIS_HOST || "localhost",
@@ -18,25 +23,35 @@ let redisInstance;
 let isMock = false;
 
 try {
-  if (process.env.NODE_ENV === "test") {
+  if (process.env.NODE_ENV === "test" && RedisMock) {
     redisInstance = new RedisMock();
     isMock = true;
   } else {
     redisInstance = new Redis(redisConfig);
   }
 } catch (e) {
-  console.warn("⚠️ Impossible d'initialiser Redis, passage sur ioredis-mock.");
-  redisInstance = new RedisMock();
+  console.warn("⚠️ Impossible d'initialiser Redis, passage en mode mémoire.");
+  if (RedisMock) {
+    redisInstance = new RedisMock();
+  } else {
+    const { EventEmitter } = require("events");
+    redisInstance = new EventEmitter();
+    redisInstance.get = redisInstance.set = redisInstance.incr = redisInstance.del = async () => null;
+    redisInstance.ping = async () => "PONG";
+    redisInstance.quit = async () => {};
+    redisInstance.disconnect = () => {};
+  }
   isMock = true;
 }
 
 // Gestion des erreurs pour éviter le flood
 redisInstance.on("error", (_err) => {
   if (!isMock) {
-    console.warn("❌ Redis déconnecté. Passage en mode mémoire (mock).");
-    // Swap pour le mock
+    console.warn("❌ Redis déconnecté. Passage en mode mémoire.");
     redisInstance.disconnect();
-    redisInstance = new RedisMock();
+    if (RedisMock) {
+      redisInstance = new RedisMock();
+    }
     isMock = true;
   }
 });
@@ -47,7 +62,9 @@ const waitForRedis = async (timeoutMs = 2000) => {
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
       console.warn("⚠️ Redis injoignable, utilisation du mode mémoire.");
-      redisInstance = new RedisMock();
+      if (RedisMock) {
+        redisInstance = new RedisMock();
+      }
       isMock = true;
       resolve(true);
     }, timeoutMs);
