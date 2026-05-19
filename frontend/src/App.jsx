@@ -27,6 +27,7 @@ const Connexion = lazy(() => import("./pages/Connexion"));
 const Inscription = lazy(() => import("./pages/Inscription"));
 const Profil = lazy(() => import("./pages/Profil"));
 const Analytiques = lazy(() => import("./pages/Analytiques"));
+const Page404 = lazy(() => import("./pages/Page404"));
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -212,8 +213,8 @@ export default function App() {
           <Route path="/profil" element={<RouteProtegee><Layout><SuspenseWrapper><Profil /></SuspenseWrapper></Layout></RouteProtegee>} />
 <Route path="/analytiques" element={<RouteProtegee><Layout><SuspenseWrapper><Analytiques /></SuspenseWrapper></Layout></RouteProtegee>} />
 
-          {/* Redirection par défaut */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* 404 */}
+          <Route path="*" element={<SuspenseWrapper><Page404 /></SuspenseWrapper>} />
         </Routes>
       </Router>
       </ErrorBoundary>
