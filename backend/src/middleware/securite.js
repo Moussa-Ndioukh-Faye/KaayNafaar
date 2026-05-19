@@ -16,13 +16,15 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 
 const originesAutorisees = (process.env.FRONTEND_URL || "")
   .split(",")
-  .map((o) => o.trim())
+  .map((o) => o.trim().replace(/\/$/, "")) // Enlever le slash de fin
   .filter(Boolean);
-// Vérifier ANTHROPIC_API_KEY (optionnel si credits épuisés)
-// if (!process.env.ANTHROPIC_API_KEY || !process.env.ANTHROPIC_API_KEY.startsWith("sk-ant-")) {
-//   console.error("❌ ANTHROPIC_API_KEY invalide!");
-//   process.exit(1);
-// }
+
+// ── Validation au démarrage ───────────────────────────────────────
+// Vérifier JWT_SECRET
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  console.error("❌ JWT_SECRET doit faire au moins 32 caractères!");
+  process.exit(1);
+}
 
 // ── Rate Limiting global ───────────────────────────────────────────
 const limiteurGlobal = rateLimit({
@@ -82,7 +84,7 @@ const validerTaillePayload = (req, res, next) => {
 // ── Validation CSRF simple (double-submit cookie) ──
 // Vérifie que la requête vient bien du frontend autorisé
 const validerCSRF = (req, res, next) => {
-  const origine = req.headers.origin;
+  const origine = req.headers.origin ? req.headers.origin.replace(/\/$/, "") : null;
   const referer = req.headers.referer;
 
   // En développement, autoriser localhost sans vérification stricte
@@ -90,7 +92,7 @@ const validerCSRF = (req, res, next) => {
     return next();
   }
 
-  // Normaliser les origines (ajouter http://localhost si http://localhost:80 est présent)
+  // Normaliser les origines autorisées
   const expandedOrigins = [...originesAutorisees];
   originesAutorisees.forEach(o => {
     if (o.endsWith(":80")) expandedOrigins.push(o.replace(":80", ""));
@@ -98,12 +100,13 @@ const validerCSRF = (req, res, next) => {
     if (!o.includes(":") && o.startsWith("http")) expandedOrigins.push(`${o}:80`);
   });
 
-  // Vérifier l'origine ou le referer
+  // Vérifier l'origine
   if (origine && !expandedOrigins.includes(origine)) {
     console.warn(`[CSRF] Origine bloquée : ${origine}`);
     return res.status(403).json({ success: false, message: "Origine non autorisée." });
   }
 
+  // Vérifier le referer (plus souple, on regarde si ça commence par une origine autorisée)
   if (referer && !expandedOrigins.some((o) => referer.startsWith(o))) {
     console.warn(`[CSRF] Référent bloqué : ${referer}`);
     return res.status(403).json({ success: false, message: "Référent non autorisé." });
