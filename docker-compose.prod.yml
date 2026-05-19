@@ -63,7 +63,7 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-https://kaay-nafaar.vercel.app}
       REDIS_HOST: redis
     ports:
-      - "127.0.0.1:5001:5001"
+      - "5001:5001"
     depends_on:
       postgres:
         condition: service_healthy
@@ -73,3 +73,26 @@ services:
       - backend-uploads:/app/uploads
     networks:
       - internal
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: revision-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      DOMAIN: ${CADDY_DOMAIN:-localhost}
+      BACKEND_URL: http://backend:5001
+    depends_on:
+      - backend
+    networks:
+      - internal
+
+volumes:
+  caddy-data:
+  caddy-config:

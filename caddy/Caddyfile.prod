@@ -1,0 +1,10 @@
+{$DOMAIN:localhost} {
+    reverse_proxy backend:5001 {
+        header_up X-Forwarded-Proto https
+    }
+
+    log {
+        output stdout
+        format console
+    }
+}
