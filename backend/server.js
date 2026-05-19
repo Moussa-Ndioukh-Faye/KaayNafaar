@@ -42,7 +42,10 @@ app.use((req, res, next) => {
 connectDB();
 
 // ── CORS — Whitelist depuis .env ─────────────────────────────
-const corsOrigins = (process.env.FRONTEND_URL || "http://localhost:3000").split(",").map(s => s.trim());
+const corsOrigins = (process.env.FRONTEND_URL || "http://localhost:3000")
+  .split(",")
+  .map(s => s.trim().replace(/\/$/, "")); // Enlever le slash de fin s'il existe
+
 app.use(
   cors({
     origin: corsOrigins,
@@ -53,14 +56,18 @@ app.use(
 );
 
 // ── Helmet + security middlewares ────────────────────────────────
+const isProd = process.env.NODE_ENV === "production";
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline pour certains scripts analytics/styles
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "blob:", "https://*"],
+      connectSrc: ["'self'", "https://*.trycloudflare.com", "https://*.vercel.app", ...corsOrigins],
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
     },
   },
   crossOriginEmbedderPolicy: false,
