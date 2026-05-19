@@ -8,7 +8,20 @@ import axios from "axios";
 
 // Utiliser le proxy Vite en développement pour éviter les problèmes CORS avec les cookies
 // En production, utiliser l'URL absolue
-const API_URL = import.meta.env.VITE_API_URL || "/api";
+const getBaseURL = () => {
+  const envURL = import.meta.env.VITE_API_URL;
+  if (!envURL) return "/api";
+  
+  // Si l'URL finit par /api, on la garde telle quelle
+  if (envURL.endsWith("/api") || envURL.endsWith("/api/")) {
+    return envURL;
+  }
+  
+  // Sinon on ajoute /api à la fin (en gérant le slash de fin)
+  return envURL.endsWith("/") ? `${envURL}api` : `${envURL}/api`;
+};
+
+const API_URL = getBaseURL();
 
 // Instance Axios configurée
 const api = axios.create({
@@ -120,19 +133,19 @@ export const iaAPI = {
    * @param {function} onError - Callback d'erreur
    */
   genererFicheStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/generer-fiche", data, onDelta, onDone, onError);
+    return fetchStream("/ai/generer-fiche", data, onDelta, onDone, onError);
   },
 
   genererQuizStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/generer-quiz", data, onDelta, onDone, onError);
+    return fetchStream("/ai/generer-quiz", data, onDelta, onDone, onError);
   },
 
   expliquerStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/expliquer", data, onDelta, onDone, onError);
+    return fetchStream("/ai/expliquer", data, onDelta, onDone, onError);
   },
 
   chatStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/chat", data, onDelta, onDone, onError);
+    return fetchStream("/ai/chat", data, onDelta, onDone, onError);
   },
 
   genererPlanning: (data) => api.post("/ai/planning", data),
@@ -146,11 +159,13 @@ export const iaAPI = {
 const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   const controller = new AbortController();
 
-  const base = import.meta.env.VITE_API_URL?.startsWith("http") 
-    ? import.meta.env.VITE_API_URL 
-    : "";
+  // On s'assure d'avoir l'URL de base incluant /api
+  const base = API_URL.startsWith("http") ? API_URL : "";
+  
+  // S'assurer que endpoint commence par un slash et n'inclut pas déjà /api
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
-  fetch(`${base}${endpoint}`, {
+  fetch(`${base}${cleanEndpoint}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
