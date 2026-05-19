@@ -1,4 +1,3 @@
-const { sequelize } = require("../config/database");
 const Progression = require("../models/Progression");
 const Fiche = require("../models/Fiche");
 const FeedbackIA = require("../models/FeedbackIA");
@@ -18,7 +17,6 @@ const getAnalytiques = async (req, res) => {
     const activite = progression?.activiteJournaliere || [];
     const matieres = progression?.matieres || [];
 
-    const aujourdhui = new Date().toISOString().split("T")[0];
     const activite7Jours = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(Date.now() - i * 86400000).toISOString().split("T")[0];

@@ -1,6 +1,5 @@
 const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
-const Progression = require("../models/Progression");
 const User = require("../models/User");
 const FeedbackIA = require("../models/FeedbackIA");
 const { AIProviderManager } = require("../utils/aiProviderManager");
@@ -11,7 +10,7 @@ const aiManager = new AIProviderManager();
 
 // Priorité Gemini Pro pour le chat, Flash pour le reste
 const ORDRE_FICHE_QUIZ = ["gemini", "groq"];
-const ORDRE_CHAT = ["gemini-pro", "gemini", "groq"];
+const ORDRE_CHAT = ["gemini", "groq"];
 
 const SYSTEM_PROMPT = `Tu es un professeur expert et assistant d'étude pour étudiants en génie logiciel et systèmes d'information.
 Tu dois répondre UNIQUEMENT en JSON valide, sans texte avant ou après.
@@ -44,29 +43,6 @@ const envoyerErreur = (res, message, status = 500) => {
   } else {
     res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
     res.end();
-  }
-};
-
-const resumerConversation = async (userId, messagesRecents) => {
-  try {
-    const utilisateur = await User.findByPk(userId);
-    if (!utilisateur) return;
-    const messagesTexte = messagesRecents
-      .map(m => `${m.role === "user" ? "Élève" : "Assistant"} : ${(m.content || "").substring(0, 200)}`)
-      .join("\n");
-    const resume = await aiManager.complete({
-      messages: [
-        { role: "system", content: "Résume cette conversation pédagogique en 2-3 phrases." },
-        { role: "user", content: messagesTexte },
-      ],
-      maxTokens: 256,
-    });
-    const nouveauResume = `[${new Date().toLocaleDateString("fr-FR")}] ${resume}`;
-    let memoire = utilisateur.memoireLongTerme || "";
-    const lignes = [nouveauResume, ...memoire.split("\n").filter(l => l.trim())].slice(0, 30);
-    await utilisateur.update({ memoireLongTerme: lignes.join("\n") });
-  } catch (err) {
-    console.error("❌ Erreur résumé conversation:", err.message);
   }
 };
 
@@ -187,7 +163,7 @@ const chat = async (req, res) => {
   try {
     let { messages, contexte } = req.body;
     let sources = [];
-    const utilisateur = await User.findByPk(req.utilisateur.id);
+    await User.findByPk(req.utilisateur.id);
 
     if (!contexte) {
       const derniereQuestion = messages[messages.length - 1].content;

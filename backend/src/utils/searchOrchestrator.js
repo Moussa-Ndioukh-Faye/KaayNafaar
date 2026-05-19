@@ -5,16 +5,12 @@
 
 const { rechercherContexteHybride } = require("./aiPro");
 const { webSearch } = require("./tavily");
-const { redis } = require("../config/redis");
 const crypto = require("crypto");
-
-const CACHE_ORCH_PREFIX = "orch:search:";
-const CACHE_TTL = 3600; // 1h
 
 /**
  * Orchestre la recherche d'informations pour une requête utilisateur
  */
-const orchestrerRecherche = async (query, userId, options = {}) => {
+const orchestrerRecherche = async (query, userId, _options = {}) => {
   // --- CACHE DÉSACTIVÉ POUR RÉSOUDRE LES HALLUCINATIONS ---
   /*
   const cacheKey = `${CACHE_ORCH_PREFIX}${userId}:${crypto.createHash("sha256").update(query.toLowerCase()).digest("hex")}`;

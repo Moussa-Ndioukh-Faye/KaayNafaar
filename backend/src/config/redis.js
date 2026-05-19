@@ -31,7 +31,7 @@ try {
 }
 
 // Gestion des erreurs pour éviter le flood
-redisInstance.on("error", (err) => {
+redisInstance.on("error", (_err) => {
   if (!isMock) {
     console.warn("❌ Redis déconnecté. Passage en mode mémoire (mock).");
     // Swap pour le mock

@@ -39,8 +39,18 @@ const connectDB = async () => {
   try {
     await dbConfig.sequelize.authenticate();
     console.log(`🐘 Base de données connectée (${dbConfig.sequelize.getDialect()})`);
-    await dbConfig.sequelize.sync({ alter: true });
-    console.log("✅ Schéma de base de données à jour.");
+
+    const syncMode = process.env.DB_SYNC || (process.env.NODE_ENV === "production" ? "false" : "alter");
+    if (syncMode === "alter") {
+      await dbConfig.sequelize.sync({ alter: true });
+      console.log("✅ Schéma de base de données à jour (alter).");
+    } else if (syncMode === "force") {
+      await dbConfig.sequelize.sync({ force: true });
+      console.log("✅ Schéma de base de données recréé (force).");
+    } else {
+      await dbConfig.sequelize.sync();
+      console.log("✅ Schéma vérifié (sync sans alter).");
+    }
   } catch (err) {
     console.error("❌ Échec de la connexion initiale:", err.message);
     

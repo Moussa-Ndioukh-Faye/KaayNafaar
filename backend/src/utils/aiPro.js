@@ -47,7 +47,7 @@ const obtenirEmbedding = async (texte) => {
       const cache = await redis.get(cacheKey);
       if (cache) return JSON.parse(cache);
     }
-  } catch (_) {}
+  } catch (_) { /* Redis non disponible */ }
 
   const [vecteur] = await embeddings.embedDocuments([texte]);
   
@@ -55,7 +55,7 @@ const obtenirEmbedding = async (texte) => {
     if (redis && typeof redis.set === 'function') {
       await redis.set(cacheKey, JSON.stringify(vecteur), "EX", CACHE_EMBEDDING_TTL);
     }
-  } catch (_) {}
+  } catch (_) { /* Redis non disponible */ }
 
   return vecteur;
 };
@@ -92,7 +92,7 @@ const rechercherContexteHybride = async (query, userId, k = 6) => {
           return JSON.parse(cachedResult);
         }
       }
-    } catch (_) {}
+    } catch (_) { /* Redis non disponible */ }
 
     // 2. Vector search + Keyword search
     const vectorStore = await PGVectorStore.initialize(embeddings, config);
@@ -137,7 +137,7 @@ const rechercherContexteHybride = async (query, userId, k = 6) => {
       if (context && redis && typeof redis.set === 'function') {
         await redis.set(cacheKey, JSON.stringify(finalResult), "EX", 3600);
       }
-    } catch (_) {}
+    } catch (_) { /* Redis non disponible */ }
 
     return finalResult;
   } catch (err) {
@@ -187,7 +187,7 @@ const indexerCours = async (text, metadata) => {
       if (redis && typeof redis.incr === 'function') {
         await redis.incr(`rag:version:${metadata.utilisateurId}`);
       }
-    } catch (_) {}
+    } catch (_) { /* Redis non disponible */ }
     return true;
   } catch (err) {
     console.error("❌ Erreur indexation vectorielle:", err.message);
@@ -199,7 +199,7 @@ const rechercherContexte = async (query, userId) => {
   return rechercherContexteHybride(query, userId, 6);
 };
 
-const mettreAJourProfilApprenant = async (userId, userMessage, assistantResponse) => {
+const mettreAJourProfilApprenant = async (userId, userMessage, _assistantResponse) => {
   try {
     const User = require("../models/User");
     const user = await User.findByPk(userId);

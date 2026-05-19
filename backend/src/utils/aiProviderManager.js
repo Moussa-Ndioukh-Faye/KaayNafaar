@@ -2,15 +2,6 @@ const OpenAI = require("openai");
 
 const PROVIDERS = [
   {
-    name: "gemini-pro",
-    client: null,
-    model: "gemini-1.5-pro",
-    baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-    apiKeyEnv: "GEMINI_API_KEY",
-    maxRetries: 2,
-    timeout: 90000, // Plus long pour le modèle Pro
-  },
-  {
     name: "gemini",
     client: null,
     model: "gemini-2.0-flash",
@@ -102,7 +93,7 @@ class AIProviderManager {
       } catch (err) {
         console.error(`❌ Provider ${provider.name} (${provider.model}):`, err.message);
         derniereErreur = err;
-        if (estRetryable(err) && provider !== tries[tries.length - 1]) {
+        if (provider !== tries[tries.length - 1]) {
           continue;
         }
         break;
@@ -122,6 +113,7 @@ class AIProviderManager {
 
     for (const provider of tries) {
       try {
+        console.log(`🤖 Utilisation du provider: ${provider.name} (${provider.model})`);
         const response = await provider.client.chat.completions.create({
           model: provider.model,
           messages,
@@ -132,7 +124,7 @@ class AIProviderManager {
       } catch (err) {
         console.error(`❌ Provider ${provider.name} (${provider.model}):`, err.message);
         derniereErreur = err;
-        if (estRetryable(err) && provider !== tries[tries.length - 1]) {
+        if (provider !== tries[tries.length - 1]) {
           continue;
         }
         break;
