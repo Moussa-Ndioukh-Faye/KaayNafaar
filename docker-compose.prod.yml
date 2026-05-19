@@ -8,6 +8,8 @@ volumes:
   postgres-data:
   redis-data:
   backend-uploads:
+  caddy-data:
+  caddy-config:
 
 networks:
   internal:
@@ -92,7 +94,3 @@ services:
       - backend
     networks:
       - internal
-
-volumes:
-  caddy-data:
-  caddy-config:
