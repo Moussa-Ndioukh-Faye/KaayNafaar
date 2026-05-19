@@ -41,30 +41,39 @@ app.use((req, res, next) => {
 // Connexion à PostgreSQL
 connectDB();
 
-// ── CORS — Whitelist depuis .env ─────────────────────────────
-const corsOrigins = (process.env.FRONTEND_URL || "http://localhost:3000")
+// ── CORS — Dynamique pour supporter Vercel Preview & Prod ─────────────────────────────
+const originsFixes = (process.env.FRONTEND_URL || "http://localhost:3000")
   .split(",")
-  .map(s => s.trim().replace(/\/$/, "")); // Enlever le slash de fin s'il existe
+  .map(s => s.trim().replace(/\/$/, ""));
 
-app.use(
-  cors({
-    origin: corsOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Autoriser si pas d'origine (ex: curl, apps mobiles) ou si dans la liste fixe
+    if (!origin || originsFixes.includes(origin)) {
+      return callback(null, true);
+    }
+    // Autoriser tous les sous-domaines vercel.app
+    if (origin.endsWith(".vercel.app")) {
+      return callback(null, true);
+    }
+    callback(new Error("Non autorisé par CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 // ── Helmet + security middlewares ────────────────────────────────
-const isProd = process.env.NODE_ENV === "production";
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline pour certains scripts analytics/styles
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "blob:", "https://*"],
-      connectSrc: ["'self'", "https://*.trycloudflare.com", "https://*.vercel.app", ...corsOrigins],
+      connectSrc: ["*"], // Très permissif pour le debug, à resserrer plus tard
       fontSrc: ["'self'", "https:", "data:"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
