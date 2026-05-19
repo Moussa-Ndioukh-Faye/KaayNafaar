@@ -19,7 +19,11 @@ import {
   Globe,
   Lock as LockIcon,
   Copy,
-  AlertCircle
+  AlertCircle,
+  ThumbsUp,
+  ThumbsDown,
+  Meh,
+  RefreshCw
 } from "lucide-react";
 import { fichesAPI, coursAPI, iaAPI } from "../services/api";
 import { exporterFichePro } from "../utils/pdfPro";
@@ -227,8 +231,36 @@ export default function Fiches() {
   };
 
   if (vue === "flashcards" && ficheSelectionnee) {
-    const flashcards = ficheSelectionnee.flashcards || [];
+    const flashcards = (ficheSelectionnee.flashcards || [])
+      .map((fc, i) => ({ ...fc, _originalIndex: i }))
+      .sort((a, b) => {
+        const aDue = a.nextReview ? new Date(a.nextReview) : new Date(0);
+        const bDue = b.nextReview ? new Date(b.nextReview) : new Date(0);
+        return aDue - bDue;
+      });
     const card = flashcards[indexFlashcard];
+    const aReviser = flashcards.filter(fc => {
+      if (!fc.nextReview) return true;
+      return new Date(fc.nextReview) <= new Date();
+    }).length;
+
+    const noterFlashcard = async (grade) => {
+      try {
+        const originalIdx = card._originalIndex;
+        await fichesAPI.mettreAJourFlashcard(ficheSelectionnee.id, originalIdx, { grade });
+        const { data } = await fichesAPI.getFiches();
+        const miseAJour = data.fiches?.find(f => f.id === ficheSelectionnee.id);
+        if (miseAJour) setFicheSelectionnee(miseAJour);
+      } catch (_) {}
+
+      if (indexFlashcard < flashcards.length - 1) {
+        setIndexFlashcard(i => i + 1);
+        setReponseMontree(false);
+      } else {
+        setIndexFlashcard(0);
+        setReponseMontree(false);
+      }
+    };
 
     return (
       <div className="max-w-2xl mx-auto space-y-8 pb-10">
@@ -239,7 +271,7 @@ export default function Fiches() {
           </Button>
           <div className="flex-1">
              <h2 className="text-xl font-extrabold text-gray-900 dark:text-white truncate">
-               Flashcards : {ficheSelectionnee.titre}
+                Flashcards : {ficheSelectionnee.titre}
              </h2>
              <div className="flex items-center gap-2 mt-0.5">
                 <div className="h-1.5 flex-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
@@ -249,6 +281,10 @@ export default function Fiches() {
                    />
                 </div>
                 <span className="text-xs font-bold text-gray-400">{indexFlashcard + 1} / {flashcards.length}</span>
+             </div>
+             <div className="flex items-center gap-1 mt-1">
+                <RefreshCw className="w-3 h-3 text-orange-500" />
+                <span className="text-[10px] font-bold text-orange-500">{aReviser} à réviser</span>
              </div>
           </div>
         </div>
@@ -264,10 +300,11 @@ export default function Fiches() {
           <div className="perspective-1000">
             <div
               className={cn(
-                "relative h-80 w-full transition-all duration-500 transform-style-3d cursor-pointer group",
-                reponseMontree ? "rotate-y-180" : ""
+                "relative h-80 w-full transition-all duration-500 transform-style-3d cursor-pointer",
+                reponseMontree ? "rotate-y-180" : "",
+                !reponseMontree ? "group" : ""
               )}
-              onClick={() => setReponseMontree(!reponseMontree)}
+              onClick={() => !reponseMontree && setReponseMontree(true)}
             >
               {/* Front side */}
               <Card className={cn(
@@ -289,18 +326,52 @@ export default function Fiches() {
               )}>
                  <span className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-widest text-emerald-600/50 bg-emerald-100/50 dark:bg-emerald-900/30 px-3 py-1 rounded-lg">Réponse</span>
                  <p className="text-xl font-bold text-emerald-900 dark:text-emerald-100 leading-relaxed">{card.reponse}</p>
-                 <div className="mt-10 text-emerald-600/60 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Bien compris !</span>
-                 </div>
               </Card>
             </div>
 
-            <div className="flex gap-4 justify-center mt-12">
+            {reponseMontree && (
+              <div className="mt-8 space-y-4">
+                <p className="text-center text-sm font-bold text-gray-500 dark:text-gray-400">Comment as-tu trouvé cette carte ?</p>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    onClick={() => noterFlashcard(1)}
+                    variant="outline"
+                    className="flex-1 max-w-[140px] h-14 rounded-2xl border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 group"
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <ThumbsDown className="w-5 h-5 text-red-500" />
+                      <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">Difficile</span>
+                    </div>
+                  </Button>
+                  <Button
+                    onClick={() => noterFlashcard(3)}
+                    variant="outline"
+                    className="flex-1 max-w-[140px] h-14 rounded-2xl border-amber-200 dark:border-amber-900/50 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:border-amber-300 group"
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <Meh className="w-5 h-5 text-amber-500" />
+                      <span className="text-[10px] font-black text-amber-500 uppercase tracking-wider">Moyen</span>
+                    </div>
+                  </Button>
+                  <Button
+                    onClick={() => noterFlashcard(5)}
+                    variant="outline"
+                    className="flex-1 max-w-[140px] h-14 rounded-2xl border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-300 group"
+                  >
+                    <div className="flex flex-col items-center gap-1">
+                      <ThumbsUp className="w-5 h-5 text-emerald-500" />
+                      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">Facile</span>
+                    </div>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-4 justify-center mt-6">
               <Button 
-                variant="outline"
+                variant="ghost"
                 disabled={indexFlashcard === 0}
-                onClick={(e) => { e.stopPropagation(); setIndexFlashcard((i) => i - 1); setReponseMontree(false); }}
+                onClick={() => { setIndexFlashcard((i) => i - 1); setReponseMontree(false); }}
                 className="rounded-xl h-12 px-6 font-bold"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
@@ -308,16 +379,18 @@ export default function Fiches() {
               </Button>
               {indexFlashcard < flashcards.length - 1 ? (
                 <Button 
-                  onClick={(e) => { e.stopPropagation(); setIndexFlashcard((i) => i + 1); setReponseMontree(false); }} 
-                  className="rounded-xl h-12 px-8 font-bold shadow-lg shadow-primary-200 dark:shadow-none"
+                  variant="ghost"
+                  onClick={() => { setIndexFlashcard((i) => i + 1); setReponseMontree(false); }} 
+                  className="rounded-xl h-12 px-8 font-bold"
                 >
-                  Suivante
+                  Passer
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               ) : (
                 <Button 
-                  onClick={(e) => { e.stopPropagation(); setIndexFlashcard(0); setReponseMontree(false); }} 
-                  className="rounded-xl h-12 px-8 font-bold bg-emerald-600 hover:bg-emerald-700"
+                  variant="ghost"
+                  onClick={() => { setIndexFlashcard(0); setReponseMontree(false); }} 
+                  className="rounded-xl h-12 px-8 font-bold text-emerald-600"
                 >
                   <RotateCcw className="w-5 h-5 mr-2" />
                   Recommencer

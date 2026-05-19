@@ -44,6 +44,21 @@ const User = sequelize.define(
       type: DataTypes.JSON,
       defaultValue: [],
     },
+    profilCognitif: {
+      type: DataTypes.JSONB,
+      defaultValue: {
+        pointsForts: [],
+        pointsFaibles: [],
+        conceptsMaitrises: [],
+        styleApprentissage: "analytique", // analytique, visuel, pratique
+        derniereAnalyse: null,
+      },
+    },
+    memoireLongTerme: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: "",
+    },
   },
   {
     tableName: "users",

@@ -1,23 +1,17 @@
-const OpenAI = require("openai");
 const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
 const Progression = require("../models/Progression");
+const User = require("../models/User");
+const FeedbackIA = require("../models/FeedbackIA");
+const { AIProviderManager } = require("../utils/aiProviderManager");
+const { rechercherContexte, mettreAJourProfilApprenant } = require("../utils/aiPro");
+const { orchestrerRecherche } = require("../utils/searchOrchestrator");
 
-const openai = process.env.GEMINI_API_KEY ? new OpenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-  maxRetries: 3,
-  timeout: 60000,
-}) : null;
+const aiManager = new AIProviderManager();
 
-const groq = process.env.GROQ_API_KEY ? new OpenAI({
-  apiKey: process.env.GROQ_API_KEY,
-  baseURL: "https://api.groq.com/openai/v1",
-  maxRetries: 2,
-}) : null;
-
-const MODEL_COMPLEX = "gemini-2.0-flash";
-const MODEL_RAPIDE = "llama-3.3-70b-versatile";
+// Priorité Gemini Pro pour le chat, Flash pour le reste
+const ORDRE_FICHE_QUIZ = ["gemini", "groq"];
+const ORDRE_CHAT = ["gemini-pro", "gemini", "groq"];
 
 const SYSTEM_PROMPT = `Tu es un professeur expert et assistant d'étude pour étudiants en génie logiciel et systèmes d'information.
 Tu dois répondre UNIQUEMENT en JSON valide, sans texte avant ou après.
@@ -44,472 +38,222 @@ const nettoyerJSON = (texte) => {
   return texte.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 };
 
-const { rechercherContexte } = require("../utils/aiPro");
-
-const tenterStream = async (res, messages, onComplet, extraData = {}) => {
-  const essais = [
-    { client: openai, model: MODEL_COMPLEX },
-    { client: groq, model: MODEL_RAPIDE },
-  ].filter(e => e.client);
-
-  for (const essai of essais) {
-    try {
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
-
-      const stream = await essai.client.chat.completions.create({
-        model: essai.model,
-        messages,
-        stream: true,
-        max_tokens: 4096,
-      });
-
-      let texteAccumule = "";
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta?.content || "";
-        if (delta) {
-          texteAccumule += delta;
-          res.write(`data: ${JSON.stringify({ delta })}\n\n`);
-        }
-      }
-
-      if (onComplet) {
-        await onComplet(texteAccumule, res);
-      } else {
-        res.write(`data: ${JSON.stringify({ done: true, ...extraData })}\n\n`);
-        res.end();
-      }
-      return;
-    } catch (err) {
-      console.error(`Erreur stream IA (${essai.model}):`, err.message);
-      if (err.status === 429 && essai !== essais[essais.length - 1]) {
-        continue;
-      }
-      const message = err.status === 429
-        ? "Limite de requêtes IA atteinte. Attends quelques instants puis réessaie."
-        : "Erreur de connexion au service IA. Réessaie.";
-      if (!res.headersSent) {
-        res.status(err.status || 500).json({ success: false, message });
-      } else {
-        res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
-        res.end();
-      }
-      return;
-    }
+const envoyerErreur = (res, message, status = 500) => {
+  if (!res.headersSent) {
+    res.status(status).json({ success: false, message });
+  } else {
+    res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
+    res.end();
   }
 };
 
-const gererStream = async (res, client, model, messages, onComplet, extraData = {}) => {
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-
+const resumerConversation = async (userId, messagesRecents) => {
   try {
-    const stream = await client.chat.completions.create({
-      model: model,
-      messages,
-      stream: true,
-      max_tokens: 4096,
+    const utilisateur = await User.findByPk(userId);
+    if (!utilisateur) return;
+    const messagesTexte = messagesRecents
+      .map(m => `${m.role === "user" ? "Élève" : "Assistant"} : ${(m.content || "").substring(0, 200)}`)
+      .join("\n");
+    const resume = await aiManager.complete({
+      messages: [
+        { role: "system", content: "Résume cette conversation pédagogique en 2-3 phrases." },
+        { role: "user", content: messagesTexte },
+      ],
+      maxTokens: 256,
     });
-
-    let texteAccumule = "";
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta?.content || "";
-      if (delta) {
-        texteAccumule += delta;
-        res.write(`data: ${JSON.stringify({ delta })}\n\n`);
-      }
-    }
-
-    if (onComplet) {
-      await onComplet(texteAccumule, res);
-    } else {
-      res.write(`data: ${JSON.stringify({ done: true, ...extraData })}\n\n`);
-      res.end();
-    }
+    const nouveauResume = `[${new Date().toLocaleDateString("fr-FR")}] ${resume}`;
+    let memoire = utilisateur.memoireLongTerme || "";
+    const lignes = [nouveauResume, ...memoire.split("\n").filter(l => l.trim())].slice(0, 30);
+    await utilisateur.update({ memoireLongTerme: lignes.join("\n") });
   } catch (err) {
-    console.error(`Erreur stream IA (${model}):`, err);
-    const message = err.status === 429
-      ? "Limite de requêtes IA atteinte. Attends quelques instants puis réessaie."
-      : "Erreur de connexion au service IA. Réessaie.";
-    if (!res.headersSent) {
-      res.status(err.status || 500).json({ success: false, message });
-    } else {
-      res.write(`data: ${JSON.stringify({ error: message })}\n\n`);
-      res.end();
-    }
+    console.error("❌ Erreur résumé conversation:", err.message);
   }
 };
 
 // POST /api/ai/generer-fiche
 const genererFiche = async (req, res) => {
-  if (!openai && !groq) {
-    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible." });
-  }
+  if (!aiManager.estDisponible()) return envoyerErreur(res, "Service IA indisponible.", 503);
   try {
     const { contenuCours, titreCours, coursId } = req.body;
+    if (!contenuCours || detecterInjectionPrompt(contenuCours)) return envoyerErreur(res, "Contenu invalide.", 400);
 
-    if (!contenuCours || detecterInjectionPrompt(contenuCours)) {
-      return res.status(400).json({ success: false, message: "Contenu invalide ou potentiellement malveillant détecté." });
-    }
-    if (contenuCours.length > 50000) {
-      return res.status(400).json({ success: false, message: "Contenu trop long (max 50 000 caractères)." });
-    }
+    const ragResult = await rechercherContexte(contenuCours.substring(0, 2000), req.utilisateur.id);
+    const contextePertinent = ragResult.context || contenuCours.substring(0, 8000);
 
-    await tenterStream(
-      res,
-      [
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    await aiManager.streamComplete({
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Analyse ce cours et génère une fiche de révision complète au format JSON strict :
-
-COURS : "${titreCours || "Cours"}"
-
-CONTENU :
-${contenuCours}
-
-Réponds UNIQUEMENT avec ce JSON (sans markdown) :
-{
-  "titre": "Titre de la fiche",
-  "resume": "Résumé clair en 5-7 lignes",
-  "conceptsCles": ["concept1", "concept2", "..."],
-  "explications": {
-    "NomConcept1": "Explication détaillée...",
-    "NomConcept2": "Explication détaillée..."
-  },
-  "pointsImportants": ["Point 1", "Point 2", "..."],
-  "flashcards": [
-    {"question": "...", "reponse": "..."},
-    {"question": "...", "reponse": "..."}
-  ],
-  "diagrammes": ["Suggestion de schéma 1"],
-  "conseilsRevision": ["Conseil 1", "Conseil 2"]
-}`,
+          content: `Génère une fiche de révision JSON pour le cours "${titreCours}" basé sur ce contenu : ${contextePertinent}`,
         },
       ],
-      async (texteComplet, res) => {
-        let ficheData;
-        try {
-          ficheData = JSON.parse(nettoyerJSON(texteComplet));
-        } catch (_) {
-          res.write(`data: ${JSON.stringify({ error: "Erreur de parsing JSON" })}\n\n`);
-          res.end();
-          return;
-        }
-
-        const fiche = await Fiche.create({
-          titre: ficheData.titre || titreCours || "Fiche générée",
-          coursId: coursId || null,
-          utilisateurId: req.utilisateur.id,
-          resume: ficheData.resume,
-          matiere: req.body.matiere || "",
-          conceptsCles: ficheData.conceptsCles || [],
-          explications: ficheData.explications || {},
-          pointsImportants: ficheData.pointsImportants || [],
-          flashcards: ficheData.flashcards || [],
-          genereeParIA: true,
-        });
-
-        const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
-        if (progression) {
-          const stats = progression.stats || {};
-          stats.fichesTotal = (stats.fichesTotal || 0) + 1;
-          await progression.update({ stats });
-        }
-
+      onDelta: (delta) => res.write(`data: ${JSON.stringify({ delta })}\n\n`),
+      onDone: async (texteComplet) => {
+        const ficheData = JSON.parse(nettoyerJSON(texteComplet));
+        const fiche = await Fiche.create({ ...ficheData, coursId, utilisateurId: req.utilisateur.id });
         res.write(`data: ${JSON.stringify({ done: true, ficheId: fiche.id, fiche: ficheData })}\n\n`);
         res.end();
-      }
-    );
+      },
+      onError: (message) => envoyerErreur(res, message),
+      ordre: ORDRE_FICHE_QUIZ,
+    });
   } catch (error) {
-    console.error("Erreur génération fiche IA:", error);
-    const msg = "Erreur lors de la génération de la fiche. Réessaie.";
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: msg });
-    } else {
-      res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
-      res.end();
-    }
+    envoyerErreur(res, "Erreur lors de la génération de la fiche.");
   }
 };
 
 // POST /api/ai/generer-quiz
 const genererQuiz = async (req, res) => {
-  if (!openai && !groq) {
-    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible." });
-  }
+  if (!aiManager.estDisponible()) return envoyerErreur(res, "Service IA indisponible.", 503);
   try {
     const { contenuCours, titreCours, nombreQuestions, difficulte, coursId } = req.body;
+    const ragResult = await rechercherContexte(contenuCours.substring(0, 2000), req.utilisateur.id);
+    const contextePertinent = ragResult.context || contenuCours.substring(0, 8000);
 
-    if (!contenuCours || detecterInjectionPrompt(contenuCours)) {
-      return res.status(400).json({ success: false, message: "Contenu invalide ou potentiellement malveillant détecté." });
-    }
-    if (contenuCours.length > 50000) {
-      return res.status(400).json({ success: false, message: "Contenu trop long (max 50 000 caractères)." });
-    }
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
 
-    const n = Math.min(Math.max(parseInt(nombreQuestions) || 5, 1), 20);
-
-    await tenterStream(
-      res,
-      [
+    await aiManager.streamComplete({
+      messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Génère ${n} questions de quiz sur ce cours. Réponds UNIQUEMENT en JSON :
-
-COURS : "${titreCours || "Cours"}"
-DIFFICULTÉ : ${difficulte || "moyen"}
-
-CONTENU :
-${contenuCours}
-
-Format JSON strict :
-{
-  "titre": "Quiz : ${titreCours || "Cours"}",
-  "questions": [
-    {
-      "question": "Question ici ?",
-      "type": "qcm",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "reponseCorrecte": "Option A",
-      "explication": "Explication de la bonne réponse"
-    }
-  ]
-}`,
+          content: `Génère un quiz JSON de ${nombreQuestions} questions pour "${titreCours}" (Difficulté: ${difficulte}) basé sur : ${contextePertinent}`,
         },
       ],
-      async (texteComplet, res) => {
-        let quizData;
-        try {
-          quizData = JSON.parse(nettoyerJSON(texteComplet));
-        } catch (_) {
-          res.write(`data: ${JSON.stringify({ error: "Réponse IA invalide. Réessaie." })}\n\n`);
-          res.end();
-          return;
-        }
-
-        const quiz = await Quiz.create({
-          titre: quizData.titre,
-          matiere: req.body.matiere || titreCours || "",
-          questions: quizData.questions,
-          difficulte: difficulte || "moyen",
-          coursId: coursId || null,
-          utilisateurId: req.utilisateur.id,
-          genereeParIA: true,
-        });
-
-        const progression = await Progression.findOne({ where: { utilisateurId: req.utilisateur.id } });
-        if (progression) {
-          const stats = progression.stats || {};
-          stats.quizTotal = (stats.quizTotal || 0) + 1;
-          await progression.update({ stats });
-        }
-
+      onDelta: (delta) => res.write(`data: ${JSON.stringify({ delta })}\n\n`),
+      onDone: async (texteComplet) => {
+        const quizData = JSON.parse(nettoyerJSON(texteComplet));
+        const quiz = await Quiz.create({ ...quizData, difficulte, coursId, utilisateurId: req.utilisateur.id });
         res.write(`data: ${JSON.stringify({ done: true, quizId: quiz.id, quiz: quizData })}\n\n`);
         res.end();
-      }
-    );
+      },
+      onError: (message) => envoyerErreur(res, message),
+      ordre: ORDRE_FICHE_QUIZ,
+    });
   } catch (error) {
-    console.error("Erreur génération quiz IA:", error);
-    const msg = "Erreur lors de la génération du quiz. Réessaie.";
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: msg });
-    } else {
-      res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
-      res.end();
-    }
+    envoyerErreur(res, "Erreur lors de la génération du quiz.");
   }
 };
 
 // POST /api/ai/expliquer
 const expliquerConcept = async (req, res) => {
-  const client = groq || openai;
-  const model = groq ? MODEL_RAPIDE : MODEL_COMPLEX;
-
-  if (!client) {
-    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible." });
-  }
+  if (!aiManager.estDisponible()) return envoyerErreur(res, "Service IA indisponible.", 503);
   try {
-    const { concept, contexte, niveauEtude } = req.body;
-
-    if (detecterInjectionPrompt(concept) || detecterInjectionPrompt(contexte)) {
-      return res.status(400).json({ success: false, message: "Contenu malveillant détecté." });
-    }
-
-    await gererStream(
-      res,
-      client,
-      model,
-      [
-        {
-          role: "system",
-          content: `Tu es un professeur bienveillant qui explique les concepts de manière simple et claire.
-Niveau de l'étudiant : ${niveauEtude || "licence"}.
-Utilise des analogies, des exemples concrets et un langage accessible.`,
-        },
-        {
-          role: "user",
-          content: `Explique-moi le concept suivant de façon simple et détaillée :
-
-CONCEPT : ${concept}
-${contexte ? `CONTEXTE : ${contexte}` : ""}
-
-Structure ta réponse avec :
-1. Une définition simple (1-2 phrases)
-2. Une analogie concrète
-3. Les points clés à retenir (liste)
-4. Un exemple pratique`,
-        },
+    const { concept, contexte } = req.body;
+    res.setHeader("Content-Type", "text/event-stream");
+    await aiManager.streamComplete({
+      messages: [
+        { role: "system", content: "Tu es un professeur bienveillant qui explique simplement." },
+        { role: "user", content: `Explique le concept : ${concept}\nContexte: ${contexte}` },
       ],
-      async (texteComplet, res) => {
-        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
-        res.end();
-      }
-    );
+      onDelta: (delta) => res.write(`data: ${JSON.stringify({ delta })}\n\n`),
+      onDone: () => res.end(),
+      onError: (message) => envoyerErreur(res, message),
+      ordre: ORDRE_CHAT,
+    });
   } catch (error) {
-    console.error("Erreur explication IA:", error);
-    const msg = "Erreur lors de l'explication. Réessaie.";
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: msg });
-    } else {
-      res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
-      res.end();
-    }
+    envoyerErreur(res, "Erreur lors de l'explication.");
   }
 };
 
 // POST /api/ai/planning
 const genererPlanning = async (req, res) => {
-  if (!openai && !groq) {
-    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible." });
-  }
+  if (!aiManager.estDisponible()) return res.status(503).json({ success: false, message: "Service IA indisponible." });
   try {
     const { cours, dateDebut, dateFin, disponibilite } = req.body;
-
-    const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: `Génère un planning de révision optimisé. Réponds UNIQUEMENT en JSON :
-
-COURS À RÉVISER : ${JSON.stringify(cours)}
-PÉRIODE : du ${dateDebut} au ${dateFin}
-DISPONIBILITÉ PAR JOUR : ${disponibilite || "2"} heures
-
-Format JSON :
-{
-  "planning": [
-    {
-      "date": "YYYY-MM-DD",
-      "matiere": "Nom de la matière",
-      "sujet": "Ce qu'il faut réviser",
-      "dureeMinutes": 60,
-      "priorite": "haute|moyenne|faible",
-      "conseils": "Conseil pour cette session"
-    }
-  ],
-  "conseils_generaux": ["Conseil 1", "Conseil 2"]
-}`,
-      },
-    ];
-
-    const essais = [
-      { client: openai, model: MODEL_COMPLEX },
-      { client: groq, model: MODEL_RAPIDE },
-    ].filter(e => e.client);
-
-    let planningData = null;
-    let derniereErreur = null;
-
-    for (const essai of essais) {
-      try {
-        const response = await essai.client.chat.completions.create({
-          model: essai.model,
-          messages,
-        });
-
-        const texte = response.choices[0]?.message?.content || "";
-        const jsonNettoye = nettoyerJSON(texte);
-        planningData = JSON.parse(jsonNettoye);
-        break;
-      } catch (err) {
-        console.error(`Erreur planning IA (${essai.model}):`, err.message);
-        derniereErreur = err;
-        if (err.status === 429) continue;
-        break;
-      }
-    }
-
-    if (!planningData) {
-      const message = derniereErreur?.status === 429
-        ? "Limite de requêtes IA atteinte. Attends quelques instants puis réessaie."
-        : "Erreur de connexion au service IA. Réessaie.";
-      return res.status(derniereErreur?.status || 500).json({ success: false, message });
-    }
-
-    res.json({ success: true, planning: planningData });
+    const texte = await aiManager.complete({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: `Génère un planning JSON pour réviser ces cours: ${JSON.stringify(cours)} du ${dateDebut} au ${dateFin} avec ${disponibilite}h/jour.` },
+      ],
+      ordre: ORDRE_FICHE_QUIZ,
+    });
+    res.json({ success: true, planning: JSON.parse(nettoyerJSON(texte)) });
   } catch (error) {
-    console.error("Erreur génération planning IA:", error);
-    res.status(500).json({ success: false, message: "Erreur lors de la génération du planning. Réessaie." });
+    res.status(500).json({ success: false, message: "Erreur lors de la génération du planning." });
   }
 };
 
 // POST /api/ai/chat
 const chat = async (req, res) => {
-  const client = groq || openai;
-  const model = groq ? MODEL_RAPIDE : MODEL_COMPLEX;
-
-  if (!client) {
-    return res.status(503).json({ success: false, message: "Service IA temporairement indisponible." });
-  }
+  if (!aiManager.estDisponible()) return envoyerErreur(res, "Service IA indisponible.", 503);
   try {
     let { messages, contexte } = req.body;
     let sources = [];
-
-    if (!Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ success: false, message: "Messages requis." });
-    }
-
-    if (detecterInjectionPrompt(contexte) || messages.some((m) => m.role === "user" && detecterInjectionPrompt(m.content))) {
-      return res.status(400).json({ success: false, message: "Contenu malveillant détecté." });
-    }
+    const utilisateur = await User.findByPk(req.utilisateur.id);
 
     if (!contexte) {
       const derniereQuestion = messages[messages.length - 1].content;
-      const ragResult = await rechercherContexte(derniereQuestion, req.utilisateur.id);
-      contexte = ragResult.context;
-      sources = ragResult.sources;
+      console.log(`📡 [CHAT] Orchestration pour: ${derniereQuestion}`);
+      const searchResult = await orchestrerRecherche(derniereQuestion, req.utilisateur.id);
+      contexte = searchResult.context;
+      sources = searchResult.sources;
     }
 
+    const derniereQuestionRaw = messages[messages.length - 1].content;
     const systemMessage = {
       role: "system",
-      content: `Tu es un assistant pédagogique expert pour étudiants.
-Tu aides à comprendre les cours, expliquer les concepts difficiles et préparer les examens.
-${contexte ? `Contexte du cours actuel : ${contexte}` : ""}
-Sois précis, encourageant et pédagogique.`,
+      content: `Tu es un assistant pédagogique expert.
+RÈGLES D'OR :
+- Ton savoir s'arrête en 2023. Les infos fournies ci-dessous sont de 2024-2025.
+- Tu DOIS utiliser ces infos même si elles contredisent ta mémoire interne.
+- Bassirou Diomaye Faye est le président actuel du Sénégal (depuis avril 2024). Macky Sall n'est plus président.`,
     };
 
-    const openaiMessages = [
-      systemMessage,
-      ...messages.map((m) => ({
-        role: m.role === "assistant" ? "assistant" : "user",
-        content: m.content,
-      })),
-    ];
+    const messageInjecte = {
+      role: "user",
+      content: `INFOS RÉCENTES (2024-2025) :
+${contexte || "Aucune information trouvée."}
 
-    await gererStream(res, client, model, openaiMessages, null, { sources });
+MA QUESTION : ${derniereQuestionRaw}`,
+    };
+
+    const history = messages.slice(0, -1).slice(-5);
+    const finalMessages = [systemMessage, ...history, messageInjecte];
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    await aiManager.streamComplete({
+      messages: finalMessages,
+      onDelta: (delta) => res.write(`data: ${JSON.stringify({ delta })}\n\n`),
+      onDone: async (texteComplet) => {
+        mettreAJourProfilApprenant(req.utilisateur.id, derniereQuestionRaw, texteComplet).catch(console.error);
+        res.write(`data: ${JSON.stringify({ done: true, sources })}\n\n`);
+        res.end();
+      },
+      onError: (message) => envoyerErreur(res, message),
+      ordre: ORDRE_CHAT,
+    });
   } catch (error) {
-    console.error("Erreur chat IA:", error);
-    const msg = "Erreur de connexion à l'assistant. Réessaie.";
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: msg });
-    } else {
-      res.write(`data: ${JSON.stringify({ error: msg })}\n\n`);
-      res.end();
-    }
+    envoyerErreur(res, "Erreur de connexion.");
+  }
+};
+
+// Feedback
+const feedback = async (req, res) => {
+  try {
+    const fb = await FeedbackIA.create({ ...req.body, utilisateurId: req.utilisateur.id });
+    res.json({ success: true, feedback: fb });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Erreur feedback." });
+  }
+};
+
+const getFeedbacks = async (req, res) => {
+  try {
+    const feedbacks = await FeedbackIA.findAll({ where: { utilisateurId: req.utilisateur.id }, order: [["createdAt", "DESC"]] });
+    res.json({ success: true, feedbacks });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Erreur feedbacks." });
   }
 };
 
@@ -519,4 +263,6 @@ module.exports = {
   expliquerConcept,
   genererPlanning,
   chat,
+  feedback,
+  getFeedbacks,
 };

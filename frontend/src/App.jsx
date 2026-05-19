@@ -26,6 +26,7 @@ const Bibliotheque = lazy(() => import("./pages/Bibliotheque"));
 const Connexion = lazy(() => import("./pages/Connexion"));
 const Inscription = lazy(() => import("./pages/Inscription"));
 const Profil = lazy(() => import("./pages/Profil"));
+const Analytiques = lazy(() => import("./pages/Analytiques"));
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -209,6 +210,7 @@ export default function App() {
           <Route path="/assistant" element={<RouteProtegee><Layout><SuspenseWrapper><AssistantIA /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/bibliotheque" element={<RouteProtegee><Layout><SuspenseWrapper><Bibliotheque /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/profil" element={<RouteProtegee><Layout><SuspenseWrapper><Profil /></SuspenseWrapper></Layout></RouteProtegee>} />
+<Route path="/analytiques" element={<RouteProtegee><Layout><SuspenseWrapper><Analytiques /></SuspenseWrapper></Layout></RouteProtegee>} />
 
           {/* Redirection par défaut */}
           <Route path="*" element={<Navigate to="/" replace />} />

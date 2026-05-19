@@ -8,6 +8,11 @@ jest.mock("../src/config/database", () => ({
   connectDB: jest.fn().mockResolvedValue(),
 }));
 
+jest.mock("../src/utils/worker", () => ({
+  extractionQueue: { add: jest.fn().mockResolvedValue({}) },
+  worker: { close: jest.fn() },
+}));
+
 const mockUsers = [];
 
 jest.mock("../src/models/User", () => {
@@ -87,6 +92,13 @@ jest.setTimeout(10000);
 beforeEach(() => {
   mockUsers.length = 0;
   jest.clearAllMocks();
+});
+
+afterAll(async () => {
+  const { sequelize } = require("../src/config/database");
+  const { redis } = require("../src/config/redis");
+  if (redis && redis.quit) await redis.quit();
+  if (sequelize && sequelize.close) await sequelize.close();
 });
 
 describe("API Auth", () => {

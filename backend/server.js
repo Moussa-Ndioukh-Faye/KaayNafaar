@@ -3,11 +3,11 @@
  * Express + PostgreSQL + Claude API
  */
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const path = require("path");
 const cookieParser = require("cookie-parser");
 const { connectDB } = require("./src/config/database");
 const { redis, waitForRedis } = require("./src/config/redis");
@@ -20,6 +20,7 @@ const ficheRoutes = require("./src/routes/fiches");
 const quizRoutes = require("./src/routes/quiz");
 const aiRoutes = require("./src/routes/ai");
 const progressionRoutes = require("./src/routes/progression");
+const analyticsRoutes = require("./src/routes/analytics");
 const {
   limiteurGlobal,
   limiteurAuth,
@@ -87,6 +88,7 @@ app.use("/api/fiches", validerCSRF, ficheRoutes);
 app.use("/api/quiz", validerCSRF, quizRoutes);
 app.use("/api/ai", validerCSRF, limiteurIA, aiRoutes);
 app.use("/api/progression", validerCSRF, progressionRoutes);
+app.use("/api/analytics", validerCSRF, analyticsRoutes);
 
 // Route de santé
 app.get("/api/health", (req, res) => {

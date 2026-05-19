@@ -11,7 +11,9 @@ import {
   Sparkles,
   ArrowLeft,
   LayoutGrid,
-  Heart
+  Heart,
+  Plus,
+  Check,
 } from "lucide-react";
 import { fichesAPI } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
@@ -24,6 +26,8 @@ export default function Bibliotheque() {
   const [search, setSearch] = useState("");
   const [matiere, setMatiere] = useState("");
   const [erreur, setErreur] = useState("");
+  const [message, setMessage] = useState("");
+  const [importIds, setImportIds] = useState(new Set());
 
   useEffect(() => {
     chargerBibliotheque();
@@ -31,6 +35,7 @@ export default function Bibliotheque() {
 
   const chargerBibliotheque = async () => {
     setChargement(true);
+    setErreur("");
     try {
       const { data } = await fichesAPI.getFichesPubliques({ matiere, search });
       setFiches(data.fiches ?? []);
@@ -43,6 +48,19 @@ export default function Bibliotheque() {
 
   const handleSearch = (e) => {
     if (e.key === "Enter") chargerBibliotheque();
+  };
+
+  const importer = async (id) => {
+    try {
+      await fichesAPI.importerFichePublique(id);
+      setImportIds(prev => new Set(prev).add(id));
+      setMessage("Fiche ajoutée à ta bibliothèque !");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (err) {
+      const msg = err.response?.data?.message || "Erreur lors de l'import.";
+      setErreur(msg);
+      setTimeout(() => setErreur(""), 3000);
+    }
   };
 
   return (
@@ -90,6 +108,12 @@ export default function Bibliotheque() {
 
       {erreur && (
         <div className="bg-red-50 text-red-700 p-4 rounded-2xl text-sm font-bold border border-red-100">{erreur}</div>
+      )}
+
+      {message && (
+        <div className="bg-emerald-50 text-emerald-700 p-4 rounded-2xl text-sm font-bold border border-emerald-100 flex items-center gap-2">
+          <Check className="w-4 h-4" /> {message}
+        </div>
       )}
 
       {chargement ? (
@@ -150,8 +174,14 @@ export default function Bibliotheque() {
 
               <CardFooter className="pt-4 border-t border-gray-50 dark:border-gray-700 mx-6 mb-4 px-0 flex justify-between items-center">
                 <div className="flex items-center gap-1">
-                   <Button variant="ghost" size="icon" className="w-9 h-9 rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-indigo-50">
-                      <Download className="w-4 h-4" />
+                   <Button
+                     variant="ghost"
+                     size="icon"
+                     className="w-9 h-9 rounded-xl text-gray-400 hover:text-emerald-600 hover:bg-emerald-50"
+                     onClick={() => importer(fiche.id)}
+                     disabled={importIds.has(fiche.id)}
+                   >
+                     {importIds.has(fiche.id) ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                    </Button>
                 </div>
                 <Button 

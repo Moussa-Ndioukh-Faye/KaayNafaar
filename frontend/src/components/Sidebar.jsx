@@ -11,7 +11,8 @@ import {
   LogOut,
   ChevronRight,
   Sparkles,
-  Globe
+  Globe,
+  BarChart3
 } from "lucide-react";
 import { useAuth } from "../App";
 import { cn } from "../lib/utils";
@@ -25,6 +26,7 @@ const navigation = [
   { nom: "Quiz", href: "/quiz", icon: BrainCircuit },
   { nom: "Planning", href: "/planning", icon: Calendar },
   { nom: "Assistant IA", href: "/assistant", icon: MessageSquare },
+  { nom: "Analytiques", href: "/analytiques", icon: BarChart3 },
   { nom: "Mon Profil", href: "/profil", icon: Settings },
 ];
 

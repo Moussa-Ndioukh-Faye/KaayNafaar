@@ -15,9 +15,14 @@ import {
   Info,
   Sparkles,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  ThumbsUp,
+  ThumbsDown,
+  Meh,
+  Globe,
+  ExternalLink
 } from "lucide-react";
-import { iaAPI, coursAPI } from "../services/api";
+import { iaAPI, coursAPI, feedbackAPI } from "../services/api";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
@@ -27,13 +32,51 @@ import { cn } from "../lib/utils";
 
 const formatMessage = (texte) => {
   if (!texte) return null;
+  
+  // Split par lignes pour gérer les structures de bloc
   return texte.split("\n").map((ligne, i) => {
-    if (ligne.startsWith("###")) return <h4 key={i} className="font-bold text-gray-900 dark:text-white mt-4 mb-2">{ligne.replace(/^###\s*/, "")}</h4>;
-    if (ligne.startsWith("##")) return <h3 key={i} className="text-lg font-extrabold text-gray-900 dark:text-white mt-5 mb-3">{ligne.replace(/^##\s*/, "")}</h3>;
-    if (ligne.startsWith("**") && ligne.endsWith("**")) return <p key={i} className="font-bold my-2">{ligne.replace(/\*\*/g, "")}</p>;
-    if (ligne.startsWith("- ") || ligne.startsWith("• ")) return <li key={i} className="ml-5 list-disc my-1 text-gray-700 dark:text-gray-300">{ligne.slice(2)}</li>;
-    if (ligne.trim() === "") return <div key={i} className="h-2" />;
-    return <p key={i} className="my-1 text-gray-700 dark:text-gray-300 leading-relaxed">{ligne}</p>;
+    // Gestion des titres
+    if (ligne.startsWith("###")) {
+      return <h4 key={i} className="font-bold text-gray-900 dark:text-white mt-4 mb-2">{renderInline(ligne.replace(/^###\s*/, ""))}</h4>;
+    }
+    if (ligne.startsWith("##")) {
+      return <h3 key={i} className="text-lg font-extrabold text-gray-900 dark:text-white mt-5 mb-3">{renderInline(ligne.replace(/^##\s*/, ""))}</h3>;
+    }
+    
+    // Gestion des listes
+    if (ligne.startsWith("- ") || ligne.startsWith("• ")) {
+      return (
+        <li key={i} className="ml-5 list-disc my-1 text-gray-700 dark:text-gray-300">
+          {renderInline(ligne.slice(2))}
+        </li>
+      );
+    }
+    
+    // Lignes vides
+    if (ligne.trim() === "") {
+      return <div key={i} className="h-2" />;
+    }
+    
+    // Paragraphe standard avec support du gras inline
+    return (
+      <p key={i} className="my-1 text-gray-700 dark:text-gray-300 leading-relaxed">
+        {renderInline(ligne)}
+      </p>
+    );
+  });
+};
+
+/**
+ * Fonction utilitaire pour parser le gras (**text**) à l'intérieur d'une ligne
+ */
+const renderInline = (text) => {
+  if (!text) return "";
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={index} className="font-bold text-gray-900 dark:text-white">{part.slice(2, -2)}</strong>;
+    }
+    return part;
   });
 };
 
@@ -69,9 +112,64 @@ const CopyButton = ({ text }) => {
   );
 };
 
+const FeedbackButtons = ({ msg }) => {
+  const [sent, setSent] = useState(null);
+
+  const sendFeedback = async (note, categorie) => {
+    if (sent) return;
+    setSent(note);
+    try {
+      await feedbackAPI.envoyer({
+        type: "chat",
+        note,
+        categorie,
+        contenuAssistant: msg.content,
+        interactionComplete: msg.content?.substring(0, 500),
+      });
+    } catch (_) {}
+  };
+
+  if (sent) {
+    return (
+      <div className="flex items-center gap-1 mt-3 text-[10px] font-bold text-gray-400">
+        <Check className="w-3 h-3 text-emerald-500" />
+        Merci de ton retour
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
+      <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 mr-1">Utile ?</span>
+      <button
+        onClick={() => sendFeedback(1, "trop_difficile")}
+        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+        title="Pas utile"
+      >
+        <ThumbsDown className="w-3.5 h-3.5" />
+      </button>
+      <button
+        onClick={() => sendFeedback(3, "utile")}
+        className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-gray-400 hover:text-amber-500 transition-colors"
+        title="Moyennement utile"
+      >
+        <Meh className="w-3.5 h-3.5" />
+      </button>
+      <button
+        onClick={() => sendFeedback(5, "parfait")}
+        className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-400 hover:text-emerald-500 transition-colors"
+        title="Très utile"
+      >
+        <ThumbsUp className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+};
+
 export default function AssistantIA() {
   const [messages, setMessages] = useState([
     {
+      id: "init",
       role: "assistant",
       content: "Bonjour ! Je suis ton assistant de révision IA. Pose-moi n'importe quelle question sur tes cours, demande des explications ou de l'aide pour comprendre un concept difficile. Comment puis-je t'aider ?",
       timestamp: new Date().toISOString(),
@@ -93,7 +191,13 @@ export default function AssistantIA() {
   }, []);
 
   useEffect(() => {
-    coursAPI.getCours().then(({ data }) => setCours(data.cours ?? [])).catch(() => {});
+    coursAPI.getCours()
+      .then(({ data }) => {
+        if (data && Array.isArray(data.cours)) {
+          setCours(data.cours);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -107,26 +211,41 @@ export default function AssistantIA() {
 
     setInput("");
     setErreur("");
-    const userMsg = { role: "user", content: texte, timestamp: new Date().toISOString() };
-    const nouveauxMessages = [...messages, userMsg];
-    setMessages(nouveauxMessages);
+    const userMsg = { 
+      id: `user-${Date.now()}`,
+      role: "user", 
+      content: texte, 
+      timestamp: new Date().toISOString() 
+    };
+    
+    setMessages((prev) => [...prev, userMsg]);
     setEnChargement(true);
 
-    setMessages((prev) => [...prev, { role: "assistant", content: "", timestamp: new Date().toISOString() }]);
+    const assistantMsgId = `ai-${Date.now()}`;
+    setMessages((prev) => [...prev, { 
+      id: assistantMsgId,
+      role: "assistant", 
+      content: "", 
+      timestamp: new Date().toISOString() 
+    }]);
 
     let contenuAccumule = "";
-    const coursTrouve = cours.find((c) => c.id === coursContexte);
+    // Conversion ID en nombre pour la comparaison si nécessaire
+    const coursTrouve = cours.find((c) => String(c.id) === String(coursContexte));
 
     controllerRef.current = iaAPI.chatStream(
       {
-        messages: nouveauxMessages.map((m) => ({ role: m.role, content: m.content })),
+        messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
         contexte: coursTrouve?.contenu?.slice(0, 2000) || "",
       },
       (delta) => {
         contenuAccumule += delta;
         setMessages((prev) => {
           const copy = [...prev];
-          copy[copy.length - 1] = { ...copy[copy.length - 1], content: contenuAccumule };
+          const lastIdx = copy.length - 1;
+          if (copy[lastIdx] && copy[lastIdx].role === "assistant") {
+            copy[lastIdx] = { ...copy[lastIdx], content: contenuAccumule };
+          }
           return copy;
         });
       },
@@ -135,7 +254,10 @@ export default function AssistantIA() {
         if (doneData.sources && doneData.sources.length > 0) {
           setMessages((prev) => {
             const copy = [...prev];
-            copy[copy.length - 1] = { ...copy[copy.length - 1], sources: doneData.sources };
+            const lastIdx = copy.length - 1;
+            if (copy[lastIdx] && copy[lastIdx].role === "assistant") {
+              copy[lastIdx] = { ...copy[lastIdx], sources: doneData.sources };
+            }
             return copy;
           });
         }
@@ -145,7 +267,10 @@ export default function AssistantIA() {
         setEnChargement(false);
         setMessages((prev) => {
           const copy = [...prev];
-          copy[copy.length - 1] = { ...copy[copy.length - 1], content: "Désolé, une erreur est survenue. Réessaie !" };
+          const lastIdx = copy.length - 1;
+          if (copy[lastIdx] && copy[lastIdx].role === "assistant") {
+            copy[lastIdx] = { ...copy[lastIdx], content: "Désolé, une erreur est survenue. Réessaie !" };
+          }
           return copy;
         });
       }
@@ -159,10 +284,19 @@ export default function AssistantIA() {
 
     setConceptInput("");
     setErreur("");
+    
+    const userMsg = { 
+      id: `user-exp-${Date.now()}`,
+      role: "user", 
+      content: `Explique-moi : ${concept}`, 
+      timestamp: new Date().toISOString() 
+    };
+    
+    const aiMsgId = `ai-exp-${Date.now()}`;
     setMessages((prev) => [
       ...prev,
-      { role: "user", content: `Explique-moi : ${concept}`, timestamp: new Date().toISOString() },
-      { role: "assistant", content: "", timestamp: new Date().toISOString() },
+      userMsg,
+      { id: aiMsgId, role: "assistant", content: "", timestamp: new Date().toISOString() },
     ]);
     setEnChargement(true);
 
@@ -174,7 +308,10 @@ export default function AssistantIA() {
         contenuAccumule += delta;
         setMessages((prev) => {
           const copy = [...prev];
-          copy[copy.length - 1] = { ...copy[copy.length - 1], content: contenuAccumule };
+          const lastIdx = copy.length - 1;
+          if (copy[lastIdx] && copy[lastIdx].role === "assistant") {
+            copy[lastIdx] = { ...copy[lastIdx], content: contenuAccumule };
+          }
           return copy;
         });
       },
@@ -203,6 +340,7 @@ export default function AssistantIA() {
     if (window.confirm("Effacer toute la conversation ?")) {
       annuler();
       setMessages([{
+        id: "init-" + Date.now(),
         role: "assistant",
         content: "Conversation réinitialisée. Comment puis-je t'aider ?",
         timestamp: new Date().toISOString(),
@@ -244,7 +382,7 @@ export default function AssistantIA() {
               onChange={(e) => setCoursContexte(e.target.value)}
             >
               <option value="">Contexte global (pas de cours)</option>
-              {cours.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}
+              {Array.isArray(cours) && cours.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}
             </select>
             <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none rotate-90" />
           </div>
@@ -306,9 +444,9 @@ export default function AssistantIA() {
         )}
 
         <div className="space-y-8">
-          {messages.map((msg) => (
+          {messages.map((msg, idx) => (
             <div
-              key={msg.timestamp}
+              key={msg.id || `msg-${idx}`}
               className={cn(
                 "flex gap-4 group animate-in slide-in-from-bottom-4 duration-300",
                 msg.role === "user" ? "flex-row-reverse" : "flex-row"
@@ -327,29 +465,46 @@ export default function AssistantIA() {
                   ? "bg-primary-600 text-white rounded-tr-none"
                   : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-none group-hover:shadow-md"
               )}>
-                {msg.role === "assistant" && (
+                {msg.role === "assistant" && !enChargement && msg.content && (
                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <CopyButton text={msg.content} />
                    </div>
                 )}
                 
                 {msg.role === "assistant" ? (
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <div className="max-w-none">
                     {msg.content ? (
                       <>
                         {formatMessage(msg.content)}
-                        {msg.sources && msg.sources.length > 0 && (
+                        {msg.sources && Array.isArray(msg.sources) && msg.sources.length > 0 && (
                           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
                             <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Sources utilisées :</p>
                             <div className="flex flex-wrap gap-2">
                               {msg.sources.map((s, i) => (
-                                <div key={i} className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg border border-gray-100 dark:border-gray-700 text-[10px] font-bold">
-                                  <BookOpen className="w-3 h-3" />
-                                  {s.titre}
-                                </div>
+                                s.isWeb ? (
+                                  <a 
+                                    key={i} 
+                                    href={s.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg border border-blue-100 dark:border-blue-800/50 text-[10px] font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                                  >
+                                    <Globe className="w-3 h-3" />
+                                    {s.titre}
+                                    <ExternalLink className="w-2 h-2" />
+                                  </a>
+                                ) : (
+                                  <div key={i} className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg border border-gray-100 dark:border-gray-700 text-[10px] font-bold">
+                                    <BookOpen className="w-3 h-3" />
+                                    {s.titre}
+                                  </div>
+                                )
                               ))}
                             </div>
                           </div>
+                        )}
+                        {!enChargement && msg.content && (
+                          <FeedbackButtons msg={msg} />
                         )}
                       </>
                     ) : (
@@ -371,7 +526,7 @@ export default function AssistantIA() {
                    "text-[9px] font-black uppercase tracking-widest mt-4 opacity-30",
                    msg.role === "user" ? "text-right" : "text-left"
                 )}>
-                   {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                   {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                 </div>
               </div>
             </div>
@@ -381,13 +536,13 @@ export default function AssistantIA() {
       </ScrollArea>
 
       {/* Input Area */}
-      <Card className="rounded-[2.5rem] border-none shadow-2xl overflow-hidden bg-white dark:bg-gray-800 p-2 border-t-2 border-primary-50 dark:border-primary-900/20">
+      <Card className="rounded-[2.5rem] border bg-white dark:bg-gray-800 p-2 shadow-2xl">
         <CardContent className="p-0">
           {modeActif === "general" ? (
             <div className="flex gap-3 items-end p-2 pl-6">
               <textarea
                 ref={textareaRef}
-                className="flex-1 resize-none bg-transparent py-4 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 outline-none max-h-40 min-h-[52px] scrollbar-none"
+                className="flex-1 resize-none bg-transparent py-4 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 outline-none max-h-40 min-h-[52px]"
                 placeholder="Pose ta question ou demande un résumé…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -398,7 +553,7 @@ export default function AssistantIA() {
               />
               <div className="pb-2 flex gap-2">
                 {enChargement ? (
-                  <Button onClick={annuler} variant="destructive" size="icon" className="shadow-lg shadow-red-100 dark:shadow-none transition-transform active:scale-90">
+                  <Button onClick={annuler} variant="destructive" size="icon">
                     <Square className="w-5 h-5 fill-current" />
                   </Button>
                 ) : (
@@ -406,7 +561,6 @@ export default function AssistantIA() {
                     onClick={envoyerMessage}
                     disabled={!input.trim()}
                     size="icon"
-                    className="shadow-lg shadow-primary-200 dark:shadow-none transition-all active:scale-90 hover:shadow-xl"
                   >
                     <Send className="w-5 h-5" />
                   </Button>
@@ -415,7 +569,7 @@ export default function AssistantIA() {
             </div>
           ) : (
             <div className="flex gap-3 items-center p-3">
-              <div className="flex-1 flex items-center gap-4 bg-gray-50 dark:bg-gray-900 rounded-[1.5rem] px-6 py-1.5 border-2 border-transparent focus-within:border-primary-500 transition-all focus-within:bg-white dark:focus-within:bg-gray-800">
+              <div className="flex-1 flex items-center gap-4 bg-gray-50 dark:bg-gray-900 rounded-[1.5rem] px-6 py-1.5 border-2 border-transparent focus-within:border-primary-500 transition-all">
                 <Search className="w-5 h-5 text-gray-400" />
                 <input
                   className="flex-1 bg-transparent text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 outline-none py-3"
@@ -435,7 +589,7 @@ export default function AssistantIA() {
                 <Button
                   onClick={expliquerConcept}
                   disabled={!conceptInput.trim()}
-                  className="px-8 font-black text-sm transition-all active:scale-95 shadow-lg shadow-primary-100 dark:shadow-none"
+                  className="px-8 font-black text-sm"
                 >
                   Expliquer <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>

@@ -5,6 +5,7 @@
 const Fiche = require("../models/Fiche");
 const Course = require("../models/Course");
 const Progression = require("../models/Progression");
+const { calculerSM2 } = require("../utils/sm2");
 const { Op } = require("sequelize");
 
 const inclureCours = {
@@ -173,12 +174,54 @@ const supprimerFiche = async (req, res) => {
   }
 };
 
-// PUT /api/fiches/:id/flashcard/:flashcardId — Mettre à jour le niveau de maîtrise d'une flashcard
+// POST /api/fiches/:id/importer — Importer une fiche publique dans son compte
+const importerFichePublique = async (req, res) => {
+  try {
+    const fiche = await Fiche.findOne({
+      where: { id: req.params.id, estPublique: true },
+    });
+
+    if (!fiche) {
+      return res.status(404).json({ success: false, message: "Fiche publique introuvable." });
+    }
+
+    const existe = await Fiche.findOne({
+      where: { titre: fiche.titre, utilisateurId: req.utilisateur.id },
+    });
+
+    if (existe) {
+      return res.status(409).json({ success: false, message: "Tu possèdes déjà cette fiche." });
+    }
+
+    const copie = await Fiche.create({
+      titre: fiche.titre,
+      matiere: fiche.matiere,
+      resume: fiche.resume,
+      conceptsCles: fiche.conceptsCles || [],
+      explications: fiche.explications || {},
+      pointsImportants: fiche.pointsImportants || [],
+      flashcards: fiche.flashcards || [],
+      couleur: fiche.couleur || "#6366f1",
+      coursId: null,
+      utilisateurId: req.utilisateur.id,
+      genereeParIA: fiche.genereeParIA || false,
+      estPublique: false,
+    });
+
+    res.status(201).json({ success: true, fiche: formaterFiche(copie) });
+  } catch (error) {
+    console.error("Erreur importerFichePublique:", error);
+    res.status(500).json({ success: false, message: "Erreur lors de l'import de la fiche." });
+  }
+};
+
+// PUT /api/fiches/:id/flashcard/:flashcardId — Algorithme SM-2 (Anki)
 const mettreAJourFlashcard = async (req, res) => {
   try {
-    const niveauMaitrise = parseInt(req.body.niveauMaitrise);
-    if (isNaN(niveauMaitrise) || niveauMaitrise < 0 || niveauMaitrise > 5) {
-      return res.status(400).json({ success: false, message: "niveauMaitrise doit être un entier entre 0 et 5." });
+    const { grade } = req.body;
+    const q = parseInt(grade);
+    if (isNaN(q) || q < 0 || q > 5) {
+      return res.status(400).json({ success: false, message: "grade doit être un entier entre 0 et 5." });
     }
 
     const fiche = await Fiche.findOne({
@@ -198,9 +241,8 @@ const mettreAJourFlashcard = async (req, res) => {
       return res.status(404).json({ success: false, message: "Flashcard introuvable." });
     }
 
-    flashcards[flashcardIndex].niveauMaitrise = niveauMaitrise;
-    const joursAvant = Math.pow(2, niveauMaitrise);
-    flashcards[flashcardIndex].prochaineRevision = new Date(Date.now() + joursAvant * 86400000);
+    const resultat = calculerSM2(q, flashcards[flashcardIndex]);
+    Object.assign(flashcards[flashcardIndex], resultat);
 
     await fiche.update({ flashcards });
     res.json({ success: true, flashcard: flashcards[flashcardIndex] });
@@ -238,12 +280,53 @@ const getFichesPubliques = async (req, res) => {
   }
 };
 
+// GET /api/fiches/dues — toutes les flashcards à réviser aujourd'hui
+const getFlashcardsDues = async (req, res) => {
+  try {
+    const fiches = await Fiche.findAll({
+      where: { utilisateurId: req.utilisateur.id },
+      attributes: ["id", "titre", "flashcards"],
+    });
+
+    const maintenant = new Date();
+    const dues = [];
+
+    for (const fiche of fiches) {
+      const cards = fiche.flashcards || [];
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        if (!card.question) continue;
+        const nextReview = card.nextReview ? new Date(card.nextReview) : null;
+        if (!nextReview || nextReview <= maintenant) {
+          dues.push({
+            ficheId: fiche.id,
+            ficheTitre: fiche.titre,
+            index: i,
+            question: card.question,
+            reponse: card.reponse,
+            repetitions: card.repetitions || 0,
+            easinessFactor: card.easinessFactor || 2.5,
+            nextReview: card.nextReview || null,
+          });
+        }
+      }
+    }
+
+    res.json({ success: true, count: dues.length, dues });
+  } catch (error) {
+    console.error("Erreur getFlashcardsDues:", error);
+    res.status(500).json({ success: false, message: "Erreur lors de la récupération des flashcards." });
+  }
+};
+
 module.exports = {
   getFiches,
   getFicheParId,
   creerFiche,
   modifierFiche,
   supprimerFiche,
+  importerFichePublique,
   mettreAJourFlashcard,
   getFichesPubliques,
+  getFlashcardsDues,
 };

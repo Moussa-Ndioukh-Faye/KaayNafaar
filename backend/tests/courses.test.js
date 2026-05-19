@@ -9,6 +9,11 @@ jest.mock("../src/utils/ocr", () => ({
   extraireTexteImage: jest.fn(() => Promise.resolve("")),
 }));
 
+jest.mock("../src/utils/worker", () => ({
+  extractionQueue: { add: jest.fn().mockResolvedValue({}) },
+  worker: { close: jest.fn() },
+}));
+
 jest.mock("../src/config/database", () => ({
   sequelize: {
     authenticate: jest.fn().mockResolvedValue(),
@@ -112,8 +117,11 @@ beforeEach(() => {
   mockProgressions.length = 0;
 });
 
-afterAll(() => {
-  // ensure server closes if needed
+afterAll(async () => {
+  const { sequelize } = require("../src/config/database");
+  const { redis } = require("../src/config/redis");
+  if (redis && redis.quit) await redis.quit();
+  if (sequelize && sequelize.close) await sequelize.close();
 });
 
 describe("API Courses", () => {

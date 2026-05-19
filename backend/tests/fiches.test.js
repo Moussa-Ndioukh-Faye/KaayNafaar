@@ -4,6 +4,11 @@ jest.mock("../src/utils/aiPro", () => ({
   indexerCours: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock("../src/utils/worker", () => ({
+  extractionQueue: { add: jest.fn().mockResolvedValue({}) },
+  worker: { close: jest.fn() },
+}));
+
 jest.mock("../src/config/database", () => ({
   sequelize: {
     authenticate: jest.fn().mockResolvedValue(),
@@ -109,6 +114,13 @@ beforeEach(() => {
   mockFiches.length = 0;
 });
 
+afterAll(async () => {
+  const { sequelize } = require("../src/config/database");
+  const { redis } = require("../src/config/redis");
+  if (redis && redis.quit) await redis.quit();
+  if (sequelize && sequelize.close) await sequelize.close();
+});
+
 describe("API Fiches", () => {
   test("GET /api/fiches sans auth retourne 401", async () => {
     const res = await request(app).get("/api/fiches");
@@ -201,7 +213,7 @@ describe("API Fiches", () => {
     expect(res.status).toBe(404);
   });
 
-  test("PUT /api/fiches/:id/flashcard/:flashcardId met à jour une flashcard", async () => {
+  test("PUT /api/fiches/:id/flashcard/:flashcardId met à jour une flashcard (SM-2)", async () => {
     const flashcards = [
       { question: "Q1", reponse: "R1", niveauMaitrise: 0 },
     ];
@@ -213,7 +225,7 @@ describe("API Fiches", () => {
     const res = await request(app)
       .put(`/api/fiches/${createRes.body.fiche.id}/flashcard/0`)
       .set("Cookie", authCookie())
-      .send({ niveauMaitrise: 3 });
+      .send({ grade: 3 });
     expect(res.status).toBe(200);
     expect(res.body.flashcard.niveauMaitrise).toBe(3);
   });

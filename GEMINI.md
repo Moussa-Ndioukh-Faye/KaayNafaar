@@ -4,27 +4,20 @@ Ce document décrit les fonctionnalités professionnelles ajoutées pour transfo
 
 ---
 
-## 🧠 1. Recherche Vectorielle & RAG (Retrieval-Augmented Generation)
+## 🧠 1. Recherche Vectorielle & Recherche Web Hybride (RAG+)
 
-L'Assistant IA utilise une architecture multi-modèles pour optimiser performance et coût :
-- **Tâches Complexes (Gemini 2.0 Flash) :** Génération de fiches, quiz et plannings de révision.
-- **Chat Rapide (Groq - Llama 3.3) :** Réponses instantanées dans le chat et explications de concepts.
+L'Assistant IA utilise désormais une architecture de recherche hybride avancée :
+- **Recherche Locale (Priorité) :** Utilise `pgvector` et la recherche plein texte pour interroger les documents de l'utilisateur.
+- **Recherche Web (Fallback Intelligent) :** Intégration de l'API **Tavily** pour compléter les connaissances si les documents locaux sont insuffisants ou si l'utilisateur demande des informations récentes.
 
-### Optimisations de Performance :
-- **Background Workers (BullMQ + Redis) :** L'extraction de texte (PDF/OCR) et l'indexation vectorielle sont désormais déportées dans une file d'attente en arrière-plan. Cela évite de bloquer le serveur principal lors de l'upload de gros documents.
-- **Caching Intelligent (Redis) :** Les résultats des recherches sémantiques (RAG) sont mis en cache dans Redis. Si une question similaire est posée, la réponse est instantanée sans appel à la base de données vectorielle.
-
-### Collaboration & Communauté :
-- **Bibliothèque Publique :** Les utilisateurs peuvent désormais rendre leurs fiches publiques. Une nouvelle section "Bibliothèque" permet de découvrir, consulter et télécharger les ressources partagées par la communauté.
-
-### Fonctionnement du RAG :
-- **Indexation automatique :** Chaque fois qu'un cours est créé ou modifié, son texte est découpé en segments et transformé en vecteurs mathématiques (embeddings) via `text-embedding-004` (Google Gemini) stockés dans **PostgreSQL** via `pgvector`.
-- **Recherche Sémantique :** Lorsque tu poses une question dans le chat sans sélectionner de cours spécifique, l'IA cherche automatiquement les segments les plus pertinents dans TOUS tes documents.
+### Fonctionnement de l'Orchestrateur :
+1. **Local First :** L'IA cherche d'abord dans tes cours indexés.
+2. **Analyse de Confiance :** Si aucune information pertinente n'est trouvée localement, ou si la question concerne l'actualité/le web, l'orchestrateur déclenche une recherche web.
+3. **Fusion de Contexte :** Les sources sont fusionnées. L'IA est instruite de prioriser tes cours tout en utilisant le web comme complément.
+4. **Citations Transparentes :** Les sources web sont affichées avec une icône de globe et un lien direct vers l'article source.
 
 ### Configuration requise :
-- `GEMINI_API_KEY` : Pour les embeddings et les tâches de génération complexes.
-- `GROQ_API_KEY` : Pour un chat ultra-rapide (optionnel, bascule sur Gemini si absent).
-- La base de données doit utiliser l'image Docker `pgvector/pgvector`.
+- `TAVILY_API_KEY` : Clé API pour la recherche web (à ajouter dans le `.env`).
 
 ---
 

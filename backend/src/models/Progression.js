@@ -42,6 +42,14 @@ const Progression = sequelize.define(
       type: DataTypes.JSONB,
       defaultValue: [],
     },
+    analyseIA: {
+      type: DataTypes.JSONB,
+      defaultValue: {
+        scoreGlobal: 0,
+        evolution: [],
+        recommandations: [],
+      },
+    },
   },
   {
     tableName: "progressions",

@@ -4,6 +4,11 @@ jest.mock("../src/utils/aiPro", () => ({
   indexerCours: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock("../src/utils/worker", () => ({
+  extractionQueue: { add: jest.fn().mockResolvedValue({}) },
+  worker: { close: jest.fn() },
+}));
+
 jest.mock("../src/config/database", () => ({
   sequelize: {
     authenticate: jest.fn().mockResolvedValue(),
@@ -94,6 +99,13 @@ const authCookie = (uid = 1) => `token=${makeToken(uid)}`;
 
 beforeEach(() => {
   mockQuiz.length = 0;
+});
+
+afterAll(async () => {
+  const { sequelize } = require("../src/config/database");
+  const { redis } = require("../src/config/redis");
+  if (redis && redis.quit) await redis.quit();
+  if (sequelize && sequelize.close) await sequelize.close();
 });
 
 describe("API Quiz", () => {

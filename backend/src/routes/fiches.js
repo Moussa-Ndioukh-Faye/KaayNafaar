@@ -3,7 +3,8 @@ const router = express.Router();
 const { body, validationResult } = require("express-validator");
 const {
   getFiches, getFicheParId, creerFiche, modifierFiche,
-  supprimerFiche, mettreAJourFlashcard, getFichesPubliques,
+  supprimerFiche, importerFichePublique, mettreAJourFlashcard, getFichesPubliques,
+  getFlashcardsDues,
 } = require("../controllers/ficheController");
 const { proteger } = require("../middleware/auth");
 
@@ -20,6 +21,7 @@ router.get("/partage/:id", getFicheParId); // Détail d'une fiche publique
 
 router.use(proteger);
 
+router.get("/dues", getFlashcardsDues);
 router.get("/", getFiches);
 router.get("/:id", getFicheParId);
 router.post("/", [
@@ -34,5 +36,6 @@ router.put("/:id", [
 ], modifierFiche);
 router.delete("/:id", supprimerFiche);
 router.put("/:id/flashcard/:flashcardId", mettreAJourFlashcard);
+router.post("/:id/importer", proteger, importerFichePublique);
 
 module.exports = router;

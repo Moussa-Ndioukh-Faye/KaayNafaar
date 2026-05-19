@@ -78,7 +78,7 @@ npm start        # Lance le serveur Vite
 | `DB_HOST` | Hôte PostgreSQL (ex: `localhost` ou `postgres`) |
 | `DB_USER` | Utilisateur base de données (`user_admin`) |
 | `DB_PASSWORD` | Mot de passe (`password_secret`) |
-| `DB_NAME` | Nom de la base (`kaay_nafaar`) |
+| `DB_NAME` | Nom de la base (`kaay_nafaar_v2`) |
 | `JWT_SECRET` | Clé secrète pour les tokens JWT |
 | `OPENAI_API_KEY` | Requis pour le RAG et les Embeddings |
 

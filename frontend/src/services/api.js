@@ -78,6 +78,7 @@ export const fichesAPI = {
   creerFiche: (data) => api.post("/fiches", data),
   modifierFiche: (id, data) => api.put(`/fiches/${id}`, data),
   supprimerFiche: (id) => api.delete(`/fiches/${id}`),
+  importerFichePublique: (id) => api.post(`/fiches/${id}/importer`),
   mettreAJourFlashcard: (ficheId, flashcardId, data) =>
     api.put(`/fiches/${ficheId}/flashcard/${flashcardId}`, data),
 };
@@ -106,6 +107,10 @@ export const progressionAPI = {
 // ═══════════════════════════════════════════════
 // IA — Streaming via EventSource (SSE)
 // ═══════════════════════════════════════════════
+export const feedbackAPI = {
+  envoyer: (data) => api.post("/ai/feedback", data),
+};
+
 export const iaAPI = {
   /**
    * Génère une fiche avec streaming SSE
@@ -141,7 +146,6 @@ export const iaAPI = {
 const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   const controller = new AbortController();
 
-  // Déterminer la base URL (soit l'URL absolue, soit rien si on utilise le proxy Vite)
   const base = import.meta.env.VITE_API_URL?.startsWith("http") 
     ? import.meta.env.VITE_API_URL 
     : "";
@@ -164,18 +168,24 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
 
       const read = async () => {
         const { done, value } = await reader.read();
         if (done) return;
 
-        const chunk = decoder.decode(value, { stream: true });
-        // Chaque ligne SSE commence par "data: "
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
+        buffer += decoder.decode(value, { stream: true });
+        
+        const lines = buffer.split("\n");
+        // Garder le dernier élément (potentiellement incomplet) dans le buffer
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith("data: ")) continue;
+          
           try {
-            const parsed = JSON.parse(line.slice(6));
+            const parsed = JSON.parse(trimmed.slice(6));
             if (parsed.error) {
               onError?.(parsed.error);
             } else if (parsed.done) {
@@ -184,7 +194,7 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
               onDelta?.(parsed.delta);
             }
           } catch (_) {
-            // Ignorer les lignes malformées
+            // Ignorer les lignes malformées ou incomplètes
           }
         }
 
@@ -199,7 +209,11 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
       }
     });
 
-  return controller; // Retourner pour permettre l'annulation
+  return controller;
+};
+
+export const analyticsAPI = {
+  get: () => api.get("/analytics"),
 };
 
 export default api;
