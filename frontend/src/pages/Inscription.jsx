@@ -64,7 +64,7 @@ export default function Inscription() {
       navigate("/");
     } catch (error) {
       if (!error.response) {
-        setErreur("Impossible de joindre le serveur. Vérifie que le backend est démarré (port 5001).");
+        setErreur(`Impossible de joindre le serveur à l'adresse ${authAPI.getBaseURL()}. Vérifie ta connexion et les variables d'environnement.`);
       } else {
         setErreur(error.response.data?.message || "Erreur lors de l'inscription.");
       }

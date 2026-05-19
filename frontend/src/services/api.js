@@ -22,6 +22,7 @@ const getBaseURL = () => {
 };
 
 const API_URL = getBaseURL();
+console.log("🚀 API Base URL:", API_URL);
 
 // Instance Axios configurée
 const api = axios.create({
@@ -53,6 +54,7 @@ api.interceptors.response.use(
 // Auth
 // ═══════════════════════════════════════════════
 export const authAPI = {
+  getBaseURL,
   inscription: (data) => api.post("/auth/inscription", data),
   connexion: (data) => api.post("/auth/connexion", data),
   getProfil: () => api.get("/auth/profil"),
