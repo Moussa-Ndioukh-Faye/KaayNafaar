@@ -66,21 +66,21 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // ── Helmet + security middlewares ────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:", "https://*"],
-      connectSrc: ["*"], // Très permissif pour le debug, à resserrer plus tard
-      fontSrc: ["'self'", "https:", "data:"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
-    },
-  },
-  crossOriginEmbedderPolicy: false,
-}));
+// app.use(helmet({
+//   contentSecurityPolicy: {
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+//       styleSrc: ["'self'", "'unsafe-inline'"],
+//       imgSrc: ["'self'", "data:", "blob:", "https://*"],
+//       connectSrc: ["*"], // Très permissif pour le debug, à resserrer plus tard
+//       fontSrc: ["'self'", "https:", "data:"],
+//       objectSrc: ["'none'"],
+//       upgradeInsecureRequests: [],
+//     },
+//   },
+//   crossOriginEmbedderPolicy: false,
+// }));
 app.use(limiteurGlobal);
 app.use(validerTaillePayload);
 
