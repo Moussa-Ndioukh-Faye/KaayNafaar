@@ -2,6 +2,7 @@
  * Contrôleur des Quiz
  */
 
+const { Op } = require("sequelize");
 const Quiz = require("../models/Quiz");
 const Progression = require("../models/Progression");
 
@@ -24,10 +25,6 @@ const getQuiz = async (req, res) => {
     res.status(500).json({ success: false, message: "Impossible de récupérer les quiz." });
   }
 };
-
-const { Op } = require("sequelize");
-
-// ...
 
 // GET /api/quiz/:id
 const getQuizParId = async (req, res) => {

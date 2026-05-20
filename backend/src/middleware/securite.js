@@ -19,13 +19,6 @@ const originesAutorisees = (process.env.FRONTEND_URL || "")
   .map((o) => o.trim().replace(/\/$/, "")) // Enlever le slash de fin
   .filter(Boolean);
 
-// ── Validation au démarrage ───────────────────────────────────────
-// Vérifier JWT_SECRET
-if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
-  console.error("❌ JWT_SECRET doit faire au moins 32 caractères!");
-  process.exit(1);
-}
-
 // ── Rate Limiting global ───────────────────────────────────────────
 const limiteurGlobal = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

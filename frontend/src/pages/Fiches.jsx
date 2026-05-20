@@ -18,7 +18,6 @@ import {
   Clock,
   Globe,
   Lock as LockIcon,
-  Copy,
   AlertCircle,
   ThumbsUp,
   ThumbsDown,
@@ -186,7 +185,7 @@ export default function Fiches() {
       (delta) => setTexteStream((prev) => prev + delta),
       () => {
         setEnGeneration(false);
-        fichesAPI.getFiches().then(({ data }) => setFiches(data.fiches ?? []));
+        fichesAPI.getFiches().then(({ data }) => setFiches(data.fiches ?? [])).catch(() => {});
         setVue("liste");
         setTexteStream("");
       },
@@ -221,9 +220,13 @@ export default function Fiches() {
       setFiches(prev => prev.map(f => f.id === fiche.id ? { ...f, estPublique: nouvelleValeur } : f));
       
       if (nouvelleValeur) {
-        const url = `${window.location.origin}/partage/fiche/${fiche.id}`;
-        await navigator.clipboard.writeText(url);
-        alert("Fiche rendue publique ! Le lien de partage a été copié dans ton presse-papiers.");
+        const url = `${window.location.origin}/bibliotheque?fiche=${fiche.id}`;
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch (_) {
+          // Clipboard non disponible, lien affiché dans la console
+        }
+        setErreur("");
       }
     } catch (_) {
       setErreur("Erreur lors de la modification de la visibilité.");
@@ -299,6 +302,10 @@ export default function Fiches() {
         ) : (
           <div className="perspective-1000">
             <div
+              role="button"
+              tabIndex={0}
+              aria-label={reponseMontree ? "Réponse affichée" : "Cliquer pour voir la réponse"}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); !reponseMontree && setReponseMontree(true); } }}
               className={cn(
                 "relative h-80 w-full transition-all duration-500 transform-style-3d cursor-pointer",
                 reponseMontree ? "rotate-y-180" : "",

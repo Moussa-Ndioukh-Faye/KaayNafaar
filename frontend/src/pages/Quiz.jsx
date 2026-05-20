@@ -69,7 +69,7 @@ export default function Quiz() {
       (delta) => setTexteStream((p) => p + delta),
       () => {
         setEnGeneration(false);
-        quizAPI.getQuiz().then(({ data }) => setQuizList(data.quizList));
+        quizAPI.getQuiz().then(({ data }) => setQuizList(data.quizList)).catch(() => {});
         setVue("liste"); setTexteStream("");
       },
       (err) => { setErreur(err || "Erreur."); setEnGeneration(false); }

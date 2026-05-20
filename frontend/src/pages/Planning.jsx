@@ -256,8 +256,8 @@ export default function Planning() {
                    </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {planningGenere.planning?.map((session, i) => (
-                    <Card key={i} className="rounded-2xl border-none bg-gray-50 dark:bg-gray-900 shadow-none hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+{planningGenere.planning?.map((session, i) => (
+  <Card key={`session-${i}`} className="rounded-2xl border-none bg-gray-50 dark:bg-gray-900 shadow-none hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                       <CardContent className="p-4 flex items-center gap-4">
                          <div className="text-center w-12 flex-shrink-0">
                             <p className="text-[10px] font-black uppercase text-gray-400">

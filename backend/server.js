@@ -49,8 +49,7 @@ const originsFixes = (process.env.FRONTEND_URL || "https://kaay-nafaar.vercel.ap
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Autoriser si pas d'origine (ex: curl) ou si dans la liste ou vercel
-      if (!origin || originsFixes.includes(origin) || origin.endsWith(".vercel.app")) {
+      if (!origin || originsFixes.includes(origin)) {
         return callback(null, true);
       }
       callback(new Error("Non autorisé par CORS"));
@@ -81,7 +80,11 @@ app.use(limiteurGlobal);
 app.use(validerTaillePayload);
 
 // cookies
-app.use(cookieParser(process.env.COOKIE_SECRET || "default-secret-change-me"));
+if (!process.env.COOKIE_SECRET || process.env.COOKIE_SECRET.length < 32) {
+  console.error("❌ COOKIE_SECRET doit faire au moins 32 caractères!");
+  process.exit(1);
+}
+app.use(cookieParser(process.env.COOKIE_SECRET));
 
 // ── Parsing du corps ──────────────────────────────────────────────
 app.use(express.json({ limit: "10mb" }));
@@ -141,7 +144,7 @@ if (require.main === module) {
     // ── Graceful Shutdown ──────────────────────────────────────────
     const arreter = async (signal) => {
       console.log(`\n🛑 Signal ${signal} reçu, arrêt gracieux...`);
-      server.close();
+      await new Promise((resolve) => server.close(resolve));
       await worker.close();
       await redis.quit();
       console.log("👋 Arrêt terminé");

@@ -220,7 +220,7 @@ export default function Bibliotheque() {
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center gap-2.5">
                       <div className={`w-9 h-9 rounded-xl ${couleurs.bg} flex items-center justify-center`}>
-                        <FileText className={`w-4.5 h-4.5 ${couleurs.text}`} />
+                        <FileText className={`w-5 h-5 ${couleurs.text}`} />
                       </div>
                       {fiche.genereeParIA && (
                         <div className="px-2 py-1 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 flex items-center gap-1">

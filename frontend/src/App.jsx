@@ -116,7 +116,7 @@ const AuthProvider = ({ children }) => {
         }
       } catch (err) {
         if (active) {
-          console.warn("Session expirée ou invalide");
+          // Session expirée — redirection silencieuse
           localStorage.removeItem("utilisateur");
           setUtilisateur(null);
         }

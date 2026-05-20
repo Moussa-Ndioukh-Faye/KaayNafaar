@@ -64,9 +64,12 @@ services:
       PORT: "5001"
       FRONTEND_URL: ${FRONTEND_URL:-https://kaay-nafaar.vercel.app}
       REDIS_HOST: redis
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      JWT_SECRET: ${JWT_SECRET}
-      COOKIE_SECRET: ${COOKIE_SECRET}
+      # Ces variables sont déjà dans le fichier .env (via env_file).
+      # Les lignes ci-dessous sont commentées car elles utilisent l'expansion
+      # shell ${} qui écrase les valeurs du fichier .env par une chaîne vide.
+      # GEMINI_API_KEY: ${GEMINI_API_KEY}
+      # JWT_SECRET: ${JWT_SECRET}
+      # COOKIE_SECRET: ${COOKIE_SECRET}
     ports:
       - "5001:5001"
     depends_on:
@@ -85,7 +88,7 @@ services:
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     environment:
-      - TUNNEL_TOKEN=eyJhIjoiY2UwOTQ5YzQ1ZDQwYWI5MTIyZjI1NmUwMDM5NjQwYzIiLCJ0IjoiZjg0ZjQzMjMtMzQyZC00ZjQwLTk3MzYtYWMzMjg4MDM5MmViIiwicyI6Ik5ESTVaalF4TUdZdFpURmlOQzAwTWpsbUxXRmhNREl0WmpjNVltSXpOakppT1RjdyJ9
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN:-}
     depends_on:
       - backend
     networks:

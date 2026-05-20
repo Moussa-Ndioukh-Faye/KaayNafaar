@@ -53,7 +53,6 @@ api.interceptors.response.use(
 // Auth
 // ═══════════════════════════════════════════════
 export const authAPI = {
-  getBaseURL,
   inscription: (data) => api.post("/auth/inscription", data),
   connexion: (data) => api.post("/auth/connexion", data),
   getProfil: () => api.get("/auth/profil"),
@@ -160,25 +159,29 @@ export const iaAPI = {
 const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   const controller = new AbortController();
 
-  // On s'assure d'avoir l'URL de base incluant /api
   const base = API_URL.startsWith("http") ? API_URL : "";
-  
-  // S'assurer que endpoint commence par un slash et n'inclut pas déjà /api
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
-  fetch(`${base}${cleanEndpoint}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(body),
-    signal: controller.signal,
-  })
-    .then(async (response) => {
+  (async () => {
+    try {
+      const response = await fetch(`${base}${cleanEndpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         onError?.(err.message || "Erreur serveur");
+        return;
+      }
+
+      if (!response.body) {
+        onError?.("Response body is null");
         return;
       }
 
@@ -187,43 +190,48 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
       let buffer = "";
 
       const read = async () => {
-        const { done, value } = await reader.read();
-        if (done) return;
+        try {
+          const { done, value } = await reader.read();
+          if (done) return;
 
-        buffer += decoder.decode(value, { stream: true });
-        
-        const lines = buffer.split("\n");
-        // Garder le dernier élément (potentiellement incomplet) dans le buffer
-        buffer = lines.pop() || "";
+          buffer += decoder.decode(value, { stream: true });
 
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith("data: ")) continue;
-          
-          try {
-            const parsed = JSON.parse(trimmed.slice(6));
-            if (parsed.error) {
-              onError?.(parsed.error);
-            } else if (parsed.done) {
-              onDone?.(parsed);
-            } else if (parsed.delta) {
-              onDelta?.(parsed.delta);
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+            try {
+              const parsed = JSON.parse(trimmed.slice(6));
+              if (parsed.error) {
+                onError?.(parsed.error);
+              } else if (parsed.done) {
+                onDone?.(parsed);
+              } else if (parsed.delta) {
+                onDelta?.(parsed.delta);
+              }
+            } catch (_) {
+              // Ignorer les lignes malformées ou incomplètes
             }
-          } catch (_) {
-            // Ignorer les lignes malformées ou incomplètes
+          }
+
+          read();
+        } catch (err) {
+          if (err.name !== "AbortError") {
+            onError?.(err.message);
           }
         }
-
-        read();
       };
 
       read();
-    })
-    .catch((err) => {
+    } catch (err) {
       if (err.name !== "AbortError") {
         onError?.(err.message);
       }
-    });
+    }
+  })();
 
   return controller;
 };

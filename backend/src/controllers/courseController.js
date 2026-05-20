@@ -17,9 +17,10 @@ const getCours = async (req, res) => {
     if (matiere) where.matiere = matiere;
     if (niveau) where.niveau = niveau;
     if (search) {
+      const escaped = search.replace(/[%_]/g, "\\$&");
       where[Op.or] = [
-        { titre: { [Op.like]: `%${search}%` } },
-        { contenu: { [Op.like]: `%${search}%` } },
+        { titre: { [Op.like]: `%${escaped}%` } },
+        { contenu: { [Op.like]: `%${escaped}%` } },
       ];
     }
 

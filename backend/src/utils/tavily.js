@@ -12,12 +12,7 @@ const TAVILY_API_URL = "https://api.tavily.com/search";
  */
 const webSearch = async (query, options = {}) => {
   const apiKey = process.env.TAVILY_API_KEY;
-  console.log(`📡 [TAVILY] Recherche: "${query}" (API Key: ${apiKey ? "OK" : "MANQUANTE"})`);
-  
-  if (!apiKey) {
-    console.warn("⚠️ Tavily API Key manquante. Recherche web désactivée.");
-    return [];
-  }
+  if (!apiKey) return [];
 
   try {
     const response = await fetch(TAVILY_API_URL, {
@@ -37,25 +32,16 @@ const webSearch = async (query, options = {}) => {
       signal: AbortSignal.timeout(15000)
     });
 
-    console.log(`📡 [TAVILY] HTTP Status: ${response.status}`);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error(`❌ [TAVILY] Error details:`, errorData);
+      console.warn("[TAVILY] Error:", errorData);
       return [];
     }
 
     const data = await response.json();
-    console.log(`✅ [TAVILY] Résultats reçus: ${data.results?.length || 0}`);
 
     if (!data || !data.results || data.results.length === 0) {
-      console.warn("⚠️ [TAVILY] Aucun résultat trouvé pour cette requête.");
       return [];
-    }
-
-    // Log le titre du premier résultat pour vérifier la fraîcheur
-    if (data.results[0]) {
-      console.log(`📄 [TAVILY] Premier résultat: "${data.results[0].title}"`);
     }
 
     return data.results.map(r => ({
@@ -66,7 +52,7 @@ const webSearch = async (query, options = {}) => {
       source: "web"
     }));
   } catch (err) {
-    console.error("❌ [TAVILY] Exception:", err.message);
+    console.warn("[TAVILY] Exception:", err.message);
     return [];
   }
 };

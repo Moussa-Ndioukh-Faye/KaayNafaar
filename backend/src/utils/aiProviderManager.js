@@ -70,7 +70,6 @@ class AIProviderManager {
 
     for (const provider of tries) {
       try {
-        console.log(`🤖 Utilisation du provider: ${provider.name} (${provider.model})`);
         const stream = await provider.client.chat.completions.create({
           model: provider.model,
           messages,
@@ -113,7 +112,6 @@ class AIProviderManager {
 
     for (const provider of tries) {
       try {
-        console.log(`🤖 Utilisation du provider: ${provider.name} (${provider.model})`);
         const response = await provider.client.chat.completions.create({
           model: provider.model,
           messages,
@@ -135,4 +133,4 @@ class AIProviderManager {
   }
 }
 
-module.exports = { AIProviderManager, initializeProviders, PROVIDERS };
+module.exports = { AIProviderManager };
