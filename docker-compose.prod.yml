@@ -76,6 +76,18 @@ services:
     networks:
       - internal
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: revision-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=eyJhIjoiY2UwOTQ5YzQ1ZDQwYWI5MTIyZjI1NmUwMDM5NjQwYzIiLCJ0IjoiZjg0ZjQzMjMtMzQyZC00ZjQwLTk3MzYtYWMzMjg4MDM5MmViIiwicyI6Ik5ESTVaalF4TUdZdFpURmlOQzAwTWpsbUxXRmhNREl0WmpjNVltSXpOakppT1RjdyJ9
+    depends_on:
+      - backend
+    networks:
+      - internal
+
   caddy:
     image: caddy:2-alpine
     container_name: revision-caddy
