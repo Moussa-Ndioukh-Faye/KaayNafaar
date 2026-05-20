@@ -11,9 +11,40 @@ const aiManager = new AIProviderManager();
 const ORDRE_FICHE_QUIZ = ["gemini", "groq"];
 const ORDRE_CHAT = ["gemini", "groq"];
 
-const SYSTEM_PROMPT = `Tu es un professeur expert et assistant d'étude pour étudiants en génie logiciel et systèmes d'information.
-Tu dois répondre UNIQUEMENT en JSON valide, sans texte avant ou après.
-Sois précis, pédagogique et adapte ton langage au niveau étudiant.`;
+const SYSTEM_PROMPT = `Tu es un professeur expert et assistant d'étude. 
+RÈGLES :
+1. Réponds UNIQUEMENT en JSON valide.
+2. Pas de texte avant ou après le JSON.
+3. Ne répète pas le contenu du cours inutilement.
+4. Sois concis et précis.`;
+
+const FICHE_SCHEMA = `
+Structure attendue pour la fiche :
+{
+  "title": "Titre du cours",
+  "summary": "Résumé global",
+  "concepts": [
+    {"term": "Concept 1", "definition": "Explication"},
+    {"term": "Concept 2", "definition": "Explication"}
+  ],
+  "flashcards": [
+    {"question": "Question ?", "answer": "Réponse"}
+  ]
+}`;
+
+const QUIZ_SCHEMA = `
+Structure attendue pour le quiz :
+{
+  "title": "Titre du quiz",
+  "description": "Brève description",
+  "questions": [
+    {
+      "question": "Énoncé de la question ?",
+      "answers": ["Option A", "Option B", "Option C", "Option D"],
+      "correct": 0 (index de la bonne réponse)
+    }
+  ]
+}`;
 
 const detecterInjectionPrompt = (contenu) => {
   if (!contenu || typeof contenu !== "string") return false;
@@ -33,7 +64,30 @@ const detecterInjectionPrompt = (contenu) => {
 };
 
 const nettoyerJSON = (texte) => {
-  return texte.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  let propre = texte.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+  
+  // Tentative de réparation de JSON tronqué
+  try {
+    JSON.parse(propre);
+    return propre;
+  } catch (e) {
+    // Si c'est tronqué, on essaie de fermer les crochets et accolades
+    let ouvertures = [];
+    for (let char of propre) {
+      if (char === "{" || char === "[") ouvertures.push(char);
+      else if (char === "}" || char === "]") {
+        const last = ouvertures[ouvertures.length - 1];
+        if ((char === "}" && last === "{") || (char === "]" && last === "[")) {
+          ouvertures.pop();
+        }
+      }
+    }
+    while (ouvertures.length > 0) {
+      const last = ouvertures.pop();
+      propre += (last === "{" ? "}" : "]");
+    }
+    return propre;
+  }
 };
 
 const envoyerErreur = (res, message, status = 500) => {
@@ -67,7 +121,7 @@ const genererFiche = async (req, res) => {
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Génère une fiche de révision JSON pour le cours "${titreCours}" basé sur ce contenu : ${contextePertinent}`,
+          content: `Génère une fiche de révision pour le cours "${titreCours}" basée sur ce contenu : ${contextePertinent}\n\n${FICHE_SCHEMA}`,
         },
       ],
       onDelta: (delta) => { if (!streamAborted) res.write(`data: ${JSON.stringify({ delta })}\n\n`); },
@@ -78,7 +132,8 @@ const genererFiche = async (req, res) => {
           const fiche = await Fiche.create({ ...ficheData, coursId, utilisateurId: req.utilisateur.id });
           res.write(`data: ${JSON.stringify({ done: true, ficheId: fiche.id, fiche: ficheData })}\n\n`);
         } catch (parseError) {
-          res.write(`data: ${JSON.stringify({ error: "Erreur de parsing JSON" })}\n\n`);
+          console.error("❌ Erreur parsing fiche:", parseError, texteComplet);
+          res.write(`data: ${JSON.stringify({ error: "Erreur de format IA (JSON invalide)" })}\n\n`);
         }
         res.end();
       },
@@ -111,7 +166,7 @@ const genererQuiz = async (req, res) => {
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Génère un quiz JSON de ${nombreQuestions} questions pour "${titreCours}" (Difficulté: ${difficulte}) basé sur : ${contextePertinent}`,
+          content: `Génère un quiz de ${nombreQuestions} questions pour "${titreCours}" (Difficulté: ${difficulte}) basé sur ce contenu : ${contextePertinent}\n\n${QUIZ_SCHEMA}`,
         },
       ],
       onDelta: (delta) => { if (!streamAborted) res.write(`data: ${JSON.stringify({ delta })}\n\n`); },
@@ -122,7 +177,8 @@ const genererQuiz = async (req, res) => {
           const quiz = await Quiz.create({ ...quizData, difficulte, coursId, utilisateurId: req.utilisateur.id });
           res.write(`data: ${JSON.stringify({ done: true, quizId: quiz.id, quiz: quizData })}\n\n`);
         } catch (parseError) {
-          res.write(`data: ${JSON.stringify({ error: "Erreur de parsing JSON" })}\n\n`);
+          console.error("❌ Erreur parsing quiz:", parseError, texteComplet);
+          res.write(`data: ${JSON.stringify({ error: "Erreur de format IA (JSON invalide)" })}\n\n`);
         }
         res.end();
       },
