@@ -115,45 +115,37 @@ export const progressionAPI = {
 // IA — Streaming via EventSource (SSE)
 // ═══════════════════════════════════════════════
 export const feedbackAPI = {
-  envoyer: (data) => api.post("/api/ai/feedback", data),
+  envoyer: (data) => api.post("/ai/feedback", data),
 };
 
 export const iaAPI = {
-  /**
-   * Génère une fiche avec streaming SSE
-   * @param {object} data - { contenuCours, titreCours, coursId }
-   * @param {function} onDelta - Callback pour chaque chunk reçu
-   * @param {function} onDone - Callback à la fin avec la fiche complète
-   * @param {function} onError - Callback d'erreur
-   */
   genererFicheStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/generer-fiche", data, onDelta, onDone, onError);
+    return fetchStream("/ai/generer-fiche", data, onDelta, onDone, onError);
   },
 
   genererQuizStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/generer-quiz", data, onDelta, onDone, onError);
+    return fetchStream("/ai/generer-quiz", data, onDelta, onDone, onError);
   },
 
   expliquerStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/expliquer", data, onDelta, onDone, onError);
+    return fetchStream("/ai/expliquer", data, onDelta, onDone, onError);
   },
 
   chatStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/api/ai/chat", data, onDelta, onDone, onError);
+    return fetchStream("/ai/chat", data, onDelta, onDone, onError);
   },
 
-  genererPlanning: (data) => api.post("/api/ai/planning", data),
+  genererPlanning: (data) => api.post("/ai/planning", data),
 };
 
 /**
  * Fetch avec streaming SSE — gère les Server-Sent Events
- * Le token JWT est automatiquement envoyé via le cookie httpOnly par le navigateur
- * Retourne une AbortController pour annuler le stream
  */
 const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   const controller = new AbortController();
 
-  const base = API_URL.startsWith("http") ? API_URL : "";
+  // S'assurer d'inclure le préfixe /api pour le proxy Vercel
+  const base = API_URL; // "/api"
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
   (async () => {
@@ -207,7 +199,7 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
                 onDelta?.(parsed.delta);
               }
             } catch (_) {
-              // Ignorer les lignes malformées ou incomplètes
+              // Ignorer les lignes malformées
             }
           }
 
