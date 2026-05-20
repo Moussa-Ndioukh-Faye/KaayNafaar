@@ -12,10 +12,13 @@ RUN npm ci --include=dev --legacy-peer-deps
 FROM node:20-alpine AS production
 WORKDIR /app
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 COPY package*.json ./
 RUN npm ci --omit=dev --legacy-peer-deps
 
 COPY . .
+RUN chown -R appuser:appgroup /app
 
 # Run as root to simplify volume permissions on VPS
 # USER appuser

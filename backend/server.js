@@ -4,8 +4,15 @@
  */
 
 const path = require("path");
+const fs = require("fs");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
+
+// Garantir que le dossier uploads/ existe et est accessible
+const uploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true, mode: 0o755 });
+}
 const cors = require("cors");
 const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
