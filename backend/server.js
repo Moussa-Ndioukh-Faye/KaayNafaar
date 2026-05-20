@@ -135,7 +135,7 @@ const PORT = process.env.PORT || 5001;
 if (require.main === module) {
   (async () => {
     try {
-      await waitForRedis(15000);
+      await waitForRedis(5000);
     } catch (err) {
       console.error("⚠️", err.message, "— BullMQ ne pourra pas traiter de jobs");
     }

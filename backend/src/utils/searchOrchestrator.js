@@ -3,6 +3,7 @@
  * Gère la priorité Local RAG vs Web Search (Tavily)
  */
 
+const crypto = require("crypto");
 const { rechercherContexteHybride } = require("./aiPro");
 const { webSearch } = require("./tavily");
 /**

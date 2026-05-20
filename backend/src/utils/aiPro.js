@@ -12,7 +12,7 @@ const { redis } = require("../config/redis");
 
 // Configuration des Embeddings (Google Gemini)
 const embeddings = new GoogleGenerativeAIEmbeddings({
-  apiKey: process.env.GEMINI_API_KEY || "placeholder",
+  apiKey: process.env.GEMINI_API_KEY,
   model: "text-embedding-004",
 });
 

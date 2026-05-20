@@ -1,4 +1,6 @@
 const Redis = require("ioredis");
+const dns = require("dns");
+
 let RedisMock;
 try {
   RedisMock = require("ioredis-mock");
@@ -6,31 +8,7 @@ try {
   RedisMock = null;
 }
 
-const redisConfig = {
-  host: process.env.REDIS_HOST || "localhost",
-  port: parseInt(process.env.REDIS_PORT || "6379"),
-  maxRetriesPerRequest: null,
-  retryStrategy: (times) => {
-    if (times > 3) {
-      // On arrête de spammer les logs après 3 tentatives
-      return null;
-    }
-    return Math.min(times * 50, 2000);
-  },
-};
-
-let redisInstance;
-let isMock = false;
-
-try {
-  if (process.env.NODE_ENV === "test" && RedisMock) {
-    redisInstance = new RedisMock();
-    isMock = true;
-  } else {
-    redisInstance = new Redis(redisConfig);
-  }
-} catch (e) {
-  console.warn("⚠️ Impossible d'initialiser Redis, passage en mode mémoire.");
+const creerMock = () => {
   if (RedisMock) {
     redisInstance = new RedisMock();
   } else {
@@ -42,30 +20,53 @@ try {
     redisInstance.disconnect = () => {};
   }
   isMock = true;
-}
+};
 
-// Gestion des erreurs pour éviter le flood
-redisInstance.on("error", (_err) => {
-  if (!isMock) {
-    console.warn("❌ Redis déconnecté. Passage en mode mémoire.");
-    redisInstance.disconnect();
-    if (RedisMock) {
-      redisInstance = new RedisMock();
+let redisInstance;
+let isMock = false;
+
+const host = process.env.REDIS_HOST || "localhost";
+
+try {
+  let reachable = host === "localhost" || host === "127.0.0.1";
+
+  if (!reachable) {
+    try {
+      dns.lookupSync(host);
+      reachable = true;
+    } catch (_) {
+      reachable = false;
     }
-    isMock = true;
   }
-});
+
+  if (process.env.NODE_ENV === "test" && RedisMock) {
+    redisInstance = new RedisMock();
+    isMock = true;
+  } else if (!reachable) {
+    console.warn("⚠️ Redis injoignable (DNS). Passage en mode mémoire.");
+    creerMock();
+  } else {
+    redisInstance = new Redis({
+      host,
+      port: parseInt(process.env.REDIS_PORT || "6379"),
+      maxRetriesPerRequest: null,
+      retryStrategy: () => null,
+      enableOfflineQueue: false,
+    });
+    redisInstance.on("error", () => {});
+  }
+} catch (e) {
+  console.warn("⚠️ Impossible d'initialiser Redis, passage en mode mémoire.");
+  creerMock();
+}
 
 const waitForRedis = async (timeoutMs = 2000) => {
   if (isMock) return true;
-  
+
   return new Promise((resolve) => {
     const timer = setTimeout(() => {
       console.warn("⚠️ Redis injoignable, utilisation du mode mémoire.");
-      if (RedisMock) {
-        redisInstance = new RedisMock();
-      }
-      isMock = true;
+      creerMock();
       resolve(true);
     }, timeoutMs);
 
@@ -75,14 +76,13 @@ const waitForRedis = async (timeoutMs = 2000) => {
         console.log("✅ Redis prêt");
         resolve(true);
       })
-      .catch(() => {
-        // L'erreur est gérée par le listener global
-      });
+      .catch(() => {});
   });
 };
 
-module.exports = { 
-  get redis() { return redisInstance; }, 
-  redisConfig, 
-  waitForRedis 
+module.exports = {
+  get redis() { return redisInstance; },
+  get redisConfig() { return { host, port: parseInt(process.env.REDIS_PORT || "6379") }; },
+  get isMock() { return isMock; },
+  waitForRedis,
 };
