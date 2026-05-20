@@ -66,10 +66,10 @@ const sanitiserInputs = (req, res, next) => {
 
 // ── Validation de taille des payloads ─────────────────────────────
 const validerTaillePayload = (req, res, next) => {
-  // La limite de 10mb est déjà dans express.json(), ceci est une couche supplémentaire
+  // Augmenter la limite à 50mb pour les gros PDF
   const contentLength = parseInt(req.headers["content-length"] || "0");
-  if (contentLength > 10 * 1024 * 1024) {
-    return res.status(413).json({ success: false, message: "Payload trop grand." });
+  if (contentLength > 50 * 1024 * 1024) {
+    return res.status(413).json({ success: false, message: "Fichier trop volumineux (max 50 Mo)." });
   }
   next();
 };

@@ -91,8 +91,8 @@ if (!process.env.COOKIE_SECRET || process.env.COOKIE_SECRET.length < 32) {
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
 // ── Parsing du corps ──────────────────────────────────────────────
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Anti-injection NoSQL
 app.use(sanitiserInputs);

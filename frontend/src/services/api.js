@@ -59,10 +59,14 @@ export const coursAPI = {
   getCours: (params) => api.get("/courses", { params }),
   getCoursParId: (id) => api.get(`/courses/${id}`),
   creerCours: (data) => {
-    // Si data contient un fichier PDF, utiliser FormData
+    // 💡 Pour l'envoi de fichiers, on utilise l'URL DIRECTE du VPS 
+    // pour contourner la limite de taille (4.5MB/10MB) du proxy Vercel.
+    const directURL = "https://185-98-136-82.sslip.io/api/courses";
+    
     if (data instanceof FormData) {
-      return api.post("/courses", data, {
+      return axios.post(directURL, data, {
         headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
       });
     }
     return api.post("/courses", data);
