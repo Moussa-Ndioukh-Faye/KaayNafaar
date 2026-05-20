@@ -64,6 +64,9 @@ services:
       PORT: "5001"
       FRONTEND_URL: ${FRONTEND_URL:-https://kaay-nafaar.vercel.app}
       REDIS_HOST: redis
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      COOKIE_SECRET: ${COOKIE_SECRET}
     ports:
       - "5001:5001"
     depends_on:
