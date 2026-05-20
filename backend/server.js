@@ -32,6 +32,9 @@ const {
 
 const app = express();
 
+// Faire confiance au proxy (Caddy/Nginx) pour le HTTPS et les cookies Secure
+app.set("trust proxy", 1);
+
 // Logger de requêtes simple
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -49,7 +52,8 @@ const originsFixes = (process.env.FRONTEND_URL || "https://kaay-nafaar.vercel.ap
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || originsFixes.includes(origin)) {
+      // Autoriser si pas d'origine (ex: curl) ou si dans la liste ou vercel
+      if (!origin || originsFixes.includes(origin) || origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
       callback(new Error("Non autorisé par CORS"));
