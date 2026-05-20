@@ -6,19 +6,9 @@
 
 import axios from "axios";
 
-// Utiliser le proxy Vite en développement pour éviter les problèmes CORS avec les cookies
-// En production, utiliser l'URL absolue
+// Utiliser le proxy Vercel (défini dans vercel.json) pour éviter les problèmes de cookies tiers sur mobile
 const getBaseURL = () => {
-  const envURL = import.meta.env.VITE_API_URL;
-  if (!envURL) return "/api";
-  
-  // Si l'URL finit par /api, on la garde telle quelle
-  if (envURL.endsWith("/api") || envURL.endsWith("/api/")) {
-    return envURL;
-  }
-  
-  // Sinon on ajoute /api à la fin (en gérant le slash de fin)
-  return envURL.endsWith("/") ? `${envURL}api` : `${envURL}/api`;
+  return "/api";
 };
 
 const API_URL = getBaseURL();
