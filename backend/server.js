@@ -42,13 +42,6 @@ const app = express();
 // Faire confiance au proxy (Caddy/Nginx) pour le HTTPS et les cookies Secure
 app.set("trust proxy", 1);
 
-// S'assurer que le dossier uploads existe
-const fs = require("fs");
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
 // Logger de requêtes simple
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
