@@ -22,7 +22,6 @@ const getBaseURL = () => {
 };
 
 const API_URL = getBaseURL();
-console.log("🚀 API Base URL:", API_URL);
 
 // Instance Axios configurée
 const api = axios.create({
@@ -42,13 +41,6 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("❌ API Error Detail:", {
-      message: error.message,
-      code: error.code,
-      config: error.config?.url,
-      response: error.response?.status
-    });
-    
     if (error.response?.status === 401 && !window.location.pathname.includes("/connexion")) {
       localStorage.removeItem("utilisateur");
       window.location.href = "/connexion?session=expiree";
@@ -174,8 +166,6 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
   // S'assurer que endpoint commence par un slash et n'inclut pas déjà /api
   const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
-  console.log(`📡 Fetching stream: ${base}${cleanEndpoint}`);
-
   fetch(`${base}${cleanEndpoint}`, {
     method: "POST",
     headers: {
@@ -188,7 +178,6 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
     .then(async (response) => {
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        console.error("❌ Stream Response Error:", response.status, err);
         onError?.(err.message || "Erreur serveur");
         return;
       }
@@ -232,7 +221,6 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
     })
     .catch((err) => {
       if (err.name !== "AbortError") {
-        console.error("❌ Stream Fetch Error:", err);
         onError?.(err.message);
       }
     });

@@ -41,9 +41,20 @@ app.use((req, res, next) => {
 // Connexion à PostgreSQL
 connectDB();
 
+// ── CORS — Autoriser Vercel ─────────────────────────────
+const originsFixes = (process.env.FRONTEND_URL || "https://kaay-nafaar.vercel.app")
+  .split(",")
+  .map(s => s.trim().replace(/\/$/, ""));
+
 app.use(
   cors({
-    origin: true, // Autorise TOUT pour le debug
+    origin: function (origin, callback) {
+      // Autoriser si pas d'origine (ex: curl) ou si dans la liste ou vercel
+      if (!origin || originsFixes.includes(origin) || origin.endsWith(".vercel.app")) {
+        return callback(null, true);
+      }
+      callback(new Error("Non autorisé par CORS"));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -54,12 +65,14 @@ app.use(
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["*"],
-      scriptSrc: ["*", "'unsafe-inline'", "'unsafe-eval'"],
-      styleSrc: ["*", "'unsafe-inline'"],
-      imgSrc: ["*", "data:", "blob:"],
-      connectSrc: ["*"],
-      frameAncestors: ["*"],
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "blob:", "https://*"],
+      connectSrc: ["'self'", "https://*.kaaynafaar.com", "https://*.vercel.app", "https://*.trycloudflare.com", "https://*.google.com", "https://*.groq.com"],
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -91,7 +104,7 @@ app.use("/api/analytics", validerCSRF, analyticsRoutes);
 
 // Route de santé
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "Serveur opérationnel v5", version: "1.0.5" });
+  res.json({ status: "OK", message: "Serveur opérationnel", version: "1.1.0" });
 });
 
 // Middleware de gestion d'erreurs global

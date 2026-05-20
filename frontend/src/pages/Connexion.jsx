@@ -53,7 +53,7 @@ export default function Connexion() {
       navigate("/");
     } catch (error) {
       if (!error.response) {
-        setErreur(`Impossible de joindre le serveur à l'adresse ${authAPI.getBaseURL()}. Vérifie ta connexion et les variables d'environnement.`);
+        setErreur("Impossible de joindre le serveur. Vérifie que le backend est démarré.");
       } else {
         setErreur(error.response.data?.message || "Erreur de connexion.");
       }
