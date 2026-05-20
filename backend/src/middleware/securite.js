@@ -93,14 +93,21 @@ const validerCSRF = (req, res, next) => {
     if (!o.includes(":") && o.startsWith("http")) expandedOrigins.push(`${o}:80`);
   });
 
-  // Vérifier l'origine
-  if (origine && !expandedOrigins.includes(origine)) {
+  // Vérifier l'origine (autorise origines fixes ou vercel)
+  const estAutorise = (o) => {
+    if (!o) return false;
+    if (expandedOrigins.includes(o)) return true;
+    if (o.endsWith(".vercel.app")) return true;
+    return false;
+  };
+
+  if (origine && !estAutorise(origine)) {
     console.warn(`[CSRF] Origine bloquée : ${origine}`);
     return res.status(403).json({ success: false, message: "Origine non autorisée." });
   }
 
-  // Vérifier le referer (plus souple, on regarde si ça commence par une origine autorisée)
-  if (referer && !expandedOrigins.some((o) => referer.startsWith(o))) {
+  // Vérifier le referer (plus souple, on regarde si ça commence par une origine autorisée ou vercel)
+  if (referer && !expandedOrigins.some((o) => referer.startsWith(o)) && !referer.includes(".vercel.app")) {
     console.warn(`[CSRF] Référent bloqué : ${referer}`);
     return res.status(403).json({ success: false, message: "Référent non autorisé." });
   }
