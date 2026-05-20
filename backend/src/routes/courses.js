@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const { body } = require("express-validator");
 const {
   getCours, getCoursParId, creerCours, modifierCours, supprimerCours,
@@ -9,8 +10,11 @@ const {
 const { proteger } = require("../middleware/auth");
 
 // Configuration de l'upload PDF
+const uploadDir = path.resolve(__dirname, "../../uploads");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) =>
     cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, "_")}`),
 });
