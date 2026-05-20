@@ -21,11 +21,14 @@ const genererToken = (id) => {
 // Helper pour envoyer le token en cookie httpOnly
 const envoyerTokenCookie = (res, token, req) => {
   const isLocalhost = req.get("host")?.includes("localhost");
+  const isProd = process.env.NODE_ENV === "production";
+  
   const options = {
     httpOnly: true,
-    // Secure seulement en prod ET si ce n'est pas localhost (pour test Docker local)
-    secure: process.env.NODE_ENV === "production" && !isLocalhost,
-    sameSite: "lax", // 'lax' est plus tolérant pour les redirections et les ports différents
+    // Pour que les cookies cross-site (Vercel -> sslip.io) fonctionnent, 
+    // il faut SameSite=None et Secure=true
+    secure: isProd && !isLocalhost,
+    sameSite: isProd && !isLocalhost ? "none" : "lax",
     path: "/",
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 jours
   };
@@ -247,7 +250,7 @@ const supprimerCompte = async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/",
     });
 
@@ -263,7 +266,7 @@ const logout = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     path: "/",
   });
   res.json({ success: true, message: "Déconnecté avec succès." });
