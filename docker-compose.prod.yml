@@ -103,7 +103,7 @@ services:
       - caddy-data:/data
       - caddy-config:/config
     environment:
-      DOMAIN: ${CADDY_DOMAIN:-localhost}
+      DOMAIN: ${CADDY_DOMAIN:-185-98-136-82.sslip.io}
       BACKEND_URL: http://backend:5001
     depends_on:
       - backend
