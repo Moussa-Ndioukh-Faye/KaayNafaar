@@ -91,7 +91,7 @@ app.use("/api/analytics", validerCSRF, analyticsRoutes);
 
 // Route de santé
 app.get("/api/health", (req, res) => {
-  res.json({ status: "OK", message: "Serveur opérationnel v2", version: "1.0.1" });
+  res.json({ status: "OK", message: "Serveur opérationnel v5", version: "1.0.5" });
 });
 
 // Middleware de gestion d'erreurs global
