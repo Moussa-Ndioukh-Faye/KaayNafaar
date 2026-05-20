@@ -115,7 +115,7 @@ export const progressionAPI = {
 // IA — Streaming via EventSource (SSE)
 // ═══════════════════════════════════════════════
 export const feedbackAPI = {
-  envoyer: (data) => api.post("/ai/feedback", data),
+  envoyer: (data) => api.post("/api/ai/feedback", data),
 };
 
 export const iaAPI = {
@@ -127,22 +127,22 @@ export const iaAPI = {
    * @param {function} onError - Callback d'erreur
    */
   genererFicheStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/generer-fiche", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/generer-fiche", data, onDelta, onDone, onError);
   },
 
   genererQuizStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/generer-quiz", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/generer-quiz", data, onDelta, onDone, onError);
   },
 
   expliquerStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/expliquer", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/expliquer", data, onDelta, onDone, onError);
   },
 
   chatStream: (data, onDelta, onDone, onError) => {
-    return fetchStream("/ai/chat", data, onDelta, onDone, onError);
+    return fetchStream("/api/ai/chat", data, onDelta, onDone, onError);
   },
 
-  genererPlanning: (data) => api.post("/ai/planning", data),
+  genererPlanning: (data) => api.post("/api/ai/planning", data),
 };
 
 /**

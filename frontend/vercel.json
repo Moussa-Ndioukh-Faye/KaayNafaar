@@ -5,7 +5,8 @@
   "installCommand": "npm ci",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "https://185-98-136-82.sslip.io/api/$1" },
-    { "source": "/((?!.*\\..*).*)", "destination": "/index.html" }
+    { "source": "/ai/(.*)", "destination": "https://185-98-136-82.sslip.io/api/ai/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
