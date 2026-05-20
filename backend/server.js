@@ -41,46 +41,29 @@ app.use((req, res, next) => {
 // Connexion à PostgreSQL
 connectDB();
 
-// ── CORS — Dynamique pour supporter Vercel Preview & Prod ─────────────────────────────
-const originsFixes = (process.env.FRONTEND_URL || "http://localhost:3000")
-  .split(",")
-  .map(s => s.trim().replace(/\/$/, ""));
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Autoriser si pas d'origine (ex: curl, apps mobiles) ou si dans la liste fixe
-    if (!origin || originsFixes.includes(origin)) {
-      return callback(null, true);
-    }
-    // Autoriser tous les sous-domaines vercel.app
-    if (origin.endsWith(".vercel.app")) {
-      return callback(null, true);
-    }
-    callback(new Error("Non autorisé par CORS"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: true, // Autorise TOUT pour le debug
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 // ── Helmet + security middlewares ────────────────────────────────
-// app.use(helmet({
-//   contentSecurityPolicy: {
-//     directives: {
-//       defaultSrc: ["'self'"],
-//       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-//       styleSrc: ["'self'", "'unsafe-inline'"],
-//       imgSrc: ["'self'", "data:", "blob:", "https://*"],
-//       connectSrc: ["*"], // Très permissif pour le debug, à resserrer plus tard
-//       fontSrc: ["'self'", "https:", "data:"],
-//       objectSrc: ["'none'"],
-//       upgradeInsecureRequests: [],
-//     },
-//   },
-//   crossOriginEmbedderPolicy: false,
-// }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["*"],
+      scriptSrc: ["*", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["*", "'unsafe-inline'"],
+      imgSrc: ["*", "data:", "blob:"],
+      connectSrc: ["*"],
+      frameAncestors: ["*"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(limiteurGlobal);
 app.use(validerTaillePayload);
 
