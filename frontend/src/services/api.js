@@ -21,9 +21,19 @@ const api = axios.create({
   withCredentials: true, // ✅ Envoyer/recevoir les cookies httpOnly
 });
 
-// Note: le token est désormais stocké en cookie httpOnly. Axios n'a plus besoin d'ajouter
-// l'en-tête Authorization puisque le navigateur enverra automatiquement le cookie.
-// L'intercepteur request disparaît.
+// Token JWT stocké en mémoire pour les requêtes cross-origin directes (upload de fichiers)
+let jwtToken = null;
+
+export const setToken = (token) => { jwtToken = token; };
+export const clearToken = () => { jwtToken = null; };
+
+// Intercepteur REQUEST — ajoute le token JWT si disponible (pour les appels cross-origin directs)
+api.interceptors.request.use((config) => {
+  if (jwtToken && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${jwtToken}`;
+  }
+  return config;
+});
 
 // ───────────────────────────────────────────────
 // Intercepteur RESPONSE — gestion token expiré / session terminée
@@ -64,10 +74,9 @@ export const coursAPI = {
     const directURL = "https://185-98-136-82.sslip.io/api/courses";
     
     if (data instanceof FormData) {
-      return axios.post(directURL, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
-      });
+      const headers = { "Content-Type": "multipart/form-data" };
+      if (jwtToken) headers["Authorization"] = `Bearer ${jwtToken}`;
+      return axios.post(directURL, data, { headers, withCredentials: true });
     }
     return api.post("/courses", data);
   },

@@ -60,7 +60,7 @@ export default function Inscription() {
         motDePasse: form.motDePasse,
         niveauEtude: form.niveauEtude,
       });
-      connecter(null, data.utilisateur);
+      connecter(data.token, data.utilisateur);
       navigate("/");
     } catch (error) {
       if (!error.response) {

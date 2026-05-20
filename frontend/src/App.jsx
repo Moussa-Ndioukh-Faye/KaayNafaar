@@ -13,6 +13,7 @@ import {
 
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
+import { setToken, clearToken } from "./services/api";
 import { Toaster } from "./components/ui/toaster";
 import { authAPI } from "./services/api";
 
@@ -128,7 +129,8 @@ const AuthProvider = ({ children }) => {
     return () => { active = false; };
   }, []);
 
-  const connecter = (_token, user) => {
+  const connecter = (token, user) => {
+    if (token) setToken(token);
     localStorage.setItem("utilisateur", JSON.stringify(user));
     setUtilisateur(user);
   };
@@ -137,6 +139,7 @@ const AuthProvider = ({ children }) => {
     try {
       await authAPI.logout();
     } catch (_) {}
+    clearToken();
     localStorage.removeItem("utilisateur");
     setUtilisateur(null);
     window.location.href = "/connexion";

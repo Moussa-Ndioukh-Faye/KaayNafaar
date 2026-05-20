@@ -49,7 +49,7 @@ export default function Connexion() {
     setChargement(true);
     try {
       const { data } = await authAPI.connexion(form);
-      connecter(null, data.utilisateur);
+      connecter(data.token, data.utilisateur);
       navigate("/");
     } catch (error) {
       if (!error.response) {

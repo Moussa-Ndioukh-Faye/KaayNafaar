@@ -74,6 +74,7 @@ const inscription = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Compte créé avec succès",
+      token,
       utilisateur: {
         id: utilisateur.id,
         nom: utilisateur.nom,
