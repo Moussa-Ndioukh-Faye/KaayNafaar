@@ -9,6 +9,7 @@ const Course = require("../models/Course");
 const queueName = "extraction-cours";
 
 const extractionQueue = new Queue(queueName, { connection: redisConfig });
+extractionQueue.on("error", (err) => console.error("[Queue]", err.message));
 
 let worker;
 

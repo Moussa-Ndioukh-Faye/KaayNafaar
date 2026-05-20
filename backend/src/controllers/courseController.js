@@ -114,7 +114,8 @@ const creerCours = async (req, res) => {
       cours 
     });
   } catch (error) {
-    console.error("Erreur creerCours:", error);
+    console.error("❌ Erreur creerCours:", error.message);
+    console.error(error.stack);
     res.status(500).json({ success: false, message: "Erreur lors de la création du cours." });
   }
 };
