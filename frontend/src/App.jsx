@@ -114,6 +114,7 @@ const AuthProvider = ({ children }) => {
         if (active) {
           setUtilisateur(profil.data.utilisateur);
           localStorage.setItem("utilisateur", JSON.stringify(profil.data.utilisateur));
+          if (profil.data.token) setToken(profil.data.token);
         }
       } catch (err) {
         if (active) {

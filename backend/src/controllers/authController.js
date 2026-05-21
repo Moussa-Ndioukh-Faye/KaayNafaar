@@ -154,7 +154,7 @@ const getProfil = async (req, res) => {
       return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
     }
 
-    res.json({ success: true, utilisateur });
+    res.json({ success: true, utilisateur, token: req.tokenJWT });
   } catch (error) {
     console.error("Erreur getProfil:", error);
     res.status(500).json({ success: false, message: "Erreur lors de la récupération du profil." });

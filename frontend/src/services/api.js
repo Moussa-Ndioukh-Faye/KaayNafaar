@@ -21,16 +21,27 @@ const api = axios.create({
   withCredentials: true, // ✅ Envoyer/recevoir les cookies httpOnly
 });
 
-// Token JWT stocké en mémoire pour les requêtes cross-origin directes (upload de fichiers)
-let jwtToken = null;
+// Token JWT stocké pour les requêtes cross-origin directes (upload de fichiers)
+// Utilise sessionStorage au lieu de la mémoire pour survivre au rafraîchissement de page
+// Le cookie httpOnly (non accessible en JS) reste le mécanisme principal via le proxy Vercel
+const TOKEN_KEY = "jwt_token";
 
-export const setToken = (token) => { jwtToken = token; };
-export const clearToken = () => { jwtToken = null; };
+export const setToken = (token) => {
+  if (token) sessionStorage.setItem(TOKEN_KEY, token);
+  else sessionStorage.removeItem(TOKEN_KEY);
+};
+
+export const clearToken = () => {
+  sessionStorage.removeItem(TOKEN_KEY);
+};
+
+const getToken = () => sessionStorage.getItem(TOKEN_KEY);
 
 // Intercepteur REQUEST — ajoute le token JWT si disponible (pour les appels cross-origin directs)
 api.interceptors.request.use((config) => {
-  if (jwtToken && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${jwtToken}`;
+  const token = getToken();
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -75,7 +86,8 @@ export const coursAPI = {
     
     if (data instanceof FormData) {
       const headers = { "Content-Type": "multipart/form-data" };
-      if (jwtToken) headers["Authorization"] = `Bearer ${jwtToken}`;
+      const token = getToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       return axios.post(directURL, data, { headers, withCredentials: true });
     }
     return api.post("/courses", data);

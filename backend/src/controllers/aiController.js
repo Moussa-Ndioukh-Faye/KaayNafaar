@@ -21,14 +21,15 @@ RÈGLES :
 const FICHE_SCHEMA = `
 Structure attendue pour la fiche :
 {
-  "title": "Titre du cours",
-  "summary": "Résumé global",
-  "concepts": [
-    {"term": "Concept 1", "definition": "Explication"},
-    {"term": "Concept 2", "definition": "Explication"}
-  ],
+  "titre": "Titre du cours",
+  "resume": "Résumé global en 2-3 phrases",
+  "conceptsCles": ["Concept 1", "Concept 2"],
+  "pointsImportants": ["Point important 1", "Point important 2"],
+  "explications": {
+    "Nom concept": "Explication détaillée"
+  },
   "flashcards": [
-    {"question": "Question ?", "answer": "Réponse"}
+    {"question": "Question ?", "reponse": "Réponse"}
   ]
 }`;
 
@@ -128,7 +129,23 @@ const genererFiche = async (req, res) => {
       onDone: async (texteComplet) => {
         if (streamAborted) return;
         try {
-          const ficheData = JSON.parse(nettoyerJSON(texteComplet));
+          const raw = JSON.parse(nettoyerJSON(texteComplet));
+          const ficheData = {
+            titre: raw.titre || raw.title || "",
+            resume: raw.resume || raw.summary || "",
+            conceptsCles: Array.isArray(raw.conceptsCles)
+              ? raw.conceptsCles
+              : (raw.concepts || []).map((c) => (typeof c === "string" ? c : c.term || c.definition || "")),
+            pointsImportants: raw.pointsImportants || [],
+            explications: raw.explications || {},
+            flashcards: (raw.flashcards || []).map((fc) => ({
+              question: fc.question || "",
+              reponse: fc.reponse || fc.answer || "",
+            })),
+            matiere: raw.matiere || "",
+            couleur: raw.couleur || "#6366f1",
+            genereeParIA: true,
+          };
           const fiche = await Fiche.create({ ...ficheData, coursId, utilisateurId: req.utilisateur.id });
           res.write(`data: ${JSON.stringify({ done: true, ficheId: fiche.id, fiche: ficheData })}\n\n`);
         } catch (parseError) {

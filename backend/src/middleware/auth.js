@@ -25,6 +25,9 @@ const proteger = async (req, res, next) => {
     });
   }
 
+  // Passer le token brut pour les endpoints qui en ont besoin (restauration session frontend)
+  req.tokenJWT = token;
+
   try {
     // Vérifier le token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
