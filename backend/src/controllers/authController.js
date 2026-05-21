@@ -129,6 +129,7 @@ const connexion = async (req, res) => {
     res.json({
       success: true,
       message: "Connexion réussie",
+      token,
       utilisateur: {
         id: utilisateur.id,
         nom: utilisateur.nom,
