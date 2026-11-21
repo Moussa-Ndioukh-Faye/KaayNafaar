@@ -29,6 +29,7 @@ const Inscription = lazy(() => import("./pages/Inscription"));
 const Profil = lazy(() => import("./pages/Profil"));
 const Analytiques = lazy(() => import("./pages/Analytiques"));
 const Confidentialite = lazy(() => import("./pages/Confidentialite"));
+const Presentation = lazy(() => import("./pages/Presentation"));
 const Page404 = lazy(() => import("./pages/Page404"));
 
 class ErrorBoundary extends React.Component {
@@ -166,6 +167,14 @@ const RouteProtegee = ({ children }) => {
   return utilisateur ? children : <Navigate to="/connexion" replace />;
 };
 
+// Accueil : tableau de bord si connecté, page de présentation sinon
+const Accueil = () => {
+  const { utilisateur, chargement } = useAuth();
+  if (chargement) return <div className="flex items-center justify-center h-screen"><div role="status" aria-label="Chargement" className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
+  if (!utilisateur) return <SuspenseWrapper><Presentation /></SuspenseWrapper>;
+  return <Layout><SuspenseWrapper><Home /></SuspenseWrapper></Layout>;
+};
+
 // ═══════════════════════════════════════════════
 // Layout principal avec Sidebar + Navbar
 // ═══════════════════════════════════════════════
@@ -216,7 +225,8 @@ export default function App() {
           <Route path="/confidentialite" element={<SuspenseWrapper><Confidentialite /></SuspenseWrapper>} />
 
           {/* Pages protégées */}
-          <Route path="/" element={<RouteProtegee><Layout><SuspenseWrapper><Home /></SuspenseWrapper></Layout></RouteProtegee>} />
+          <Route path="/" element={<Accueil />} />
+          <Route path="/presentation" element={<SuspenseWrapper><Presentation /></SuspenseWrapper>} />
           <Route path="/mes-cours" element={<RouteProtegee><Layout><SuspenseWrapper><MesCours /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/fiches" element={<RouteProtegee><Layout><SuspenseWrapper><Fiches /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/quiz" element={<RouteProtegee><Layout><SuspenseWrapper><Quiz /></SuspenseWrapper></Layout></RouteProtegee>} />
