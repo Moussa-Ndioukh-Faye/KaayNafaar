@@ -1,11 +1,11 @@
 {
   "name": "Kaay Nafaar",
   "short_name": "Kaay Nafaar",
-  "description": "Plateforme de révision intelligente",
+  "description": "Ton assistant d'études intelligent",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
+  "theme_color": "#0a1f4a",
   "icons": [
     {
       "src": "/icon-192.png",

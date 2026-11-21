@@ -1,49 +1,47 @@
 import { cn } from "../../lib/utils";
+import marque from "../../assets/marque/kn-mark.png";
+import marqueClaire from "../../assets/marque/kn-mark-clair.png";
+import logoComplet from "../../assets/marque/kn-logo.png";
+import logoCompletClair from "../../assets/marque/kn-logo-clair.png";
 
 /**
- * Logo Kaay Nafaar : un losange (motif bogolan) qui s'ouvre comme un livre.
- * `ton` = "clair" sur fond sombre, "sombre" sur fond clair.
+ * Monogramme KN (toque + trait bleu). `ton="clair"` pour un fond sombre ;
+ * par défaut, la version claire s'affiche automatiquement en mode sombre.
  */
-export function LogoMarque({ className, ton = "sombre" }) {
-  const encre = ton === "clair" ? "#fbf7ef" : "currentColor";
+export function LogoMarque({ className, ton = "auto" }) {
+  if (ton === "clair") {
+    return <img src={marqueClaire} alt="" className={cn("w-10 h-auto", className)} />;
+  }
   return (
-    <svg
-      viewBox="0 0 40 40"
-      className={cn("w-10 h-10", ton === "sombre" && "text-primary-700 dark:text-primary-400", className)}
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="M20 3 L37 20 L20 37 L3 20 Z" fill={encre} />
-      <path d="M20 11 L20 29 M20 13 C16 11 12 12 10 14 L10 27 C12 25 16 25 20 27 C24 25 28 25 30 27 L30 14 C28 12 24 11 20 13"
-        fill="none" stroke={ton === "clair" ? "#0c4f3c" : "#fbf7ef"} strokeWidth="1.8" strokeLinejoin="round" />
-      <circle cx="20" cy="7.5" r="1.6" fill="#e08a3c" />
-    </svg>
+    <>
+      <img src={marque} alt="" className={cn("w-10 h-auto", ton === "auto" && "dark:hidden", className)} />
+      {ton === "auto" && <img src={marqueClaire} alt="" className={cn("w-10 h-auto hidden dark:block", className)} />}
+    </>
   );
 }
 
-export default function Logo({ className, ton = "sombre", sousTitre = true }) {
+/** Logo complet (monogramme + « Kaay Nafaar » + livre), pour les grandes surfaces */
+export function LogoComplet({ className, ton = "auto" }) {
+  if (ton === "clair") {
+    return <img src={logoCompletClair} alt="Kaay Nafaar" className={cn("h-auto", className)} />;
+  }
   return (
-    <span className={cn("inline-flex items-center gap-3", className)}>
-      <LogoMarque ton={ton} />
-      <span className="leading-none">
-        <span
-          className={cn(
-            "block font-display text-[1.35rem] font-semibold tracking-tight",
-            ton === "clair" ? "text-[#fbf7ef]" : "text-gray-900 dark:text-white"
-          )}
-        >
-          Kaay Nafaar
-        </span>
-        {sousTitre && (
-          <span
-            className={cn(
-              "block mt-1 text-[10px] font-bold uppercase tracking-[0.22em]",
-              ton === "clair" ? "text-secondary-200" : "text-secondary-700 dark:text-secondary-300"
-            )}
-          >
-            Réviser malin
-          </span>
-        )}
+    <>
+      <img src={logoComplet} alt="Kaay Nafaar" className={cn("h-auto dark:hidden", className)} />
+      <img src={logoCompletClair} alt="Kaay Nafaar" className={cn("h-auto hidden dark:block", className)} />
+    </>
+  );
+}
+
+/** Logo horizontal : monogramme + logotype bicolore (marine / bleu roi) */
+export default function Logo({ className, ton = "auto" }) {
+  const clair = ton === "clair";
+  return (
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <LogoMarque ton={ton} className="w-11" />
+      <span className="font-display text-[1.4rem] font-bold leading-none tracking-tight">
+        <span className={clair ? "text-white" : "text-marine dark:text-white"}>Kaay </span>
+        <span className={clair ? "text-primary-300" : "text-primary-600 dark:text-primary-400"}>Nafaar</span>
       </span>
     </span>
   );

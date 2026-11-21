@@ -63,7 +63,7 @@ export default function Connexion() {
   return (
     <div className="min-h-screen flex">
       <PanneauMarque
-        titre={<>Content de te <em className="text-secondary-300">revoir</em>.</>}
+        titre={<>Content de te <span className="trait-main">revoir</span>.</>}
         accroche="Reprends là où tu t'étais arrêté : tes fiches, tes quiz et ton planning t'attendent."
       />
 
@@ -75,7 +75,7 @@ export default function Connexion() {
             <Logo />
           </div>
 
-          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(60,40,20,0.35)]">
+          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
             <div className="mb-8">
               <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">Connexion</h1>
               <p className="text-slate-500 mt-1 font-medium">Connecte-toi pour continuer tes révisions</p>

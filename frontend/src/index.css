@@ -3,70 +3,67 @@
 @tailwind utilities;
 
 @layer base {
-  /* Identité « Teranga » : papier sable, encre, vert baobab, ocre du Sahel */
+  /* Identité Kaay Nafaar : bleu roi et bleu marine du logo, accent jaune « crayon » */
   :root {
-    --background: 39 44% 94%;
-    --foreground: 36 14% 10%;
+    --background: 220 60% 99%;
+    --foreground: 221 76% 16%;
 
-    --card: 40 100% 99%;
-    --card-foreground: 36 14% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 221 76% 16%;
 
-    --popover: 40 100% 99%;
-    --popover-foreground: 36 14% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 76% 16%;
 
-    --primary: 162 73% 22%;
-    --primary-foreground: 40 100% 98%;
+    --primary: 221 100% 43%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 27 70% 46%;
-    --secondary-foreground: 40 100% 98%;
+    --secondary: 41 94% 54%;
+    --secondary-foreground: 221 76% 16%;
 
-    --muted: 38 33% 90%;
-    --muted-foreground: 37 9% 37%;
+    --muted: 216 55% 96%;
+    --muted-foreground: 220 17% 40%;
 
-    --accent: 41 78% 88%;
-    --accent-foreground: 36 14% 10%;
+    --accent: 224 100% 96%;
+    --accent-foreground: 221 76% 16%;
 
-    --destructive: 4 70% 45%;
-    --destructive-foreground: 40 100% 98%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 37 30% 84%;
-    --input: 37 30% 84%;
-    --ring: 162 73% 28%;
+    --border: 216 33% 90%;
+    --input: 216 33% 88%;
+    --ring: 221 100% 43%;
 
-    --radius: 1.25rem;
-
-    /* Motif géométrique inspiré du bogolan (losanges et chevrons) */
-    --motif: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.4'%3E%3Cpath d='M24 4 L36 16 L24 28 L12 16 Z'/%3E%3Cpath d='M0 40 L8 32 L16 40 M32 40 L40 32 L48 40'/%3E%3Ccircle cx='24' cy='16' r='2'/%3E%3C/g%3E%3C/svg%3E");
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 200 14% 8%;
-    --foreground: 38 33% 93%;
+    --background: 222 58% 8%;
+    --foreground: 220 50% 95%;
 
-    --card: 198 14% 11%;
-    --card-foreground: 38 33% 93%;
+    --card: 222 48% 12%;
+    --card-foreground: 220 50% 95%;
 
-    --popover: 198 14% 11%;
-    --popover-foreground: 38 33% 93%;
+    --popover: 222 48% 12%;
+    --popover-foreground: 220 50% 95%;
 
-    --primary: 158 45% 48%;
-    --primary-foreground: 200 14% 8%;
+    --primary: 222 100% 68%;
+    --primary-foreground: 222 58% 8%;
 
-    --secondary: 28 75% 58%;
-    --secondary-foreground: 200 14% 8%;
+    --secondary: 41 94% 58%;
+    --secondary-foreground: 222 58% 8%;
 
-    --muted: 198 12% 16%;
-    --muted-foreground: 38 12% 68%;
+    --muted: 222 40% 15%;
+    --muted-foreground: 220 20% 72%;
 
-    --accent: 198 12% 18%;
-    --accent-foreground: 38 33% 93%;
+    --accent: 222 40% 17%;
+    --accent-foreground: 220 50% 95%;
 
-    --destructive: 4 65% 52%;
-    --destructive-foreground: 38 33% 93%;
+    --destructive: 0 70% 58%;
+    --destructive-foreground: 220 50% 95%;
 
-    --border: 198 12% 20%;
-    --input: 198 12% 20%;
-    --ring: 158 45% 52%;
+    --border: 222 35% 20%;
+    --input: 222 35% 22%;
+    --ring: 222 100% 68%;
   }
 }
 
@@ -76,26 +73,17 @@
   }
   body {
     @apply bg-background text-foreground antialiased leading-relaxed font-sans;
-    font-feature-settings: "ss01", "cv11";
     transition: background-color 0.3s ease, color 0.3s ease;
-    /* Grain de papier très léger */
-    background-image: radial-gradient(hsl(var(--foreground) / 0.035) 1px, transparent 1px);
-    background-size: 3px 3px;
   }
 
-  /* Titres en Fraunces : sérif chaleureux, à forte personnalité */
-  h1, h2, h3, .font-display {
-    font-family: "Fraunces Variable", ui-serif, Georgia, serif;
-    font-optical-sizing: auto;
-    font-variation-settings: "SOFT" 60, "WONK" 0;
-    letter-spacing: -0.015em;
-  }
-  h1.font-black, h2.font-black, h3.font-black {
-    font-weight: 700;
+  /* Titres en Outfit : géométrique et arrondi, comme le logotype */
+  h1, h2, h3, h4, .font-display {
+    font-family: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 
   ::selection {
-    background: hsl(var(--secondary) / 0.25);
+    background: hsl(var(--primary) / 0.18);
   }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -146,31 +134,49 @@
            placeholder-slate-500 transition-all duration-200;
   }
 
-  /* Surface signature : vert baobab + motif bogolan + halo ocre */
-  .surface-teranga {
+  /* Surface marine : reprend le bleu marine du logo et son trait bleu */
+  .surface-marque {
     position: relative;
     isolation: isolate;
     overflow: hidden;
     background:
-      radial-gradient(70% 60% at 100% 0%, hsl(30 80% 52% / 0.35), transparent 70%),
-      radial-gradient(90% 80% at 0% 100%, hsl(41 78% 55% / 0.18), transparent 60%),
-      #0c4f3c;
-    color: #fbf7ef;
+      radial-gradient(80% 70% at 100% 0%, hsl(221 100% 43% / 0.55), transparent 65%),
+      #0a1f4a;
+    color: #f1f5ff;
   }
-  .surface-teranga::before {
+  .surface-marque::after {
     content: "";
     position: absolute;
-    inset: 0;
+    right: -10%;
+    bottom: -18%;
+    width: 75%;
+    height: 70%;
     z-index: -1;
-    background-image: var(--motif);
-    background-size: 48px 48px;
-    filter: invert(1);
-    opacity: 0.09;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'%3E%3Cpath d='M10 190 C 90 80, 220 30, 395 18' fill='none' stroke='%233a73ff' stroke-width='16' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E") no-repeat center / contain;
   }
 
-  /* Liseré ocre décoratif sous un titre */
-  .souligne-ocre {
-    background-image: linear-gradient(transparent 62%, hsl(41 78% 60% / 0.45) 62%, hsl(41 78% 60% / 0.45) 92%, transparent 92%);
+  /* Fond teinté des sections (comme les bandeaux pastel des sites e-learning) */
+  .fond-teinte {
+    background-color: hsl(var(--accent));
+    background-image: radial-gradient(hsl(var(--primary) / 0.12) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+  }
+
+  /* Mot surligné d'un trait dessiné à la main, en écho au trait du logo */
+  .trait-main {
+    position: relative;
+    white-space: nowrap;
+    color: hsl(var(--primary));
+  }
+  .trait-main::after {
+    content: "";
+    position: absolute;
+    left: -2%;
+    right: -2%;
+    bottom: -0.28em;
+    height: 0.42em;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 24' preserveAspectRatio='none'%3E%3Cpath d='M3 17 C 50 6, 120 3, 197 9' fill='none' stroke='%23f8b41c' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+    pointer-events: none;
   }
 
   /* Apparition échelonnée au chargement */

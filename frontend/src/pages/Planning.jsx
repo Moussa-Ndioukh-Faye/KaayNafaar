@@ -445,7 +445,7 @@ export default function Planning() {
           ))}
           
           {/* Motivation Widget */}
-          <Card className="rounded-[2.5rem] border-none surface-teranga p-1">
+          <Card className="rounded-[2.5rem] border-none surface-marque p-1">
              <div className="bg-white dark:bg-gray-900 rounded-[2.4rem] p-8 flex flex-col md:flex-row items-center gap-8">
                 <div className="w-20 h-20 rounded-[2rem] bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
                    <Target className="w-10 h-10 text-orange-500" />

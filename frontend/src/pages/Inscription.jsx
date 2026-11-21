@@ -105,7 +105,7 @@ export default function Inscription() {
   return (
     <div className="min-h-screen flex">
       <PanneauMarque
-        titre={<>Tes cours, <em className="text-secondary-300">en mieux</em>.</>}
+        titre={<>Tes cours, <span className="trait-main">en mieux</span>.</>}
         accroche="Crée ton compte gratuit et transforme tes cours en fiches, quiz et planning de révision."
       />
 
@@ -117,7 +117,7 @@ export default function Inscription() {
             <Logo />
           </div>
 
-          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(60,40,20,0.35)]">
+          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
             <div className="mb-8">
               <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">Créer un compte</h1>
               <p className="text-slate-600 mt-1 font-medium">C'est gratuit et prend moins d'une minute</p>

@@ -18,6 +18,7 @@ import { progressionAPI, coursAPI, fichesAPI, quizAPI } from "../services/api";
 import { useAuth } from "../App";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Button } from "../components/ui/button";
+import { Eclats, FlecheCourbe, Pointilles, Pastille } from "../components/marque/Gribouillis";
 
 // Carte statistique éditoriale : grand chiffre en Fraunces, filet de couleur en tête
 const StatCard = ({ icon: Icon, titre, valeur, couleur, lien }) => (
@@ -29,7 +30,7 @@ const StatCard = ({ icon: Icon, titre, valeur, couleur, lien }) => (
           <p className="text-xs font-bold uppercase tracking-[0.14em] text-gray-600 dark:text-gray-300">{titre}</p>
           <Icon className="w-5 h-5 text-gray-500 group-hover:text-primary-600 transition-colors" aria-hidden="true" />
         </div>
-        <p className="font-display text-5xl font-semibold tabular-nums text-gray-900 dark:text-white mt-4 leading-none">
+        <p className="font-display text-5xl font-bold tabular-nums text-gray-900 dark:text-white mt-4 leading-none">
           {valeur ?? 0}
         </p>
       </CardContent>
@@ -44,7 +45,7 @@ const ActionRapide = ({ icon: Icon, titre, description, href, couleur }) => (
         <div className={`w-11 h-11 rounded-2xl ${couleur} flex items-center justify-center mb-2 group-hover:-rotate-6 transition-transform`}>
           <Icon className="w-5 h-5" aria-hidden="true" />
         </div>
-        <CardTitle className="font-display text-lg font-semibold group-hover:text-primary-700 dark:group-hover:text-primary-300 transition-colors">
+        <CardTitle className="font-display text-lg font-semibold text-marine dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-300 transition-colors">
           {titre}
         </CardTitle>
         <CardDescription className="text-sm line-clamp-2">
@@ -125,32 +126,32 @@ export default function Home() {
 
   return (
     <div className="space-y-10 max-w-6xl mx-auto pb-10 apparition">
-      {/* En-tête « Teranga » */}
-      <section className="surface-teranga rounded-[2rem] p-8 md:p-12 shadow-[0_30px_60px_-30px_rgba(12,79,60,0.6)]">
-        <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
+      {/* En-tête d'accueil, dans l'esprit des plateformes e-learning : clair, aéré, trait dessiné */}
+      <section className="fond-teinte relative overflow-hidden rounded-[2rem] border border-border p-8 md:p-12">
+        <Pointilles className="absolute bottom-6 right-8 opacity-70 hidden md:block" />
+        <div className="relative grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="max-w-2xl">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-secondary-200">
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/80 dark:bg-white/10 border border-border px-3 py-1 text-xs font-semibold text-primary-700 dark:text-primary-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-secondary-400" aria-hidden="true" />
               {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
             </p>
-            <h2 className="mt-4 text-4xl md:text-6xl font-semibold leading-[1.05]">
+            <h2 className="mt-5 text-4xl md:text-[3.4rem] font-bold leading-[1.1] text-marine dark:text-white">
               Nanga def,{" "}
-              <em className="not-italic text-secondary-300" style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1' }}>
-                {utilisateur?.nom?.split(" ")[0]}
-              </em>
-              <span className="text-secondary-300">.</span>
+              <span className="trait-main">{utilisateur?.nom?.split(" ")[0]}</span> !
+              <br className="hidden md:block" /> On révise quoi aujourd'hui ?
             </h2>
-            <p className="mt-5 text-lg text-[#f3ead9]/90 max-w-xl">
-              Tes cours t'attendent : transforme-les en fiches et quiz, puis révise à ton rythme.
+            <p className="mt-5 text-lg text-gray-600 dark:text-gray-300 max-w-xl">
+              Transforme tes cours en fiches et en quiz, puis révise à ton rythme avec l'IA.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/assistant" className="rounded-2xl">
-                <Button className="h-12 rounded-2xl bg-secondary-400 hover:bg-secondary-300 text-[#1c1915] px-6 font-bold shadow-lg shadow-black/20 transition-transform active:scale-95">
+              <Link to="/assistant" className="rounded-xl">
+                <Button className="h-12 rounded-xl bg-marine hover:bg-marine-clair text-white px-6 font-semibold shadow-lg shadow-marine/20 transition-transform active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-400">
                   <MessageSquare className="w-5 h-5 mr-2" aria-hidden="true" />
                   Demander à l'IA
                 </Button>
               </Link>
-              <Link to="/mes-cours" className="rounded-2xl">
-                <Button variant="outline" className="h-12 rounded-2xl bg-transparent border-[#f3ead9]/40 text-[#fbf7ef] hover:bg-white/10 hover:text-white px-6 font-bold transition-transform active:scale-95">
+              <Link to="/mes-cours" className="rounded-xl">
+                <Button variant="outline" className="h-12 rounded-xl bg-white dark:bg-transparent border-primary-200 dark:border-primary-800 text-primary-700 dark:text-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/40 px-6 font-semibold transition-transform active:scale-95">
                   <PlusCircle className="w-5 h-5 mr-2" aria-hidden="true" />
                   Ajouter un cours
                 </Button>
@@ -158,14 +159,18 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Série de révision, mise en avant comme un chiffre de une */}
-          <div className="lg:text-right border-t lg:border-t-0 lg:border-l border-[#f3ead9]/20 pt-6 lg:pt-0 lg:pl-10">
-            <p className="font-display text-7xl md:text-8xl font-semibold leading-none tabular-nums text-secondary-300">
-              {stats.serie}
-            </p>
-            <p className="mt-2 text-sm font-bold uppercase tracking-[0.2em] text-[#f3ead9]/80">
-              {stats.serie > 1 ? "jours de suite" : "jour de série"}
-            </p>
+          {/* Série de révision en pastille, avec flèche dessinée */}
+          <div className="relative flex items-center justify-center lg:justify-start gap-6 lg:pr-4">
+            <FlecheCourbe className="hidden lg:block w-24 rotate-6" />
+            <div className="relative">
+              <Pastille
+                valeur={stats.serie}
+                libelle={stats.serie > 1 ? "jours de suite" : "jour de série"}
+                icone={TrendingUp}
+                className="w-36 h-36"
+              />
+              <Eclats className="absolute -top-6 -right-6 w-12 h-12" />
+            </div>
           </div>
         </div>
       </section>
@@ -173,14 +178,14 @@ export default function Home() {
       {/* Stats Grid */}
       <section>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-2xl font-semibold text-gray-900 dark:text-white"><span className="souligne-ocre">Aperçu de tes progrès</span></h3>
+          <h3 className="text-2xl font-bold text-marine dark:text-white"><span className="trait-main">Aperçu de tes progrès</span></h3>
           <Link to="/profil" className="text-sm font-bold text-primary-700 dark:text-primary-300 hover:underline">Voir détails</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard icon={BookOpen} titre="Cours" valeur={stats.cours} couleur="bg-primary-500" lien="/mes-cours" />
+          <StatCard icon={BookOpen} titre="Cours" valeur={stats.cours} couleur="bg-primary-600" lien="/mes-cours" />
           <StatCard icon={FileText} titre="Fiches" valeur={stats.fiches} couleur="bg-secondary-400" lien="/fiches" />
-          <StatCard icon={BrainCircuit} titre="Quiz" valeur={stats.quiz} couleur="bg-primary-800" lien="/quiz" />
-          <StatCard icon={Target} titre="Score moyen" valeur={`${stats.scoreMoyen}%`} couleur="bg-secondary-600" lien="/quiz" />
+          <StatCard icon={BrainCircuit} titre="Quiz" valeur={stats.quiz} couleur="bg-marine dark:bg-primary-200" lien="/quiz" />
+          <StatCard icon={Target} titre="Score moyen" valeur={`${stats.scoreMoyen}%`} couleur="bg-primary-300" lien="/quiz" />
         </div>
       </section>
 
@@ -188,7 +193,7 @@ export default function Home() {
         {/* Planning Section */}
         <section className="lg:col-span-1">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-2xl font-bold text-marine dark:text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary-600" aria-hidden="true" />
               À faire aujourd'hui
             </h3>
@@ -250,7 +255,7 @@ export default function Home() {
         {/* Actions Grid */}
         <section className="lg:col-span-2">
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-2xl font-semibold text-gray-900 dark:text-white"><span className="souligne-ocre">Raccourcis</span></h3>
+            <h3 className="text-2xl font-bold text-marine dark:text-white"><span className="trait-main">Raccourcis</span></h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <ActionRapide

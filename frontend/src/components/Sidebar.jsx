@@ -67,7 +67,7 @@ export default function Sidebar({ ouverte, fermer }) {
                 cn(
                   "flex items-center gap-3 px-4 py-3 rounded-2xl text-[0.94rem] font-semibold transition-all group relative",
                   isActive
-                    ? "bg-primary-700 text-[#fbf7ef] dark:bg-primary-500/20 dark:text-primary-200 shadow-[0_10px_24px_-14px_rgba(12,79,60,0.8)]"
+                    ? "bg-marine text-white dark:bg-primary-500/20 dark:text-primary-100 shadow-[0_10px_24px_-14px_rgba(10,31,74,0.8)]"
                     : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-muted"
                 )
               }

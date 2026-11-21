@@ -129,7 +129,7 @@ export default function Profil() {
     <div className="space-y-8 max-w-3xl mx-auto pb-20">
       {/* Header Profile */}
       <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-card rounded-[2rem] border border-border">
-         <div className="w-24 h-24 rounded-[2rem] surface-teranga flex items-center justify-center shadow-lg">
+         <div className="w-24 h-24 rounded-[2rem] surface-marque flex items-center justify-center shadow-lg">
             <User className="w-12 h-12" />
          </div>
          <div className="flex-1 text-center md:text-left">
