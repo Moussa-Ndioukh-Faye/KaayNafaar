@@ -487,7 +487,7 @@ export default function AssistantIA() {
                                     href={s.url} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg border border-blue-100 dark:border-blue-800/50 text-[10px] font-bold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                                    className="flex items-center gap-1.5 px-2 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg border border-primary-100 dark:border-primary-800/50 text-[10px] font-bold hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
                                   >
                                     <Globe className="w-3 h-3" />
                                     {s.titre}

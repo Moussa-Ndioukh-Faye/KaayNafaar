@@ -132,7 +132,7 @@ export default function Quiz() {
     const stats = [
       { label: "Score", value: `${resultat.score} / ${resultat.total}`, icon: Trophy, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-900/20" },
       { label: "Réussite", value: `${pct}%`, icon: BarChart3, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-      { label: "Questions", value: resultat.total, icon: HelpCircle, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-900/20" },
+      { label: "Questions", value: resultat.total, icon: HelpCircle, color: "text-primary-500", bg: "bg-primary-50 dark:bg-primary-900/20" },
     ];
 
     return (
@@ -358,8 +358,8 @@ export default function Quiz() {
             Retour
           </Button>
           <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-             <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-purple-600" />
+             <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-900/30 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-secondary-600" />
              </div>
              Générer un quiz IA
           </h2>
@@ -457,8 +457,8 @@ export default function Quiz() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-              <BrainCircuit className="w-6 h-6 text-purple-600" />
+            <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-900/30 rounded-xl flex items-center justify-center">
+              <BrainCircuit className="w-6 h-6 text-secondary-600" />
             </div>
             Quiz & Évaluations
           </h2>
@@ -528,10 +528,10 @@ export default function Quiz() {
                      {q.titre}
                   </CardTitle>
                   <div className="flex items-center gap-2 mt-3">
-                     <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-purple-50 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-md">
+                     <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-secondary-50 dark:bg-secondary-900/50 text-secondary-700 dark:text-secondary-300 rounded-md">
                         {q.difficulte}
                      </span>
-                     <span className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 rounded-md">
+                     <span className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-primary-50 dark:bg-primary-900/50 text-primary-600 dark:text-primary-300 rounded-md">
                         <Timer className="w-3 h-3" /> {q.dureeMinutes} min
                      </span>
                      <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-md">

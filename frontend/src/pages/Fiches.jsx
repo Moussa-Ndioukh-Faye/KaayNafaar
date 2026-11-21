@@ -456,17 +456,17 @@ export default function Fiches() {
 
         {/* Fiche Content Card */}
         <Card className="rounded-[2rem] border-none shadow-xl shadow-gray-100 dark:shadow-none overflow-hidden bg-white dark:bg-gray-800">
-          <div className="h-3 bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-500" />
+          <div className="h-3 bg-gradient-to-r from-primary-600 via-secondary-400 to-primary-600" />
           <CardHeader className="p-8 pb-4">
             <div className="flex items-center gap-3 mb-4">
                {fiche.genereeParIA && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-purple-100 dark:border-purple-900/50">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-secondary-100 dark:border-secondary-900/50">
                      <Sparkles className="w-3 h-3" />
                      Générée par IA
                   </div>
                )}
                {fiche.cours && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-blue-100 dark:border-blue-900/50">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-primary-100 dark:border-primary-900/50">
                      <BookOpen className="w-3 h-3" />
                      {fiche.cours.titre}
                   </div>
@@ -513,15 +513,15 @@ export default function Fiches() {
             {pointsImportants.length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                    <Star className="w-4 h-4 text-blue-600" />
+                  <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+                    <Star className="w-4 h-4 text-primary-600" />
                   </div>
                   Points à retenir
                 </h3>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {pointsImportants.map((p, i) => (
                     <li key={`point-${i}`} className="flex gap-3 p-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700">
-                      <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[10px] text-blue-600">
+                      <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[10px] text-primary-600">
                          {i + 1}
                       </div>
                       <span className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{p}</span>
@@ -534,8 +534,8 @@ export default function Fiches() {
             {Object.keys(explications).length > 0 && (
               <div className="space-y-4">
                 <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
-                    <MessageSquare className="w-4 h-4 text-purple-600" />
+                  <div className="w-8 h-8 rounded-lg bg-secondary-50 dark:bg-secondary-900/30 flex items-center justify-center">
+                    <MessageSquare className="w-4 h-4 text-secondary-600" />
                   </div>
                   Explications détaillées
                 </h3>
@@ -581,8 +581,8 @@ export default function Fiches() {
             Retour
           </Button>
           <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-             <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-purple-600" />
+             <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-900/30 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-secondary-600" />
              </div>
              Générer une fiche IA
           </h2>
@@ -731,7 +731,7 @@ export default function Fiches() {
                         <FileText className="w-4 h-4" />
                       </div>
                       {fiche.genereeParIA && (
-                        <div className="p-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg" title="Générée par IA">
+                        <div className="p-1.5 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 rounded-lg" title="Générée par IA">
                            <Sparkles className="w-3 h-3" />
                         </div>
                       )}

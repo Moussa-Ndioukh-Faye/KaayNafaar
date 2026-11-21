@@ -45,7 +45,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950 p-4">
+        <div className="flex items-center justify-center h-screen bg-background p-4">
           <div className="text-center max-w-md">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">⚠️</span>
@@ -173,7 +173,7 @@ const Layout = ({ children }) => {
   const [sidebarOuverte, setSidebarOuverte] = useState(false);
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
+    <div className="flex h-screen bg-background overflow-hidden transition-colors duration-300">
       {/* WCAG 2.4.1 : lien d'évitement vers le contenu principal */}
       <a
         href="#contenu"

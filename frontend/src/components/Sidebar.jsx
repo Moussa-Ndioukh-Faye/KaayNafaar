@@ -9,13 +9,12 @@ import {
   MessageSquare, 
   Settings,
   LogOut,
-  ChevronRight,
-  Sparkles,
   Globe,
   BarChart3
 } from "lucide-react";
 import { useAuth } from "../App";
 import { cn } from "../lib/utils";
+import Logo from "./marque/Logo";
 import { Button } from "./ui/button";
 
 const navigation = [
@@ -50,18 +49,12 @@ export default function Sidebar({ ouverte, fermer }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 transition-colors">
-      <div className="flex items-center gap-3 px-8 py-8">
-        <div className="w-10 h-10 bg-primary-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-200 dark:shadow-none">
-          <Sparkles className="w-6 h-6 fill-current" />
-        </div>
-        <div>
-          <p className="font-black text-gray-900 dark:text-white text-xl tracking-tight leading-none">Kaay Nafaar</p>
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary-600 mt-1">Études 2.0</p>
-        </div>
+    <div className="flex flex-col h-full bg-card border-r border-border transition-colors">
+      <div className="px-7 py-8">
+        <Logo />
       </div>
 
-      <nav aria-label="Navigation principale" className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-none">
+      <nav aria-label="Navigation principale" className="flex-1 px-4 py-2 space-y-1 overflow-y-auto scrollbar-none">
         {navigation.map((item) => {
           const Icon = item.icon;
           return (
@@ -72,18 +65,18 @@ export default function Sidebar({ ouverte, fermer }) {
               onClick={fermer}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all group relative",
+                  "flex items-center gap-3 px-4 py-3 rounded-2xl text-[0.94rem] font-semibold transition-all group relative",
                   isActive
-                    ? "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 shadow-sm"
-                    : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                    ? "bg-primary-700 text-[#fbf7ef] dark:bg-primary-500/20 dark:text-primary-200 shadow-[0_10px_24px_-14px_rgba(12,79,60,0.8)]"
+                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-muted"
                 )
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon className={cn("w-5 h-5 transition-colors", isActive ? "text-primary-600" : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300")} />
+                  <Icon aria-hidden="true" className={cn("w-5 h-5 transition-colors", isActive ? "text-secondary-300" : "text-gray-500 group-hover:text-primary-600")} />
                   <span className="flex-1">{item.nom}</span>
-                  {isActive && <ChevronRight className="w-4 h-4" />}
+                  {isActive && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-secondary-300" />}
                 </>
               )}
             </NavLink>
@@ -92,7 +85,7 @@ export default function Sidebar({ ouverte, fermer }) {
       </nav>
 
       <div className="p-6 mt-auto">
-         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-3xl p-5 border border-gray-100 dark:border-gray-800">
+         <div className="bg-muted/60 rounded-3xl p-5 border border-border">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-white dark:bg-gray-700 rounded-xl flex items-center justify-center text-primary-600 font-black shadow-sm">
                 {utilisateur?.nom?.charAt(0)?.toUpperCase() || "?"}

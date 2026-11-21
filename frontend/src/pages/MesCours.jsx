@@ -317,7 +317,7 @@ export default function MesCours() {
                     <GraduationCap className="w-3 h-3" />
                     {c.niveau}
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md">
+                  <div className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-md">
                     <Clock className="w-3 h-3" />
                     {c.dureeEstimee} min
                   </div>
@@ -338,9 +338,9 @@ export default function MesCours() {
                   </div>
                 )}
                 {c.resumeIA && (
-                  <div className="ml-auto flex items-center gap-1 px-2 py-1 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                    <Sparkles className="w-3 h-3 text-purple-600" />
-                    <span className="text-[10px] font-bold text-purple-600 uppercase">IA OK</span>
+                  <div className="ml-auto flex items-center gap-1 px-2 py-1 bg-secondary-50 dark:bg-secondary-900/20 rounded-lg">
+                    <Sparkles className="w-3 h-3 text-secondary-600" />
+                    <span className="text-[10px] font-bold text-secondary-600 uppercase">IA OK</span>
                   </div>
                 )}
               </CardFooter>

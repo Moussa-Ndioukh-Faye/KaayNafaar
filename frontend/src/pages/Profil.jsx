@@ -128,8 +128,8 @@ export default function Profil() {
   return (
     <div className="space-y-8 max-w-3xl mx-auto pb-20">
       {/* Header Profile */}
-      <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl shadow-gray-100 dark:shadow-none border-none">
-         <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white shadow-lg">
+      <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-card rounded-[2rem] border border-border">
+         <div className="w-24 h-24 rounded-[2rem] surface-teranga flex items-center justify-center shadow-lg">
             <User className="w-12 h-12" />
          </div>
          <div className="flex-1 text-center md:text-left">
@@ -162,7 +162,7 @@ export default function Profil() {
          <Card className="rounded-[2rem] shadow-lg border-none overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800">
             <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-6 border-b border-gray-100 dark:border-gray-700">
                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+                  <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600">
                      <Settings className="w-4 h-4" />
                   </div>
                   <CardTitle className="text-lg">Paramètres du profil</CardTitle>

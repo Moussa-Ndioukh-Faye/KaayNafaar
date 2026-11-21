@@ -22,7 +22,7 @@ const MATIERES = ["Informatique", "Mathématiques", "Physique", "Économie"];
 
 const COULEURS_MATIERE = {
   Informatique: { bg: "bg-sky-50 dark:bg-sky-500/10", text: "text-sky-600 dark:text-sky-400", dot: "bg-sky-500" },
-  Mathématiques: { bg: "bg-violet-50 dark:bg-violet-500/10", text: "text-violet-600 dark:text-violet-400", dot: "bg-violet-500" },
+  Mathématiques: { bg: "bg-secondary-50 dark:bg-secondary-500/10", text: "text-secondary-600 dark:text-secondary-400", dot: "bg-secondary-500" },
   Physique: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
   Économie: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
 };
@@ -102,11 +102,11 @@ export default function Bibliotheque() {
         <div>
           <div className="flex items-center gap-4 mb-2">
             <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 dark:from-indigo-400 dark:to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-200/50 dark:shadow-indigo-900/30">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-400 dark:to-primary-500 flex items-center justify-center shadow-lg shadow-primary-200/50 dark:shadow-primary-900/30">
                 <Library className="w-7 h-7 text-white" />
               </div>
               <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center">
-                <Globe className="w-3 h-3 text-indigo-500" />
+                <Globe className="w-3 h-3 text-primary-500" />
               </div>
             </div>
             <div>
@@ -124,7 +124,7 @@ export default function Bibliotheque() {
           <div className="relative flex-1 md:w-72">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <Input
-              className="pl-10 h-11 rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-indigo-400 text-sm transition-all"
+              className="pl-10 h-11 rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-400 text-sm transition-all"
               placeholder="Rechercher..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -139,7 +139,7 @@ export default function Bibliotheque() {
           >
             <SlidersHorizontal className="w-4 h-4" />
           </Button>
-          <Button onClick={filtrer} className="h-11 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
+          <Button onClick={filtrer} className="h-11 px-5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white shadow-sm">
             Rechercher
           </Button>
         </div>
@@ -184,8 +184,8 @@ export default function Bibliotheque() {
             <div className="w-28 h-28 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
               <BookMarked className="w-12 h-12 text-gray-300 dark:text-gray-600" />
             </div>
-            <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
-              <Search className="w-5 h-5 text-indigo-400" />
+            <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+              <Search className="w-5 h-5 text-primary-400" />
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Aucune fiche trouvée</h3>
@@ -213,10 +213,10 @@ export default function Bibliotheque() {
             return (
               <Card
                 key={fiche.id}
-                className="group relative rounded-3xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-800/50 hover:shadow-xl hover:shadow-indigo-100/20 dark:hover:shadow-indigo-950/20 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4"
+                className="group relative rounded-3xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-primary-200 dark:hover:border-primary-800/50 hover:shadow-xl hover:shadow-primary-100/20 dark:hover:shadow-primary-950/20 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4"
                 style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
               >
-                <div className={`absolute top-0 left-0 right-0 h-1 ${importee ? "bg-emerald-400" : "bg-gradient-to-r from-indigo-400 to-indigo-600 dark:from-indigo-500 dark:to-indigo-400"} opacity-60`} />
+                <div className={`absolute top-0 left-0 right-0 h-1 ${importee ? "bg-emerald-400" : "bg-gradient-to-r from-primary-400 to-primary-600 dark:from-primary-500 dark:to-primary-400"} opacity-60`} />
 
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start mb-3">
@@ -225,9 +225,9 @@ export default function Bibliotheque() {
                         <FileText className={`w-5 h-5 ${couleurs.text}`} />
                       </div>
                       {fiche.genereeParIA && (
-                        <div className="px-2 py-1 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-purple-500" />
-                          <span className="text-[9px] font-bold uppercase tracking-widest text-purple-500">IA</span>
+                        <div className="px-2 py-1 rounded-lg bg-gradient-to-r from-secondary-50 to-secondary-50 dark:from-secondary-900/20 dark:to-secondary-900/20 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-secondary-500" />
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-secondary-500">IA</span>
                         </div>
                       )}
                     </div>
@@ -237,7 +237,7 @@ export default function Bibliotheque() {
                       className={`w-8 h-8 rounded-xl transition-all ${
                         importee
                           ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500"
-                          : "text-gray-300 dark:text-gray-600 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                          : "text-gray-300 dark:text-gray-600 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
                       }`}
                       onClick={() => !importee && importer(fiche.id, fiche.titre)}
                       disabled={importee}
@@ -246,7 +246,7 @@ export default function Bibliotheque() {
                     </Button>
                   </div>
 
-                  <CardTitle className="text-lg font-bold leading-snug text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">
+                  <CardTitle className="text-lg font-bold leading-snug text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
                     {fiche.titre}
                   </CardTitle>
 
@@ -281,7 +281,7 @@ export default function Bibliotheque() {
                   </span>
                   <Button
                     variant="ghost"
-                    className="text-xs font-bold tracking-wider text-indigo-600 dark:text-indigo-400 hover:bg-transparent hover:text-indigo-700 dark:hover:text-indigo-300 hover:translate-x-0.5 transition-all flex items-center gap-1.5 px-0"
+                    className="text-xs font-bold tracking-wider text-primary-600 dark:text-primary-400 hover:bg-transparent hover:text-primary-700 dark:hover:text-primary-300 hover:translate-x-0.5 transition-all flex items-center gap-1.5 px-0"
                   >
                     Lire <ChevronRight className="w-3.5 h-3.5" />
                   </Button>
