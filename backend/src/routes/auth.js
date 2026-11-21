@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-const { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, logout } = require("../controllers/authController");
+const { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, exporterDonnees, logout } = require("../controllers/authController");
 const { proteger } = require("../middleware/auth");
 
 // Middleware de validation
@@ -58,6 +58,7 @@ router.get("/profil", proteger, getProfil);
 router.put("/profil", proteger, validerProfil, validate, mettreAJourProfil);
 router.put("/changer-mot-de-passe", proteger, validerChangementMDP, validate, changerMotDePasse);
 router.delete("/compte", proteger, validerSuppression, validate, supprimerCompte);
+router.get("/export", proteger, exporterDonnees);
 router.post("/logout", logout);
 
 module.exports = router;
