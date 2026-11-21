@@ -196,7 +196,7 @@ export default function Planning() {
           <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-8 border-b border-gray-100 dark:border-gray-700">
              <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                   <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600">
+                   <div className="w-10 h-10 rounded-xl bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center text-secondary-600">
                       <Sparkles className="w-6 h-6" />
                    </div>
                    <div>
@@ -284,15 +284,15 @@ export default function Planning() {
                 </div>
                 
                 {planningGenere.conseils_generaux && (
-                  <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-[2rem] border border-blue-100 dark:border-blue-900/30">
-                    <p className="text-sm font-black text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <div className="p-6 bg-primary-50 dark:bg-primary-900/20 rounded-[2rem] border border-primary-100 dark:border-primary-900/30">
+                    <p className="text-sm font-black text-primary-800 dark:text-primary-300 mb-3 flex items-center gap-2">
                       <Lightbulb className="w-5 h-5" />
                       Conseils de préparation :
                     </p>
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                       {planningGenere.conseils_generaux.map((c, i) => (
-                         <li key={i} className="text-sm text-blue-700 dark:text-blue-400 flex items-start gap-2 leading-relaxed">
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
+                         <li key={i} className="text-sm text-primary-700 dark:text-primary-400 flex items-start gap-2 leading-relaxed">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary-400 mt-1.5 flex-shrink-0" />
                             {c}
                          </li>
                       ))}
@@ -420,7 +420,7 @@ export default function Planning() {
                                {s.matiere}
                              </p>
                              {s.coursId && (
-                                <div className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-md text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
+                                <div className="px-2 py-0.5 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-md text-[8px] font-black uppercase tracking-wider flex items-center gap-1">
                                    <BookOpen className="w-2.5 h-2.5" /> lié
                                 </div>
                              )}
@@ -445,7 +445,7 @@ export default function Planning() {
           ))}
           
           {/* Motivation Widget */}
-          <Card className="rounded-[2.5rem] border-none bg-gradient-to-br from-primary-600 to-secondary-600 p-1">
+          <Card className="rounded-[2.5rem] border-none surface-marque p-1">
              <div className="bg-white dark:bg-gray-900 rounded-[2.4rem] p-8 flex flex-col md:flex-row items-center gap-8">
                 <div className="w-20 h-20 rounded-[2rem] bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center flex-shrink-0">
                    <Target className="w-10 h-10 text-orange-500" />

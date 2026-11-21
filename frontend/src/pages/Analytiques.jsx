@@ -76,8 +76,8 @@ export default function Analytiques() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center">
-                  <Layers className="w-5 h-5 text-purple-600" />
+                <div className="w-10 h-10 rounded-xl bg-secondary-50 dark:bg-secondary-900/30 flex items-center justify-center">
+                  <Layers className="w-5 h-5 text-secondary-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-black text-gray-900 dark:text-white">{sm2.totalFlashcards}</p>
@@ -115,8 +115,8 @@ export default function Analytiques() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-primary-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-black text-gray-900 dark:text-white">{sm2.efMoyen}</p>
@@ -176,7 +176,7 @@ export default function Analytiques() {
                 <div key={i} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
                   <div className="flex flex-col items-center gap-0.5">
                     {jour.quiz > 0 && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-purple-500" title={`${jour.quiz} quiz`} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-secondary-500" title={`${jour.quiz} quiz`} />
                     )}
                     {jour.seances > 0 && (
                       <div className="text-[8px] font-bold text-primary-600">{jour.seances}</div>
@@ -260,7 +260,7 @@ export default function Analytiques() {
                   <p className="text-2xl font-black text-gray-900 dark:text-white">{progression.fichesTotal}</p>
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-                  <div className="flex items-center gap-2 text-purple-600 mb-1">
+                  <div className="flex items-center gap-2 text-secondary-600 mb-1">
                     <BrainCircuit className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Quiz</span>
                   </div>
@@ -281,7 +281,7 @@ export default function Analytiques() {
                   <p className="text-2xl font-black text-gray-900 dark:text-white">{progression.serie} jours</p>
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-                  <div className="flex items-center gap-2 text-blue-600 mb-1">
+                  <div className="flex items-center gap-2 text-primary-600 mb-1">
                     <Clock className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Temps total</span>
                   </div>

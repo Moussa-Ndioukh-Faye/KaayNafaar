@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth, useDarkMode } from "../App";
 import { Button } from "./ui/button";
+import { LogoMarque } from "./marque/Logo";
 
 const titresPages = {
   "/": { label: "Tableau de bord", icon: LayoutDashboard },
@@ -33,7 +34,7 @@ export default function Navbar({ ouvrir }) {
   const Icon = pageInfo.icon;
 
   return (
-    <header className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-40 transition-colors">
+    <header className="bg-background/80 backdrop-blur-xl border-b border-border px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-40 transition-colors">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -47,18 +48,15 @@ export default function Navbar({ ouvrir }) {
 
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 group md:hidden" aria-label="Tableau de bord">
-             <div className="w-8 h-8 rounded-xl bg-primary-600 flex items-center justify-center text-white font-black text-sm">K</div>
+             <LogoMarque className="w-9 h-9" />
           </Link>
           
           {Icon && (
-            <div className="hidden md:flex items-center gap-3" aria-hidden="true">
-               <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-primary-600">
+            <div className="hidden md:flex items-center gap-3">
+               <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-primary-700 dark:text-primary-300" aria-hidden="true">
                   <Icon className="w-5 h-5" />
                </div>
-               <div className="flex flex-col">
-                  <h1 className="text-lg font-black text-gray-900 dark:text-white leading-none">{pageInfo.label}</h1>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">Kaay Nafaar</p>
-               </div>
+               <h1 className="font-display text-2xl font-semibold text-gray-900 dark:text-white leading-none">{pageInfo.label}</h1>
             </div>
           )}
         </div>

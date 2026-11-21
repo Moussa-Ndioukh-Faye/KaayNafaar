@@ -30,8 +30,8 @@ const Section = ({ titre, children }) => (
 
 export default function Confidentialite() {
   return (
-    <main id="contenu" className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4">
-      <article className="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-[2rem] shadow-xl p-8 md:p-12 space-y-10">
+    <main id="contenu" className="min-h-screen bg-background py-12 px-4">
+      <article className="max-w-3xl mx-auto bg-card border border-border rounded-[2rem] p-8 md:p-12 space-y-10">
         <header className="space-y-4">
           <Link
             to="/"

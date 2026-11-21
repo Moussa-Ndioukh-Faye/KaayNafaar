@@ -4,20 +4,18 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  LogIn, 
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
   AlertCircle,
-  TrendingUp,
-  Zap,
-  Award,
-  Sparkles
 } from "lucide-react";
 import { authAPI } from "../services/api";
 import { useAuth } from "../App";
+import Logo from "../components/marque/Logo";
+import PanneauMarque from "../components/marque/PanneauMarque";
 
 export default function Connexion() {
   const [searchParams] = useSearchParams();
@@ -64,58 +62,22 @@ export default function Connexion() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Panneau gauche décoratif (desktop) */}
-      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-primary-600 to-secondary-600 flex-col items-center justify-center p-12 text-white relative overflow-hidden">
-        {/* Animated background shapes */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-48 h-48 bg-white/5 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/10 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
-        </div>
-        
-        <div className="relative z-10 max-w-xs text-center space-y-6">
-          {/* Animated Logo */}
-          <div className="w-24 h-24 bg-white/20 rounded-[2.5rem] flex items-center justify-center mx-auto backdrop-blur-sm shadow-2xl border border-white/20">
-            <Sparkles className="w-12 h-12 text-white fill-current" />
-          </div>
-          
-          <h2 className="text-4xl font-black tracking-tight">
-            Kaay Nafaar
-          </h2>
-          <p className="text-white/80 text-lg font-medium italic">Études 2.0 augmentées par l'IA</p>
-          
-          <div className="space-y-4 pt-4">
-            {[
-              { icon: TrendingUp, text: "Suis ta progression en temps réel" },
-              { icon: Zap, text: "Génération de fiches en quelques secondes" },
-              { icon: Award, text: "Flashcards et quiz adaptatifs" },
-            ].map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-center gap-4 bg-white/10 hover:bg-white/20 rounded-2xl px-5 py-4 backdrop-blur-md text-left transition-all duration-300 border border-white/5 shadow-lg group">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                   <Icon className="w-5 h-5 text-white" />
-                </div>
-                <p className="text-sm font-semibold text-white/90">{text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <PanneauMarque
+        titre={<>Content de te <span className="trait-main">revoir</span>.</>}
+        accroche="Reprends là où tu t'étais arrêté : tes fiches, tes quiz et ton planning t'attendent."
+      />
 
       {/* Panneau droit — formulaire */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 overflow-y-auto">
+      <main id="contenu" className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
         <div className="w-full max-w-md py-8">
           {/* Logo mobile */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-primary-200">
-              <Sparkles className="w-10 h-10 text-white fill-current" />
-            </div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Kaay Nafaar</h2>
-            <p className="text-sm font-bold text-primary-600 uppercase tracking-widest mt-1">Études 2.0</p>
+          <div className="lg:hidden flex justify-center mb-10">
+            <Logo />
           </div>
 
-          <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-10">
+          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
             <div className="mb-8">
-              <h2 className="text-3xl font-black text-gray-900 tracking-tight">Bienvenue</h2>
+              <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">Connexion</h1>
               <p className="text-slate-500 mt-1 font-medium">Connecte-toi pour continuer tes révisions</p>
             </div>
 
@@ -190,7 +152,7 @@ export default function Connexion() {
             <div className="mt-8 pt-8 border-t border-slate-100 text-center">
               <p className="text-sm text-slate-500 font-medium">
                 Pas encore de compte ?{" "}
-                <Link to="/inscription" className="text-primary-600 font-bold hover:text-primary-700 transition-colors ml-1">
+                <Link to="/inscription" className="text-primary-700 font-bold hover:text-primary-800 transition-colors ml-1">
                   Créer un compte
                 </Link>
               </p>
@@ -200,7 +162,7 @@ export default function Connexion() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -1,22 +1,20 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  School, 
-  UserPlus, 
-  AlertCircle, 
-  BookOpen, 
-  BrainCircuit, 
-  Calendar, 
-  CheckCircle, 
+import {
+  User,
+  Mail,
+  Lock,
+  School,
+  UserPlus,
+  AlertCircle,
+  CheckCircle,
   XCircle,
   ChevronDown,
-  Sparkles
 } from "lucide-react";
 import { authAPI } from "../services/api";
 import { useAuth } from "../App";
+import Logo from "../components/marque/Logo";
+import PanneauMarque from "../components/marque/PanneauMarque";
 import { cn } from "../lib/utils";
 
 export default function Inscription() {
@@ -106,56 +104,22 @@ export default function Inscription() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Panneau gauche décoratif (desktop) */}
-      <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-primary-600 to-secondary-600 flex-col items-center justify-center p-12 text-white relative overflow-hidden">
-        {/* Animated background shapes */}
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full animate-pulse"></div>
-          <div className="absolute bottom-20 right-10 w-48 h-48 bg-white/5 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/10 rounded-full animate-pulse" style={{ animationDelay: '2s' }}></div>
-        </div>
-        
-        <div className="relative z-10 max-w-xs text-center space-y-6">
-          {/* Animated Logo */}
-          <div className="w-24 h-24 bg-white/20 rounded-[2.5rem] flex items-center justify-center mx-auto backdrop-blur-sm shadow-2xl border border-white/20">
-            <Sparkles className="w-12 h-12 text-white fill-current" />
-          </div>
-          
-          <h2 className="text-4xl font-black tracking-tight text-white">
-            Kaay Nafaar
-          </h2>
-          <p className="text-white/80 text-lg font-medium italic text-center">Ton assistant d'études intelligent</p>
-          
-          <div className="grid grid-cols-3 gap-3 pt-4">
-            {[
-              { icon: BookOpen, label: "Fiches IA" },
-              { icon: BrainCircuit, label: "Quiz" },
-              { icon: Calendar, label: "Planning" },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="bg-white/10 rounded-2xl py-5 px-2 backdrop-blur-md text-center hover:bg-white/20 transition-all duration-300 hover:scale-105 border border-white/5 shadow-lg group">
-                <Icon className="w-8 h-8 mx-auto mb-2 text-white/90 group-hover:scale-110 transition-transform" />
-                <p className="text-[10px] font-bold uppercase tracking-wider">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <PanneauMarque
+        titre={<>Tes cours, <span className="trait-main">en mieux</span>.</>}
+        accroche="Crée ton compte gratuit et transforme tes cours en fiches, quiz et planning de révision."
+      />
 
       {/* Panneau droit — formulaire */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-slate-50 overflow-y-auto">
+      <main id="contenu" className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
         <div className="w-full max-w-md py-8">
           {/* Logo mobile */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-primary-200">
-              <Sparkles className="w-10 h-10 text-white fill-current" />
-            </div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">Kaay Nafaar</h2>
-            <p className="text-sm font-bold text-primary-600 uppercase tracking-widest mt-1">Études 2.0</p>
+          <div className="lg:hidden flex justify-center mb-10">
+            <Logo />
           </div>
 
-          <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-10">
+          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
             <div className="mb-8">
-              <h2 className="text-3xl font-black text-gray-900 tracking-tight">Créer un compte</h2>
+              <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">Créer un compte</h1>
               <p className="text-slate-600 mt-1 font-medium">C'est gratuit et prend moins d'une minute</p>
             </div>
 
@@ -301,14 +265,14 @@ export default function Inscription() {
             <div className="mt-8 pt-8 border-t border-slate-100 text-center">
               <p className="text-sm text-slate-600 font-medium">
                 Déjà un compte ?{" "}
-                <Link to="/connexion" className="text-primary-600 font-bold hover:text-primary-700 transition-colors ml-1">
+                <Link to="/connexion" className="text-primary-700 font-bold hover:text-primary-800 transition-colors ml-1">
                   Se connecter
                 </Link>
               </p>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
