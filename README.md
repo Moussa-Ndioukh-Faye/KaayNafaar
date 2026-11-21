@@ -193,6 +193,20 @@ npm run preview       # Preview du build
 
 ---
 
-## 📄 License
+## ✅ Normes et conformité
 
-MIT - Développé avec passion pour une réussite académique augmentée par l'IA.
+| Norme | Application dans le projet |
+| --- | --- |
+| **OWASP Top 10 / ASVS** | CORS et CSRF en liste blanche, JWT HS256 avec révocation, uploads privés, validation des entrées, Helmet + HSTS — voir [SECURITY.md](SECURITY.md) |
+| **NIST SP 800-63B** | Mots de passe de 8 caractères minimum, sans règles de composition imposées |
+| **WCAG 2.2 AA** | Libellés de formulaires, lien d'évitement, focus visible, contraste AA, `prefers-reduced-motion`, lint `jsx-a11y` bloquant en CI |
+| **Loi sénégalaise 2008-12 (CDP) / RGPD** | Page `/confidentialite`, consentement à l'inscription, export des données (`GET /api/auth/export`), suppression complète du compte |
+| **Conventional Commits / SemVer** | Voir [CONTRIBUTING.md](CONTRIBUTING.md) |
+
+Les dépendances sont auditées à chaque CI (`npm audit --audit-level=high`) et mises à jour chaque semaine par Dependabot.
+
+---
+
+## 📄 Licence
+
+[MIT](LICENSE) — © 2026 Moussa Ndioukh Faye. Développé avec passion pour une réussite académique augmentée par l'IA.
