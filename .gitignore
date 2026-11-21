@@ -8,3 +8,5 @@ build/
 *.log
 .DS_Store
 *.sqlite
+# Fichiers de session locaux (curl)
+cookies.txt
