@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BrainCircuit,
   TrendingUp,
@@ -8,20 +8,14 @@ import {
   Target,
   Clock,
   BarChart3,
-  LineChart,
   AlertTriangle,
-  Sparkles,
   Layers,
-  RotateCcw,
   Star,
-  Calendar,
-  Meh,
   Activity,
   ChevronRight,
-  Info,
 } from "lucide-react";
 import api from "../services/api";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent} from "../components/ui/card";
 import { cn } from "../lib/utils";
 
 export default function Analytiques() {
@@ -56,12 +50,6 @@ export default function Analytiques() {
 
   const { progression, sm2, feedback, activite7Jours, pointsFaibles } = data;
   const maxActivite = Math.max(...activite7Jours.map(a => a.seances), 1);
-
-  const formaterDate = (iso) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" });
-  };
 
   const jours = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
@@ -201,7 +189,7 @@ export default function Analytiques() {
                     )}
                     style={{ height: `${Math.max((jour.seances / maxActivite) * 120, 4)}px` }}
                   />
-                  <span className="text-[9px] font-bold text-gray-400 uppercase">{jours[new Date(jour.date).getDay()]}</span>
+                  <span className="text-[9px] font-bold text-gray-500 uppercase">{jours[new Date(jour.date).getDay()]}</span>
                 </div>
               ))}
             </div>

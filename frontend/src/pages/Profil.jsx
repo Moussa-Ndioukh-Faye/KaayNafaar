@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { 
   User, 
   Settings, 
@@ -11,11 +11,12 @@ import {
   Eye,
   EyeOff,
   Trash2,
-  ChevronRight
+  Download,
 } from "lucide-react";
 import { useAuth } from "../App";
-import { authAPI } from "../services/api";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { Link } from "react-router-dom";
+import { authAPI, setToken } from "../services/api";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 
@@ -73,20 +74,48 @@ export default function Profil() {
         nouveauMotDePasse: motDePasse.nouveau,
       });
       if (data.success) {
+        // Les autres sessions sont révoquées : on garde la session courante avec le nouveau jeton
+        if (data.token) setToken(data.token);
         setMotDePasse({ actuel: "", nouveau: "", confirmation: "" });
         setMessage({ type: "success", texte: "Ton mot de passe a été modifié." });
       }
-    } catch (_) {
-      setMessage({ type: "error", texte: "Mot de passe actuel incorrect." });
+    } catch (err) {
+      const erreurs = err.response?.data?.errors;
+      setMessage({
+        type: "error",
+        texte: erreurs?.[0]?.msg || err.response?.data?.message || "Mot de passe actuel incorrect.",
+      });
     } finally {
       setEnvoi(false);
+    }
+  };
+
+  const [exportEnCours, setExportEnCours] = useState(false);
+
+  const exporterDonnees = async () => {
+    setExportEnCours(true);
+    try {
+      const { data } = await authAPI.exporterDonnees();
+      const url = URL.createObjectURL(data);
+      const lien = document.createElement("a");
+      lien.href = url;
+      lien.download = `kaay-nafaar-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(lien);
+      lien.click();
+      lien.remove();
+      URL.revokeObjectURL(url);
+      setMessage({ type: "success", texte: "Tes données ont été téléchargées." });
+    } catch (_) {
+      setMessage({ type: "error", texte: "Impossible d'exporter tes données pour le moment." });
+    } finally {
+      setExportEnCours(false);
     }
   };
 
   const supprimerCompte = async () => {
     const mdp = window.prompt("Pour confirmer la suppression, entre ton mot de passe actuel :");
     if (!mdp) return;
-    if (!window.confirm("Attention : cette action supprimera définitivement tes cours, fiches et progression. Continuer ?")) return;
+    if (!window.confirm("Attention : cette action supprimera définitivement ton compte, tes cours, fichiers importés, fiches, quiz et ta progression. Continuer ?")) return;
     try {
       await authAPI.supprimerCompte({ motDePasse: mdp });
       deconnecter();
@@ -117,7 +146,7 @@ export default function Profil() {
       </div>
 
       {message.texte && (
-        <div className={cn(
+        <div role={message.type === "error" ? "alert" : "status"} className={cn(
           "px-6 py-4 rounded-2xl text-sm font-bold flex items-center gap-3 animate-fade-in border-2",
           message.type === "success" 
             ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" 
@@ -142,10 +171,10 @@ export default function Profil() {
             <form onSubmit={mettreAJourProfil} className="flex-1 flex flex-col">
                <CardContent className="p-6 space-y-4 flex-1">
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Nom complet</label>
+                    <label htmlFor="profil-champ-143" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Nom complet</label>
                     <div className="relative">
-                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                       <input
+                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                       <input id="profil-champ-143"
                          type="text"
                          className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
                          value={form.nom}
@@ -155,10 +184,10 @@ export default function Profil() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Adresse email</label>
+                    <label htmlFor="profil-champ-156" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Adresse email</label>
                     <div className="relative">
-                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                       <input
+                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                       <input id="profil-champ-156"
                          type="email"
                          className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
                          value={form.email}
@@ -189,8 +218,8 @@ export default function Profil() {
             <form onSubmit={changerMotDePasse} className="flex-1 flex flex-col">
                <CardContent className="p-6 space-y-4 flex-1">
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Mot de passe actuel</label>
-                    <input
+                    <label htmlFor="profil-champ-190" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Mot de passe actuel</label>
+                    <input id="profil-champ-190"
                       type={voirMDP ? "text" : "password"}
                       className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
                       value={motDePasse.actuel}
@@ -199,9 +228,9 @@ export default function Profil() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Nouveau mot de passe</label>
+                    <label htmlFor="profil-champ-200" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Nouveau mot de passe</label>
                     <div className="relative">
-                       <input
+                       <input id="profil-champ-200"
                          type={voirMDP ? "text" : "password"}
                          className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
                          value={motDePasse.nouveau}
@@ -212,15 +241,17 @@ export default function Profil() {
                        <button 
                          type="button" 
                          onClick={() => setVoirMDP(!voirMDP)}
-                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                         aria-label={voirMDP ? "Masquer les mots de passe" : "Afficher les mots de passe"}
+                         aria-pressed={voirMDP}
+                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
                        >
                           {voirMDP ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                        </button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Confirmation</label>
-                    <input
+                    <label htmlFor="profil-champ-220" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Confirmation</label>
+                    <input id="profil-champ-220"
                       type={voirMDP ? "text" : "password"}
                       className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
                       value={motDePasse.confirmation}
@@ -237,6 +268,23 @@ export default function Profil() {
             </form>
          </Card>
       </div>
+
+      {/* Mes données (RGPD / loi sénégalaise 2008-12) */}
+      <Card className="rounded-[2rem] shadow-lg border-none bg-white dark:bg-gray-800">
+         <CardContent className="p-8 flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1 text-center md:text-left">
+               <h3 className="text-xl font-black text-gray-900 dark:text-white">Mes données personnelles</h3>
+               <p className="text-gray-600 dark:text-gray-300 mt-2 font-medium">
+                  Télécharge une copie de toutes tes données (profil, cours, fiches, quiz, progression) au format JSON.
+                  Consulte notre <Link to="/confidentialite" className="underline text-primary-700 dark:text-primary-400 font-bold">politique de confidentialité</Link>.
+               </p>
+            </div>
+            <Button onClick={exporterDonnees} disabled={exportEnCours} variant="outline" className="rounded-2xl h-12 px-6 font-bold">
+               <Download className="w-5 h-5 mr-2" aria-hidden="true" />
+               {exportEnCours ? "Préparation..." : "Exporter mes données"}
+            </Button>
+         </CardContent>
+      </Card>
 
       {/* Danger Zone */}
       <Card className="rounded-[2.5rem] border-2 border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10 overflow-hidden">
@@ -262,7 +310,7 @@ export default function Profil() {
 
       {/* Version Info */}
       <div className="text-center pt-10">
-         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300 dark:text-gray-700">
+         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
              Kaay Nafaar — Version 2.0.0
          </p>
       </div>

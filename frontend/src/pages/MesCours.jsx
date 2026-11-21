@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   BookOpen, 
   Plus, 
@@ -119,7 +119,7 @@ export default function MesCours() {
       {/* Search and Feedback */}
       <div className="flex flex-col md:flex-row gap-4 items-center">
         <div className="relative w-full max-w-md group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary-500 transition-colors" />
           <input
             type="search"
             className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all shadow-sm"
@@ -164,8 +164,8 @@ export default function MesCours() {
             <CardContent className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Titre du cours *</label>
-                  <input
+                  <label htmlFor="mescours-champ-167" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Titre du cours *</label>
+                  <input id="mescours-champ-167"
                     className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
                     placeholder="ex: Introduction à l'Algorithmique" required
                     value={form.titre} maxLength={200}
@@ -173,8 +173,8 @@ export default function MesCours() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Matière *</label>
-                  <input
+                  <label htmlFor="mescours-champ-176" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Matière *</label>
+                  <input id="mescours-champ-176"
                     className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
                     placeholder="ex: Informatique" required
                     value={form.matiere} maxLength={100}
@@ -184,10 +184,10 @@ export default function MesCours() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
-                  Contenu du cours * <span className="text-gray-400 font-normal">(Texte brut pour analyse IA)</span>
+                <label htmlFor="mescours-champ-187" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
+                  Contenu du cours * <span className="text-gray-500 font-normal">(Texte brut pour analyse IA)</span>
                 </label>
-                <textarea
+                <textarea id="mescours-champ-187"
                   className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all h-40 resize-none"
                   required
                   placeholder="Colle ici le texte de tes leçons ou notes…"
@@ -198,8 +198,8 @@ export default function MesCours() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Niveau</label>
-                  <select 
+                  <label htmlFor="mescours-champ-201" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Niveau</label>
+                  <select id="mescours-champ-201" 
                     className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none"
                     value={form.niveau} onChange={(e) => setForm({ ...form, niveau: e.target.value })}
                   >
@@ -207,16 +207,16 @@ export default function MesCours() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Durée estimée (min)</label>
-                  <input type="number" min="5" max="300" 
+                  <label htmlFor="mescours-champ-210" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Durée estimée (min)</label>
+                  <input id="mescours-champ-210" type="number" min="5" max="300" 
                     className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
                     value={form.dureeEstimee}
                     onChange={(e) => setForm({ ...form, dureeEstimee: parseInt(e.target.value) || 30 })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Tags</label>
-                  <input 
+                  <label htmlFor="mescours-champ-218" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Tags</label>
+                  <input id="mescours-champ-218" 
                     className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
                     placeholder="tri, algo, mémoire" value={form.tags} maxLength={200}
                     onChange={(e) => setForm({ ...form, tags: e.target.value })}
@@ -225,9 +225,9 @@ export default function MesCours() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Fichier (PDF ou Image pour OCR)</label>
+                <label htmlFor="mescours-champ-228" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Fichier (PDF ou Image pour OCR)</label>
                 <div className="flex items-center gap-4">
-                  <input ref={fileInputRef} type="file" accept=".pdf,.txt,.jpg,.jpeg,.png" className="hidden"
+                  <input id="mescours-champ-228" ref={fileInputRef} type="file" accept=".pdf,.txt,.jpg,.jpeg,.png" className="hidden"
                     onChange={(e) => {
                       const f = e.target.files[0];
                       if (f && f.size > 10 * 1024 * 1024) { setErreur("Fichier trop grand (max 10 Mo)."); return; }
@@ -235,11 +235,11 @@ export default function MesCours() {
                     }}
                   />
                   <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-xl border-dashed border-2 h-20 flex-1 flex flex-col items-center justify-center gap-1 hover:border-primary-400 hover:bg-primary-50/30 transition-all">
-                    <FileUp className={cn("w-5 h-5", fichier ? "text-primary-600" : "text-gray-400")} />
+                    <FileUp className={cn("w-5 h-5", fichier ? "text-primary-600" : "text-gray-500")} />
                     <span className="text-xs font-bold text-gray-500">
                       {fichier ? fichier.name : "PDF ou Photo de notes (OCR)"}
                     </span>
-                    {!fichier && <span className="text-[9px] text-gray-400 uppercase tracking-tighter">Supporte les notes manuscrites</span>}
+                    {!fichier && <span className="text-[9px] text-gray-500 uppercase tracking-tighter">Supporte les notes manuscrites</span>}
                   </Button>
                   {fichier && (
                     <Button type="button" variant="ghost" size="icon" onClick={() => setFichier(null)} className="rounded-full text-red-500">
@@ -331,8 +331,8 @@ export default function MesCours() {
               <CardFooter className="pt-0 flex justify-between items-center">
                 {c.tags?.length > 0 && (
                   <div className="flex gap-1">
-                    <Tag className="w-3 h-3 text-gray-400" />
-                    <span className="text-[10px] text-gray-400 font-medium truncate max-w-[150px]">
+                    <Tag className="w-3 h-3 text-gray-500" />
+                    <span className="text-[10px] text-gray-500 font-medium truncate max-w-[150px]">
                       {Array.isArray(c.tags) ? c.tags.join(", ") : c.tags}
                     </span>
                   </div>

@@ -1,11 +1,9 @@
-import React from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { 
   Menu, 
   Sun, 
   Moon, 
-  User, 
-  ChevronRight,
+  User,
   LayoutDashboard,
   BookOpen,
   FileText,
@@ -29,7 +27,6 @@ const titresPages = {
 
 export default function Navbar({ ouvrir }) {
   const location = useLocation();
-  const navigate = useNavigate();
   const { utilisateur } = useAuth();
   const { darkMode, setDarkMode } = useDarkMode();
   const pageInfo = titresPages[location.pathname] || { label: "", icon: null };
@@ -60,7 +57,7 @@ export default function Navbar({ ouvrir }) {
                </div>
                <div className="flex flex-col">
                   <h1 className="text-lg font-black text-gray-900 dark:text-white leading-none">{pageInfo.label}</h1>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-1">Kaay Nafaar</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mt-1">Kaay Nafaar</p>
                </div>
             </div>
           )}
@@ -80,20 +77,21 @@ export default function Navbar({ ouvrir }) {
         
         <div className="h-6 w-px bg-gray-100 dark:bg-gray-800" />
 
-        <div 
-           className="flex items-center gap-3 pl-2 cursor-pointer group"
-           onClick={() => navigate("/profil")}
+        <Link
+           to="/profil"
+           aria-label="Mon profil"
+           className="flex items-center gap-3 pl-2 cursor-pointer group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         >
-          <div className="hidden sm:flex flex-col items-end">
-            <p className="text-sm font-black text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">
+          <span className="hidden sm:flex flex-col items-end">
+            <span className="text-sm font-black text-gray-900 dark:text-white group-hover:text-primary-600 transition-colors">
                {utilisateur?.nom?.split(" ")[0]}
-            </p>
-            <p className="text-[10px] font-bold text-gray-400">Compte étudiant</p>
-          </div>
-          <div className="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 rounded-xl flex items-center justify-center text-primary-600 border-2 border-transparent group-hover:border-primary-100 dark:group-hover:border-primary-900 transition-all">
-            <User className="w-5 h-5" />
-          </div>
-        </div>
+            </span>
+            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">Compte étudiant</span>
+          </span>
+          <span className="w-10 h-10 bg-primary-50 dark:bg-primary-900/30 rounded-xl flex items-center justify-center text-primary-600 border-2 border-transparent group-hover:border-primary-100 dark:group-hover:border-primary-900 transition-all">
+            <User className="w-5 h-5" aria-hidden="true" />
+          </span>
+        </Link>
       </div>
     </header>
   );

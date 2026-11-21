@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   Search,
@@ -65,6 +65,8 @@ export default function Bibliotheque() {
 
   useEffect(() => {
     chargerBibliotheque();
+    // Chargement initial uniquement
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const chargerBibliotheque = async () => {
@@ -120,7 +122,7 @@ export default function Bibliotheque() {
 
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 md:w-72">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <Input
               className="pl-10 h-11 rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-indigo-400 text-sm transition-all"
               placeholder="Rechercher..."
@@ -145,7 +147,7 @@ export default function Bibliotheque() {
 
       {filtresOuverts && (
         <div className="flex flex-wrap items-center gap-3 mb-8 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-top-2 duration-200">
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-400 mr-1">Matière</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 mr-1">Matière</span>
           <button
             onClick={() => setMatiere("")}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all ${
@@ -187,7 +189,7 @@ export default function Bibliotheque() {
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Aucune fiche trouvée</h3>
-          <p className="text-gray-400 dark:text-gray-500 max-w-md mt-2 text-sm leading-relaxed">
+          <p className="text-gray-500 dark:text-gray-500 max-w-md mt-2 text-sm leading-relaxed">
             {search || matiere
               ? "Essaie de modifier tes filtres ou de rechercher autre chose."
               : "Sois le premier à partager tes connaissances avec la communauté !"}
@@ -249,7 +251,7 @@ export default function Bibliotheque() {
                   </CardTitle>
 
                   <div className="flex items-center gap-3 mt-2.5">
-                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                       <Clock className="w-3 h-3" />
                       {new Date(fiche.createdAt).toLocaleDateString("fr-FR", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
@@ -274,7 +276,7 @@ export default function Bibliotheque() {
                 </CardContent>
 
                 <CardFooter className="pt-3 border-t border-gray-50 dark:border-gray-800 px-6 pb-5 flex justify-between items-center">
-                  <span className="text-[11px] text-gray-400 font-medium">
+                  <span className="text-[11px] text-gray-500 font-medium">
                     {importee ? "✓ Dans ta bibliothèque" : "Ajouter à mes fiches"}
                   </span>
                   <Button
@@ -292,7 +294,7 @@ export default function Bibliotheque() {
 
       {!chargement && fiches.length > 0 && (
         <div className="mt-10 text-center">
-          <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+          <p className="text-xs text-gray-500 dark:text-gray-500 font-medium">
             {fiches.length} fiche{fiches.length > 1 ? "s" : ""} disponible{fiches.length > 1 ? "s" : ""} dans la bibliothèque
           </p>
         </div>

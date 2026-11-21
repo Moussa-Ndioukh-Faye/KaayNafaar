@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   BookOpen, 
@@ -216,7 +216,7 @@ export default function Home() {
               <Card className="border-dashed bg-gray-50/50 dark:bg-gray-800/30">
                 <CardContent className="p-8 text-center">
                   <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Calendar className="w-6 h-6 text-gray-400" />
+                    <Calendar className="w-6 h-6 text-gray-500" />
                   </div>
                   <p className="text-sm font-medium text-gray-500">Rien de prévu pour le moment.</p>
                   <Link to="/planning" className="mt-3 inline-block text-xs font-bold text-primary-600 hover:underline">Planifier ma journée</Link>

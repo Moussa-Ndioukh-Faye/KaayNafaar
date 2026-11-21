@@ -70,6 +70,8 @@ export const authAPI = {
   updateProfil: (data) => api.put("/auth/profil", data),
   changerMotDePasse: (data) => api.put("/auth/changer-mot-de-passe", data),
   supprimerCompte: (data) => api.delete("/auth/compte", { data }),
+  // Portabilité des données (RGPD art. 20)
+  exporterDonnees: () => api.get("/auth/export", { responseType: "blob" }),
   logout: () => api.post("/auth/logout"),
 };
 

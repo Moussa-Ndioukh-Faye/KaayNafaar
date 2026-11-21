@@ -2,7 +2,7 @@
  * Page de Connexion — UI modernisée avec Google Material Icons
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { 
   Mail, 
@@ -133,7 +133,7 @@ export default function Connexion() {
                   Adresse email
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="email" name="email" type="email"
                     autoComplete="email" required
@@ -151,7 +151,7 @@ export default function Connexion() {
                   Mot de passe
                 </label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="motDePasse" name="motDePasse"
                     type={voirMotDePasse ? "text" : "password"}
@@ -164,7 +164,7 @@ export default function Connexion() {
                   <button
                     type="button"
                     onClick={() => setVoirMotDePasse(!voirMotDePasse)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 focus:outline-none transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary-600 focus:outline-none transition-colors"
                     tabIndex={-1}
                   >
                     {voirMotDePasse ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -193,6 +193,9 @@ export default function Connexion() {
                 <Link to="/inscription" className="text-primary-600 font-bold hover:text-primary-700 transition-colors ml-1">
                   Créer un compte
                 </Link>
+              </p>
+              <p className="text-xs text-slate-600 mt-4">
+                <Link to="/confidentialite" className="underline hover:text-primary-700">Politique de confidentialité</Link>
               </p>
             </div>
           </div>

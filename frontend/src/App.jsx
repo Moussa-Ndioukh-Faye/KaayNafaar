@@ -28,6 +28,7 @@ const Connexion = lazy(() => import("./pages/Connexion"));
 const Inscription = lazy(() => import("./pages/Inscription"));
 const Profil = lazy(() => import("./pages/Profil"));
 const Analytiques = lazy(() => import("./pages/Analytiques"));
+const Confidentialite = lazy(() => import("./pages/Confidentialite"));
 const Page404 = lazy(() => import("./pages/Page404"));
 
 class ErrorBoundary extends React.Component {
@@ -161,7 +162,7 @@ const AuthProvider = ({ children }) => {
 // ═══════════════════════════════════════════════
 const RouteProtegee = ({ children }) => {
   const { utilisateur, chargement } = useAuth();
-  if (chargement) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
+  if (chargement) return <div className="flex items-center justify-center h-screen"><div role="status" aria-label="Chargement" className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>;
   return utilisateur ? children : <Navigate to="/connexion" replace />;
 };
 
@@ -173,13 +174,20 @@ const Layout = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden transition-colors duration-300">
+      {/* WCAG 2.4.1 : lien d'évitement vers le contenu principal */}
+      <a
+        href="#contenu"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-primary-700 focus:text-white focus:font-bold"
+      >
+        Aller au contenu principal
+      </a>
       <Sidebar
         ouverte={sidebarOuverte}
         fermer={() => setSidebarOuverte(false)}
       />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar ouvrir={() => setSidebarOuverte(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in">
+        <main id="contenu" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in focus:outline-none">
           {children}
         </main>
       </div>
@@ -191,7 +199,7 @@ const Layout = ({ children }) => {
 // Application principale
 // ═══════════════════════════════════════════════
 const SuspenseWrapper = ({ children }) => (
-  <Suspense fallback={<div className="flex items-center justify-center h-full min-h-[60vh]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>}>
+  <Suspense fallback={<div className="flex items-center justify-center h-full min-h-[60vh]"><div role="status" aria-label="Chargement" className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>}>
     {children}
   </Suspense>
 );
@@ -205,6 +213,7 @@ export default function App() {
           {/* Pages publiques */}
           <Route path="/connexion" element={<SuspenseWrapper><Connexion /></SuspenseWrapper>} />
           <Route path="/inscription" element={<SuspenseWrapper><Inscription /></SuspenseWrapper>} />
+          <Route path="/confidentialite" element={<SuspenseWrapper><Confidentialite /></SuspenseWrapper>} />
 
           {/* Pages protégées */}
           <Route path="/" element={<RouteProtegee><Layout><SuspenseWrapper><Home /></SuspenseWrapper></Layout></RouteProtegee>} />
