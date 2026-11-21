@@ -3,7 +3,8 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const { body } = require("express-validator");
+const crypto = require("crypto");
+const { body, param } = require("express-validator");
 const {
   getCours, getCoursParId, creerCours, modifierCours, supprimerCours,
 } = require("../controllers/courseController");
@@ -13,20 +14,32 @@ const { proteger } = require("../middleware/auth");
 const uploadDir = path.resolve(__dirname, "../../uploads");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
+// Types acceptés : extension ET type MIME doivent correspondre (OWASP File Upload)
+const TYPES_AUTORISES = {
+  ".pdf": ["application/pdf"],
+  ".txt": ["text/plain"],
+  ".jpg": ["image/jpeg"],
+  ".jpeg": ["image/jpeg"],
+  ".png": ["image/png"],
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
+  // Nom aléatoire : jamais le nom fourni par le client (traversée de chemin, devinette)
   filename: (req, file, cb) =>
-    cb(null, `${Date.now()}-${file.originalname.replace(/\s/g, "_")}`),
+    cb(null, `${crypto.randomUUID()}${path.extname(file.originalname).toLowerCase()}`),
 });
 
 const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB max
+  limits: { fileSize: 50 * 1024 * 1024, files: 1 }, // 50 Mo, un seul fichier
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    const allowedExts = [".pdf", ".txt", ".jpg", ".jpeg", ".png"];
-    if (allowedExts.includes(ext)) return cb(null, true);
-    cb(new Error("Fichiers acceptés : PDF, TXT, JPG, PNG."));
+    const mimes = TYPES_AUTORISES[ext];
+    if (mimes && mimes.includes(file.mimetype)) return cb(null, true);
+    const err = new Error("Fichiers acceptés : PDF, TXT, JPG, PNG.");
+    err.code = "TYPE_FICHIER_INVALIDE";
+    cb(err);
   },
 });
 
@@ -49,7 +62,7 @@ router.use(proteger);
 router.get("/", getCours);
 router.get("/:id", getCoursParId);
 router.post("/", upload.single("fichier"), validerCours, validate, creerCours);
-router.put("/:id", validerCours, validate, modifierCours);
-router.delete("/:id", supprimerCours);
+router.put("/:id", param("id").isInt({ min: 1 }), validerCours, validate, modifierCours);
+router.delete("/:id", param("id").isInt({ min: 1 }), validate, supprimerCours);
 
 module.exports = router;

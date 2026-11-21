@@ -3,7 +3,6 @@
  * Inscription, connexion, profil
  */
 
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Progression = require("../models/Progression");
 const Course = require("../models/Course");
@@ -11,12 +10,11 @@ const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
 const { Op } = require("sequelize");
 
-// Générer un JWT
-const genererToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE || "7d",
-  });
-};
+const bcrypt = require("bcryptjs");
+const { genererToken } = require("../utils/jeton");
+
+// Hash bcrypt d'une valeur aléatoire, utilisé contre l'énumération par chronométrage
+const HASH_FACTICE = bcrypt.hashSync(require("crypto").randomBytes(16).toString("hex"), 12);
 
 // Helper pour envoyer le token en cookie httpOnly
 const envoyerTokenCookie = (res, token, req) => {
@@ -68,7 +66,7 @@ const inscription = async (req, res) => {
       utilisateurId: utilisateur.id,
     });
 
-    const token = genererToken(utilisateur.id);
+    const token = genererToken(utilisateur);
     envoyerTokenCookie(res, token, req);
 
     res.status(201).json({
@@ -109,6 +107,8 @@ const connexion = async (req, res) => {
     const erreurAuth = { success: false, message: "Email ou mot de passe incorrect." };
 
     if (!utilisateur) {
+      // Comparaison factice : même temps de réponse que le compte existe ou non
+      await bcrypt.compare(motDePasse, HASH_FACTICE);
       return res.status(401).json(erreurAuth);
     }
 
@@ -123,7 +123,7 @@ const connexion = async (req, res) => {
       { where: { utilisateurId: utilisateur.id } }
     ).catch(err => console.error("Erreur update last login:", err));
 
-    const token = genererToken(utilisateur.id);
+    const token = genererToken(utilisateur);
     envoyerTokenCookie(res, token, req);
 
     res.json({
@@ -215,7 +215,12 @@ const changerMotDePasse = async (req, res) => {
     utilisateur.motDePasse = nouveauMotDePasse;
     await utilisateur.save();
 
-    res.json({ success: true, message: "Mot de passe modifié avec succès." });
+    // Les autres sessions sont révoquées (empreinte du mot de passe dans le JWT) :
+    // on émet un nouveau jeton pour garder la session courante active.
+    const token = genererToken(utilisateur);
+    envoyerTokenCookie(res, token, req);
+
+    res.json({ success: true, message: "Mot de passe modifié avec succès.", token });
   } catch (error) {
     console.error("Erreur changerMotDePasse:", error);
     res.status(500).json({ success: false, message: "Erreur lors du changement de mot de passe." });
