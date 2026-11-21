@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   FileText, 
   Sparkles, 
@@ -9,7 +9,6 @@ import {
   ArrowLeft, 
   ArrowRight, 
   RotateCcw,
-  CheckCircle2,
   BookOpen,
   Star,
   Key,
@@ -29,7 +28,7 @@ import { exporterFichePro } from "../utils/pdfPro";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
+import {} from "../components/ui/tooltip";
 
 const escHtml = (str) =>
   String(str ?? "")
@@ -283,7 +282,7 @@ export default function Fiches() {
                       style={{ width: `${((indexFlashcard + 1) / flashcards.length) * 100}%` }}
                    />
                 </div>
-                <span className="text-xs font-bold text-gray-400">{indexFlashcard + 1} / {flashcards.length}</span>
+                <span className="text-xs font-bold text-gray-500">{indexFlashcard + 1} / {flashcards.length}</span>
              </div>
              <div className="flex items-center gap-1 mt-1">
                 <RefreshCw className="w-3 h-3 text-orange-500" />
@@ -320,7 +319,7 @@ export default function Fiches() {
               )}>
                  <span className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-widest text-primary-600/50 bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded-lg">Question</span>
                  <p className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{card.question}</p>
-                 <div className="mt-10 text-gray-400 group-hover:text-primary-500 transition-colors flex items-center gap-2">
+                 <div className="mt-10 text-gray-500 group-hover:text-primary-500 transition-colors flex items-center gap-2">
                     <RotateCcw className="w-4 h-4 animate-spin-slow" />
                     <span className="text-xs font-bold uppercase tracking-wider">Clique pour voir la réponse</span>
                  </div>
@@ -604,8 +603,8 @@ export default function Fiches() {
           <CardContent className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="space-y-2">
-                 <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Cours source (optionnel)</label>
-                 <select 
+                 <label htmlFor="fiches-champ-606" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Cours source (optionnel)</label>
+                 <select id="fiches-champ-606" 
                     className="w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none" 
                     onChange={handleCoursChange} 
                     value={generation.coursId}
@@ -615,8 +614,8 @@ export default function Fiches() {
                  </select>
                </div>
                <div className="space-y-2">
-                 <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Titre de la fiche</label>
-                 <input 
+                 <label htmlFor="fiches-champ-617" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Titre de la fiche</label>
+                 <input id="fiches-champ-617" 
                     className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all" 
                     placeholder="ex: Fiche - Algorithmes de tri" 
                     maxLength={200}
@@ -628,7 +627,7 @@ export default function Fiches() {
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
-                Texte du cours à analyser * <span className="text-gray-400 font-normal">({generation.contenu.length}/50 000)</span>
+                Texte du cours à analyser * <span className="text-gray-500 font-normal">({generation.contenu.length}/50 000)</span>
               </label>
               <textarea
                 className="w-full px-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all h-64 resize-none" 
@@ -662,7 +661,7 @@ export default function Fiches() {
              <CardHeader className="bg-gray-800/50 p-4 border-b border-gray-700">
                 <div className="flex items-center gap-2">
                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">IA en direct</span>
+                   <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">IA en direct</span>
                 </div>
              </CardHeader>
              <CardContent className="p-6">
@@ -728,7 +727,7 @@ export default function Fiches() {
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start mb-2">
                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-400 group-hover:text-primary-600 transition-colors">
+                      <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-500 group-hover:text-primary-600 transition-colors">
                         <FileText className="w-4 h-4" />
                       </div>
                       {fiche.genereeParIA && (
@@ -755,7 +754,7 @@ export default function Fiches() {
                    {fiche.titre}
                 </CardTitle>
                 <div className="flex items-center gap-2 mt-2">
-                   <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-gray-400">
+                   <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-gray-500">
                       <Clock className="w-3 h-3" />
                       {new Date(fiche.createdAt).toLocaleDateString("fr-FR")}
                    </div>
@@ -775,7 +774,7 @@ export default function Fiches() {
                 {fiche.contenu?.conceptsCles?.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-4">
                     {fiche.contenu.conceptsCles.slice(0, 2).map((c, i) => (
-                      <span key={`cc-${i}`} className="text-[9px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-400 rounded-full border border-gray-100 dark:border-gray-700">
+                      <span key={`cc-${i}`} className="text-[9px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-500 rounded-full border border-gray-100 dark:border-gray-700">
                         {c}
                       </span>
                     ))}
@@ -788,10 +787,10 @@ export default function Fiches() {
 
               <CardFooter className="pt-2 border-t border-gray-50 dark:border-gray-700 mt-2 flex justify-between items-center group-hover:bg-gray-50/50 dark:group-hover:bg-gray-900/30 transition-colors">
                 <div className="flex gap-1">
-                   <Button variant="ghost" size="icon" onClick={() => telechargerHTML(fiche)} className="w-8 h-8 rounded-lg text-gray-400 hover:text-primary-600">
+                   <Button variant="ghost" size="icon" onClick={() => telechargerHTML(fiche)} className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600">
                       <Download className="w-4 h-4" />
                    </Button>
-                   <Button variant="ghost" size="icon" onClick={() => imprimerFiche(fiche)} className="w-8 h-8 rounded-lg text-gray-400 hover:text-primary-600">
+                   <Button variant="ghost" size="icon" onClick={() => imprimerFiche(fiche)} className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600">
                       <Printer className="w-4 h-4" />
                    </Button>
                 </div>

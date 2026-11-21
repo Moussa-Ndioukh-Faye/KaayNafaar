@@ -3,6 +3,7 @@
  * CRUD + upload PDF
  */
 
+const { supprimerFichier } = require("../utils/fichiers");
 const Course = require("../models/Course");
 const Progression = require("../models/Progression");
 const { Op } = require("sequelize");
@@ -156,7 +157,7 @@ const modifierCours = async (req, res) => {
 // DELETE /api/courses/:id — Supprimer un cours
 const supprimerCours = async (req, res) => {
   try {
-    const cours = await Course.destroy({
+    const cours = await Course.findOne({
       where: {
         id: req.params.id,
         utilisateurId: req.utilisateur.id,
@@ -168,6 +169,11 @@ const supprimerCours = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Cours introuvable." });
     }
+
+    const fichier = cours.fichierPDF;
+    await Course.destroy({ where: { id: cours.id, utilisateurId: req.utilisateur.id } });
+    // Minimisation des données : le fichier importé est supprimé avec le cours
+    await supprimerFichier(fichier);
 
     res.json({ success: true, message: "Cours supprimé avec succès." });
   } catch (error) {

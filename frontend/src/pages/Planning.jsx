@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { 
   Calendar as CalendarIcon, 
   Sparkles, 
@@ -212,21 +212,21 @@ export default function Planning() {
           <CardContent className="p-8 space-y-8">
             <form onSubmit={genererPlanningIA} className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date de début</label>
-                <input type="date" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                <label htmlFor="planning-champ-215" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date de début</label>
+                <input id="planning-champ-215" type="date" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
                   value={genForm.dateDebut}
                   onChange={(e) => setGenForm({ ...genForm, dateDebut: e.target.value })} required />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date de fin</label>
-                <input type="date" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                <label htmlFor="planning-champ-221" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date de fin</label>
+                <input id="planning-champ-221" type="date" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
                   value={genForm.dateFin} required
                   min={genForm.dateDebut}
                   onChange={(e) => setGenForm({ ...genForm, dateFin: e.target.value })} />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Heures par jour</label>
-                <select className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" 
+                <label htmlFor="planning-champ-228" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Heures par jour</label>
+                <select id="planning-champ-228" className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" 
                   value={genForm.disponibilite}
                   onChange={(e) => setGenForm({ ...genForm, disponibilite: parseInt(e.target.value) })}>
                   {[1, 2, 3, 4, 6, 8].map((h) => <option key={h} value={h}>{h}h / jour</option>)}
@@ -260,7 +260,7 @@ export default function Planning() {
   <Card key={`session-${i}`} className="rounded-2xl border-none bg-gray-50 dark:bg-gray-900 shadow-none hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                       <CardContent className="p-4 flex items-center gap-4">
                          <div className="text-center w-12 flex-shrink-0">
-                            <p className="text-[10px] font-black uppercase text-gray-400">
+                            <p className="text-[10px] font-black uppercase text-gray-500">
                                {new Date(session.date).toLocaleDateString("fr-FR", { weekday: "short" })}
                             </p>
                             <p className="text-lg font-black text-primary-600">
@@ -270,7 +270,7 @@ export default function Planning() {
                          <div className="flex-1 min-w-0">
                             <p className="font-bold text-gray-900 dark:text-white truncate">{session.sujet}</p>
                             <div className="flex items-center gap-2 mt-1">
-                               <span className="flex items-center gap-1 text-[10px] font-bold text-gray-400">
+                               <span className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
                                   <Clock className="w-3 h-3" /> {session.dureeMinutes}min
                                </span>
                                <span className={cn("text-[8px] font-black uppercase px-2 py-0.5 rounded-full border", prioriteStyles[session.priorite] || prioriteStyles.moyenne)}>
@@ -320,32 +320,32 @@ export default function Planning() {
              <CardContent className="p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date *</label>
-                    <input type="date" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" value={form.date} required
+                    <label htmlFor="planning-champ-323" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Date *</label>
+                    <input id="planning-champ-323" type="date" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" value={form.date} required
                       onChange={(e) => setForm({ ...form, date: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Matière *</label>
-                    <input className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                    <label htmlFor="planning-champ-328" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Matière *</label>
+                    <input id="planning-champ-328" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
                       placeholder="ex: Mathématiques" required maxLength={100}
                       value={form.matiere} onChange={(e) => setForm({ ...form, matiere: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Cours associé</label>
-                    <select className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" value={form.coursId} onChange={(e) => setForm({ ...form, coursId: e.target.value })}>
+                    <label htmlFor="planning-champ-334" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Cours associé</label>
+                    <select id="planning-champ-334" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" value={form.coursId} onChange={(e) => setForm({ ...form, coursId: e.target.value })}>
                       <option value="">-- Aucun --</option>
                       {cours.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Durée (minutes)</label>
-                    <input type="number" min="5" max="480" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500"
+                    <label htmlFor="planning-champ-341" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Durée (minutes)</label>
+                    <input id="planning-champ-341" type="number" min="5" max="480" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500"
                       value={form.dureeMinutes} onChange={(e) => setForm({ ...form, dureeMinutes: parseInt(e.target.value) || 30 })} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Notes ou objectifs</label>
-                  <input className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
+                  <label htmlFor="planning-champ-347" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Notes ou objectifs</label>
+                  <input id="planning-champ-347" className="w-full px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" 
                     placeholder="ex: Réviser les chapitres 1 à 3" maxLength={300}
                     value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                 </div>
@@ -389,7 +389,7 @@ export default function Planning() {
           {Object.entries(parDate).map(([date, sessions]) => (
             <div key={date} className="relative pl-6 border-l-2 border-gray-100 dark:border-gray-800 pb-2">
               <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-gray-900 border-4 border-primary-500" />
-              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 pl-2">
+              <h3 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 pl-2">
                 {date}
               </h3>
               <div className="space-y-4">
@@ -416,7 +416,7 @@ export default function Planning() {
                        
                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                             <p className={cn("text-lg font-black text-gray-900 dark:text-white truncate", s.estComplete && "line-through text-gray-400")}>
+                             <p className={cn("text-lg font-black text-gray-900 dark:text-white truncate", s.estComplete && "line-through text-gray-500")}>
                                {s.matiere}
                              </p>
                              {s.coursId && (
@@ -430,7 +430,7 @@ export default function Planning() {
 
                        <div className="flex items-center gap-4 flex-shrink-0">
                           <div className="flex flex-col items-end">
-                             <div className="flex items-center gap-1 text-[10px] font-black uppercase text-gray-400">
+                             <div className="flex items-center gap-1 text-[10px] font-black uppercase text-gray-500">
                                 <Clock className="w-3 h-3" /> Durée
                              </div>
                              <p className="text-sm font-black text-gray-700 dark:text-gray-200">{s.dureeMinutes} min</p>

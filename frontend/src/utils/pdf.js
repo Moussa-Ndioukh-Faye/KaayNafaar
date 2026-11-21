@@ -41,7 +41,7 @@ export const exporterFichePDF = (fiche) => {
     doc.text("Flashcards", 15, y);
     y += 7;
     doc.setFont("helvetica", "normal");
-    fiche.flashcards.forEach((fc, i) => {
+    fiche.flashcards.forEach((fc) => {
       doc.setFont("helvetica", "bold");
       doc.text(`Q: ${fc.question}`, 15, y);
       y += 6;

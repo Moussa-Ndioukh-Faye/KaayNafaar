@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { 
   MessageSquare, 
   Search, 
@@ -25,7 +25,7 @@ import {
 import { iaAPI, coursAPI, feedbackAPI } from "../services/api";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 import { cn } from "../lib/utils";
@@ -99,7 +99,7 @@ const CopyButton = ({ text }) => {
             variant="ghost" 
             size="icon" 
             onClick={handleCopy}
-            className="w-8 h-8 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
+            className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
           </Button>
@@ -131,7 +131,7 @@ const FeedbackButtons = ({ msg }) => {
 
   if (sent) {
     return (
-      <div className="flex items-center gap-1 mt-3 text-[10px] font-bold text-gray-400">
+      <div className="flex items-center gap-1 mt-3 text-[10px] font-bold text-gray-500">
         <Check className="w-3 h-3 text-emerald-500" />
         Merci de ton retour
       </div>
@@ -140,24 +140,24 @@ const FeedbackButtons = ({ msg }) => {
 
   return (
     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
-      <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 mr-1">Utile ?</span>
+      <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 mr-1">Utile ?</span>
       <button
         onClick={() => sendFeedback(1, "trop_difficile")}
-        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-400 hover:text-red-500 transition-colors"
+        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-gray-500 hover:text-red-500 transition-colors"
         title="Pas utile"
       >
         <ThumbsDown className="w-3.5 h-3.5" />
       </button>
       <button
         onClick={() => sendFeedback(3, "utile")}
-        className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-gray-400 hover:text-amber-500 transition-colors"
+        className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-gray-500 hover:text-amber-500 transition-colors"
         title="Moyennement utile"
       >
         <Meh className="w-3.5 h-3.5" />
       </button>
       <button
         onClick={() => sendFeedback(5, "parfait")}
-        className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-400 hover:text-emerald-500 transition-colors"
+        className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-gray-500 hover:text-emerald-500 transition-colors"
         title="Très utile"
       >
         <ThumbsUp className="w-3.5 h-3.5" />
@@ -375,7 +375,7 @@ export default function AssistantIA() {
 
         <div className="flex-1 w-full flex gap-3">
           <div className="relative flex-1 group">
-            <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+            <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary-500 transition-colors" />
             <select
               className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none shadow-sm cursor-pointer"
               value={coursContexte}
@@ -384,7 +384,7 @@ export default function AssistantIA() {
               <option value="">Contexte global (pas de cours)</option>
               {Array.isArray(cours) && cours.map((c) => <option key={c.id} value={c.id}>{c.titre}</option>)}
             </select>
-            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none rotate-90" />
+            <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none rotate-90" />
           </div>
 
           <TooltipProvider>
@@ -478,7 +478,7 @@ export default function AssistantIA() {
                         {formatMessage(msg.content)}
                         {msg.sources && Array.isArray(msg.sources) && msg.sources.length > 0 && (
                           <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Sources utilisées :</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Sources utilisées :</p>
                             <div className="flex flex-wrap gap-2">
                               {msg.sources.map((s, i) => (
                                 s.isWeb ? (
@@ -514,7 +514,7 @@ export default function AssistantIA() {
                            <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce [animation-duration:800ms] [animation-delay:200ms]" />
                            <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce [animation-duration:800ms] [animation-delay:400ms]" />
                         </div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Analyse IA...</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-2">Analyse IA...</span>
                       </div>
                     )}
                   </div>
@@ -570,7 +570,7 @@ export default function AssistantIA() {
           ) : (
             <div className="flex gap-3 items-center p-3">
               <div className="flex-1 flex items-center gap-4 bg-gray-50 dark:bg-gray-900 rounded-[1.5rem] px-6 py-1.5 border-2 border-transparent focus-within:border-primary-500 transition-all">
-                <Search className="w-5 h-5 text-gray-400" />
+                <Search className="w-5 h-5 text-gray-500" />
                 <input
                   className="flex-1 bg-transparent text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 outline-none py-3"
                   placeholder="Quel concept veux-tu comprendre ?"
@@ -600,7 +600,7 @@ export default function AssistantIA() {
       </Card>
       
       <div className="flex items-center justify-center gap-4 mt-4 mb-2">
-         <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400">
+         <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-500">
             <Info className="w-3 h-3" />
             L'IA peut faire des erreurs, vérifie les informations importantes.
          </div>

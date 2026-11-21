@@ -29,7 +29,7 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        len: { args: [6], msg: "Le mot de passe doit contenir au moins 6 caractères" },
+        len: { args: [8], msg: "Le mot de passe doit contenir au moins 8 caractères" },
       },
     },
     avatar: {

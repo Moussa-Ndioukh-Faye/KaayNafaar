@@ -63,6 +63,7 @@ jest.mock("../src/models/Progression", () => {
 jest.mock("../src/models/Course", () => {
   const M = function () {};
   M.destroy = jest.fn().mockResolvedValue();
+  M.findAll = jest.fn().mockResolvedValue([]);
   M.belongsTo = jest.fn();
   M.hasMany = jest.fn();
   return M;
@@ -71,6 +72,7 @@ jest.mock("../src/models/Course", () => {
 jest.mock("../src/models/Fiche", () => {
   const M = function () {};
   M.destroy = jest.fn().mockResolvedValue();
+  M.findAll = jest.fn().mockResolvedValue([]);
   M.belongsTo = jest.fn();
   M.hasMany = jest.fn();
   return M;
@@ -79,8 +81,17 @@ jest.mock("../src/models/Fiche", () => {
 jest.mock("../src/models/Quiz", () => {
   const M = function () {};
   M.destroy = jest.fn().mockResolvedValue();
+  M.findAll = jest.fn().mockResolvedValue([]);
   M.belongsTo = jest.fn();
   M.hasMany = jest.fn();
+  return M;
+});
+
+jest.mock("../src/models/FeedbackIA", () => {
+  const M = function () {};
+  M.destroy = jest.fn().mockResolvedValue();
+  M.findAll = jest.fn().mockResolvedValue([]);
+  M.belongsTo = jest.fn();
   return M;
 });
 
@@ -155,6 +166,50 @@ describe("API Auth", () => {
     const res = await request(app)
       .post("/api/auth/connexion")
       .send({ email: "test2@test.com", motDePasse: "wrong" });
+    expect(res.status).toBe(401);
+  });
+
+  test("mot de passe de moins de 8 caractères refusé (NIST 800-63B)", async () => {
+    const res = await request(app)
+      .post("/api/auth/inscription")
+      .send({ nom: "Test", email: "court@test.com", motDePasse: "abc1234" });
+    expect(res.status).toBe(400);
+  });
+
+  test("le jeton est révoqué quand le mot de passe change", async () => {
+    const inscription = await request(app)
+      .post("/api/auth/inscription")
+      .send({ nom: "Test", email: "revoc@test.com", motDePasse: "secret123" });
+    const token = inscription.body.token;
+
+    const avant = await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${token}`);
+    expect(avant.status).toBe(200);
+
+    // Simule un changement de mot de passe depuis une autre session
+    const bcrypt = require("bcryptjs");
+    mockUsers[0].motDePasse = await bcrypt.hash("nouveauSecret456", 4);
+
+    const apres = await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${token}`);
+    expect(apres.status).toBe(401);
+  });
+
+  test("export des données personnelles (portabilité)", async () => {
+    const inscription = await request(app)
+      .post("/api/auth/inscription")
+      .send({ nom: "Test", email: "export@test.com", motDePasse: "secret123" });
+
+    const res = await request(app)
+      .get("/api/auth/export")
+      .set("Authorization", `Bearer ${inscription.body.token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.format).toBe("kaay-nafaar-export-v1");
+    expect(res.headers["content-disposition"]).toMatch(/attachment/);
+  });
+
+  test("jeton signé avec un autre algorithme refusé", async () => {
+    const jwt = require("jsonwebtoken");
+    const faux = jwt.sign({ id: 1 }, "", { algorithm: "none" });
+    const res = await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${faux}`);
     expect(res.status).toBe(401);
   });
 });

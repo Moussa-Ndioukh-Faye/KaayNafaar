@@ -1,4 +1,4 @@
-import React from "react";
+import { useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -31,6 +31,16 @@ const navigation = [
 ];
 
 export default function Sidebar({ ouverte, fermer }) {
+  // WCAG 2.1.2 : le menu mobile se ferme avec la touche Échap
+  useEffect(() => {
+    if (!ouverte) return undefined;
+    const surTouche = (e) => {
+      if (e.key === "Escape") fermer();
+    };
+    document.addEventListener("keydown", surTouche);
+    return () => document.removeEventListener("keydown", surTouche);
+  }, [ouverte, fermer]);
+
   const { utilisateur, deconnecter } = useAuth();
   const navigate = useNavigate();
 
@@ -51,7 +61,7 @@ export default function Sidebar({ ouverte, fermer }) {
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-none">
+      <nav aria-label="Navigation principale" className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-none">
         {navigation.map((item) => {
           const Icon = item.icon;
           return (
@@ -71,7 +81,7 @@ export default function Sidebar({ ouverte, fermer }) {
             >
               {({ isActive }) => (
                 <>
-                  <Icon className={cn("w-5 h-5 transition-colors", isActive ? "text-primary-600" : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300")} />
+                  <Icon className={cn("w-5 h-5 transition-colors", isActive ? "text-primary-600" : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300")} />
                   <span className="flex-1">{item.nom}</span>
                   {isActive && <ChevronRight className="w-4 h-4" />}
                 </>
@@ -91,7 +101,7 @@ export default function Sidebar({ ouverte, fermer }) {
                 <p className="text-sm font-black text-gray-900 dark:text-white truncate">
                   {utilisateur?.nom || "Étudiant"}
                 </p>
-                <p className="text-[10px] font-bold text-gray-400 truncate">
+                <p className="text-[10px] font-bold text-gray-500 truncate">
                   {utilisateur?.email || ""}
                 </p>
               </div>
@@ -102,9 +112,15 @@ export default function Sidebar({ ouverte, fermer }) {
               aria-label="Se déconnecter"
               className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-bold px-3"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4" aria-hidden="true" />
               Déconnexion
             </Button>
+            <NavLink
+              to="/confidentialite"
+              className="block mt-2 px-3 text-[11px] font-semibold text-gray-600 dark:text-gray-400 underline hover:text-primary-700"
+            >
+              Confidentialité et données
+            </NavLink>
          </div>
       </div>
     </div>
@@ -121,8 +137,15 @@ export default function Sidebar({ ouverte, fermer }) {
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={fermer}
+            role="presentation"
+            aria-hidden="true"
           />
-          <div className="absolute left-0 top-0 h-full w-72 shadow-2xl animate-slide-right">
+          <div
+            className="absolute left-0 top-0 h-full w-72 shadow-2xl animate-slide-right"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navigation"
+          >
             <SidebarContent />
           </div>
         </div>

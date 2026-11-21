@@ -21,7 +21,7 @@ export default function Page404() {
         <h1 className="text-8xl font-black text-gray-900 dark:text-white tracking-tighter leading-none mb-2">
           4<span className="text-indigo-500">0</span>4
         </h1>
-        <p className="text-lg font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6">
+        <p className="text-lg font-bold text-gray-500 dark:text-gray-500 uppercase tracking-widest mb-6">
           Page introuvable
         </p>
         <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-sm mx-auto mb-10">

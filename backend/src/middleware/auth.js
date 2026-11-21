@@ -2,8 +2,8 @@
  * Middleware d'authentification JWT
  */
 
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { verifierToken, empreinteMotDePasse } = require("../utils/jeton");
 
 const proteger = async (req, res, next) => {
   let token;
@@ -29,13 +29,11 @@ const proteger = async (req, res, next) => {
   req.tokenJWT = token;
 
   try {
-    // Vérifier le token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Vérifier le token (algorithme imposé)
+    const decoded = verifierToken(token);
 
     // Récupérer l'utilisateur
-    const utilisateur = await User.findByPk(decoded.id, {
-      attributes: { exclude: ["motDePasse"] } // Sécurité supplémentaire
-    });
+    const utilisateur = await User.findByPk(decoded.id);
 
     if (!utilisateur) {
       return res.status(401).json({
@@ -43,6 +41,19 @@ const proteger = async (req, res, next) => {
         message: "Session invalide. Utilisateur non trouvé.",
       });
     }
+
+    // Session révoquée si le mot de passe a changé depuis l'émission du jeton
+    const empreinte = empreinteMotDePasse(utilisateur.motDePasse);
+    if (empreinte && decoded.pwv !== empreinte) {
+      return res.status(401).json({
+        success: false,
+        message: "Session expirée. Veuillez vous reconnecter.",
+      });
+    }
+
+    // Ne jamais garder le hash du mot de passe dans l'objet de requête
+    if (utilisateur.dataValues) delete utilisateur.dataValues.motDePasse;
+    else delete utilisateur.motDePasse;
 
     req.utilisateur = utilisateur;
     next();

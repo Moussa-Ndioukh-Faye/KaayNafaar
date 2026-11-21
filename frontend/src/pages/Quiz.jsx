@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   BrainCircuit, 
   Sparkles, 
@@ -12,7 +12,6 @@ import {
   Timer, 
   BarChart3,
   HelpCircle,
-  ChevronRight,
   AlertCircle
 } from "lucide-react";
 import { quizAPI, coursAPI, iaAPI } from "../services/api";
@@ -154,7 +153,7 @@ export default function Quiz() {
                {stats.map((s) => (
                  <div key={s.label} className={cn("p-4 rounded-3xl border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-700 transition-all", s.bg)}>
                    <s.icon className={cn("w-5 h-5 mx-auto mb-2", s.color)} />
-                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{s.label}</p>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">{s.label}</p>
                    <p className={cn("text-lg font-black", s.color)}>{s.value}</p>
                 </div>
               ))}
@@ -187,7 +186,7 @@ export default function Quiz() {
                         <p className="font-bold text-gray-900 dark:text-white text-base">{q.question}</p>
                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                            <div className="p-3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-                              <p className="text-[9px] font-black uppercase text-gray-400 mb-1">Ta réponse</p>
+                              <p className="text-[9px] font-black uppercase text-gray-500 mb-1">Ta réponse</p>
                               <p className={cn("text-sm font-bold", rep?.estCorrecte ? "text-emerald-600" : "text-red-600")}>
                                  {rep?.reponseUtilisateur || "Pas de réponse"}
                               </p>
@@ -243,8 +242,8 @@ export default function Quiz() {
             Quitter
           </Button>
           <div className="flex items-center gap-3">
-             <Timer className="w-4 h-4 text-gray-400" />
-             <span className="text-sm font-black text-gray-400 uppercase tracking-widest">
+             <Timer className="w-4 h-4 text-gray-500" />
+             <span className="text-sm font-black text-gray-500 uppercase tracking-widest">
                Question {session.indexQuestion + 1} / {quizActif.questions.length}
              </span>
           </div>
@@ -284,7 +283,7 @@ export default function Quiz() {
                   >
                     <div className={cn(
                        "w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm transition-colors",
-                       reponseDonnee === opt ? "bg-primary-600 text-white" : "bg-white dark:bg-gray-700 text-gray-400 group-hover:text-primary-500"
+                       reponseDonnee === opt ? "bg-primary-600 text-white" : "bg-white dark:bg-gray-700 text-gray-500 group-hover:text-primary-500"
                     )}>
                        {String.fromCharCode(65 + i)}
                     </div>
@@ -380,8 +379,8 @@ export default function Quiz() {
           </CardHeader>
           <CardContent className="p-8 space-y-6">
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Choisir un cours</label>
-              <select 
+              <label htmlFor="quiz-champ-382" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Choisir un cours</label>
+              <select id="quiz-champ-382" 
                  className="w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none" 
                  onChange={handleCoursChange} 
                  value={generation.coursId}
@@ -392,8 +391,8 @@ export default function Quiz() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Contenu (Texte libre)</label>
-              <textarea 
+              <label htmlFor="quiz-champ-394" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Contenu (Texte libre)</label>
+              <textarea id="quiz-champ-394" 
                  className="w-full px-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all h-32 resize-none" 
                  placeholder="Ou colle le texte directement ici…"
                  value={generation.contenu} 
@@ -404,8 +403,8 @@ export default function Quiz() {
 
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Nombre de questions</label>
-                <select 
+                <label htmlFor="quiz-champ-406" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Nombre de questions</label>
+                <select id="quiz-champ-406" 
                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" 
                    value={generation.nombreQuestions}
                    onChange={(e) => setGeneration({ ...generation, nombreQuestions: parseInt(e.target.value) })}
@@ -414,8 +413,8 @@ export default function Quiz() {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Difficulté</label>
-                <select 
+                <label htmlFor="quiz-champ-416" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Difficulté</label>
+                <select id="quiz-champ-416" 
                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none appearance-none" 
                    value={generation.difficulte}
                    onChange={(e) => setGeneration({ ...generation, difficulte: e.target.value })}
@@ -507,7 +506,7 @@ export default function Quiz() {
                 <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
                      <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-400 group-hover:text-primary-600 transition-colors">
+                        <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-500 group-hover:text-primary-600 transition-colors">
                           <HelpCircle className="w-6 h-6" />
                         </div>
                         {q.genereeParIA && (
@@ -551,7 +550,7 @@ export default function Quiz() {
                             {score}%
                          </div>
                          <div className="flex-1">
-                            <p className="text-[10px] font-black uppercase tracking-wider text-gray-400">Dernier essai</p>
+                            <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">Dernier essai</p>
                             <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
                                {derniereSession.score} / {derniereSession.total} bonnes réponses
                             </p>

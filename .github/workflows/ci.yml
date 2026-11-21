@@ -6,7 +6,28 @@ on:
   pull_request:
     branches: [main]
 
+# Moindre privilège : le jeton GitHub n'a qu'un accès en lecture
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  audit-dependances:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Échoue si une faille haute ou critique touche les dépendances de production
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: backend
+      - run: npm audit --omit=dev --audit-level=high
+        working-directory: frontend
+
   test-backend:
     runs-on: ubuntu-latest
     steps:
@@ -66,12 +87,12 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
         working-directory: frontend
-      - run: npm run lint
+      - run: npm run lint -- --max-warnings 0
         working-directory: frontend
 
   deploy-backend:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [test-backend, lint-backend]
+    needs: [test-backend, lint-backend, audit-dependances]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

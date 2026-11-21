@@ -35,6 +35,7 @@ const {
   sanitiserInputs,
   validerTaillePayload,
   validerCSRF,
+  estOrigineAutorisee,
 } = require("./src/middleware/securite");
 
 const app = express();
@@ -42,32 +43,33 @@ const app = express();
 // Faire confiance au proxy (Caddy/Nginx) pour le HTTPS et les cookies Secure
 app.set("trust proxy", 1);
 
-// Logger de requêtes simple
+// Logger de requêtes simple (chemin seul : pas de query string dans les logs)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
 
 // Connexion à PostgreSQL
 connectDB();
 
-// ── CORS — Autoriser Vercel ─────────────────────────────
-const originsFixes = (process.env.FRONTEND_URL || "https://kaay-nafaar.vercel.app")
-  .split(",")
-  .map(s => s.trim().replace(/\/$/, ""));
+// ── CORS — liste blanche stricte (voir middleware/securite.js) ─────
+const devOrigine = (origin) =>
+  process.env.NODE_ENV !== "production" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Autoriser si pas d'origine (ex: curl) ou si dans la liste ou vercel
-      if (!origin || originsFixes.includes(origin) || origin.endsWith(".vercel.app")) {
+      // Pas d'origine (curl, app mobile, même origine) : CORS ne s'applique pas
+      if (!origin || estOrigineAutorisee(origin) || devOrigine(origin)) {
         return callback(null, true);
       }
-      callback(new Error("Non autorisé par CORS"));
+      // Refus silencieux : pas d'en-têtes CORS, le navigateur bloque la réponse
+      callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 600,
   })
 );
 
@@ -86,6 +88,9 @@ app.use(helmet({
     },
   },
   crossOriginEmbedderPolicy: false,
+  // HSTS 1 an + sous-domaines (OWASP / RFC 6797)
+  strictTransportSecurity: { maxAge: 31536000, includeSubDomains: true },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
 }));
 app.use(limiteurGlobal);
 app.use(validerTaillePayload);
@@ -98,14 +103,15 @@ if (!process.env.COOKIE_SECRET || process.env.COOKIE_SECRET.length < 32) {
 app.use(cookieParser(process.env.COOKIE_SECRET));
 
 // ── Parsing du corps ──────────────────────────────────────────────
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// Les fichiers passent par multer (multipart) : 10 Mo suffisent pour le JSON
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Anti-injection NoSQL
 app.use(sanitiserInputs);
 
-// Dossier uploads statique
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Le dossier uploads/ n'est plus servi publiquement : les cours importés
+// étaient lisibles par n'importe qui sans authentification (OWASP A01).
 
 // Routes API — rate limiter spécifique sur auth et IA + validation CSRF
 app.use("/api/auth", validerCSRF, limiteurAuth, authRoutes);
@@ -124,10 +130,22 @@ app.get("/api/health", (req, res) => {
 // Middleware de gestion d'erreurs global
 app.use((err, req, res, _next) => {
   console.error("Erreur serveur:", err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || "Erreur interne du serveur",
-  });
+
+  // Erreurs d'upload (taille, type de fichier) : erreur client
+  if (err.name === "MulterError" || err.code === "TYPE_FICHIER_INVALIDE") {
+    return res.status(400).json({ success: false, message: err.message });
+  }
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({ success: false, message: "Requête trop volumineuse." });
+  }
+
+  const statut = err.status || err.statusCode || 500;
+  // OWASP A05 : ne pas divulguer les détails internes des erreurs 5xx en production
+  const message =
+    statut >= 500 && process.env.NODE_ENV === "production"
+      ? "Erreur interne du serveur"
+      : err.message || "Erreur interne du serveur";
+  res.status(statut).json({ success: false, message });
 });
 
 // 404 pour routes inconnues

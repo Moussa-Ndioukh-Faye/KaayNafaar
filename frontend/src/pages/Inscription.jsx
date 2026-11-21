@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   User, 
@@ -23,6 +23,7 @@ export default function Inscription() {
   const [form, setForm] = useState({
     nom: "", email: "", motDePasse: "", confirmMotDePasse: "", niveauEtude: "licence",
   });
+  const [consentement, setConsentement] = useState(false);
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
   const [champsVus, setChampsVus] = useState({});
@@ -42,8 +43,10 @@ export default function Inscription() {
     if (!form.nom.trim() || !form.email.trim() || !form.motDePasse) return "Tous les champs sont requis.";
     if (form.nom.trim().length < 2) return "Le nom doit faire au moins 2 caractères.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Adresse email invalide.";
-    if (form.motDePasse.length < 6) return "Le mot de passe doit contenir au moins 6 caractères.";
+    if (form.motDePasse.length < 8) return "Le mot de passe doit contenir au moins 8 caractères.";
+    if (new TextEncoder().encode(form.motDePasse).length > 72) return "Le mot de passe est trop long (72 caractères maximum).";
     if (form.motDePasse !== form.confirmMotDePasse) return "Les mots de passe ne correspondent pas.";
+    if (!consentement) return "Tu dois accepter la politique de confidentialité pour créer un compte.";
     return null;
   };
 
@@ -66,7 +69,11 @@ export default function Inscription() {
       if (!error.response) {
         setErreur("Impossible de joindre le serveur. Vérifie que le backend est démarré.");
       } else {
-        setErreur(error.response.data?.message || "Erreur lors de l'inscription.");
+        setErreur(
+          error.response.data?.errors?.[0]?.msg ||
+            error.response.data?.message ||
+            "Erreur lors de l'inscription."
+        );
       }
     } finally {
       setChargement(false);
@@ -77,7 +84,7 @@ export default function Inscription() {
     const mdp = form.motDePasse;
     if (!mdp) return 0;
     let score = 0;
-    if (mdp.length >= 6) score++;
+    if (mdp.length >= 8) score++;
     if (mdp.length >= 10) score++;
     if (/[A-Z]/.test(mdp)) score++;
     if (/[0-9]/.test(mdp)) score++;
@@ -149,7 +156,7 @@ export default function Inscription() {
           <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100 p-10">
             <div className="mb-8">
               <h2 className="text-3xl font-black text-gray-900 tracking-tight">Créer un compte</h2>
-              <p className="text-slate-500 mt-1 font-medium">C'est gratuit et prend moins d'une minute</p>
+              <p className="text-slate-600 mt-1 font-medium">C'est gratuit et prend moins d'une minute</p>
             </div>
 
             {erreur && (
@@ -164,7 +171,7 @@ export default function Inscription() {
               <div className="space-y-2">
                 <label htmlFor="nom" className="block text-sm font-bold text-gray-700 ml-1">Nom complet</label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="nom" name="nom" type="text" required autoComplete="name"
                     className="input-field pl-12 h-14" placeholder="Jean Dupont"
@@ -177,7 +184,7 @@ export default function Inscription() {
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-bold text-gray-700 ml-1">Adresse email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="email" name="email" type="email" required autoComplete="email"
                     className="input-field pl-12 h-14" placeholder="jean@email.com"
@@ -190,21 +197,27 @@ export default function Inscription() {
               <div className="space-y-2">
                 <label htmlFor="motDePasse" className="block text-sm font-bold text-gray-700 ml-1">Mot de passe</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="motDePasse" name="motDePasse" type="password" required autoComplete="new-password"
-                    className="input-field pl-12 h-14" placeholder="Min. 6 caractères"
-                    value={form.motDePasse} onChange={handleChange} onBlur={handleBlur} maxLength={128}
+                    className="input-field pl-12 h-14" placeholder="Min. 8 caractères"
+                    aria-describedby="aide-mot-de-passe"
+                    value={form.motDePasse} onChange={handleChange} onBlur={handleBlur} maxLength={72}
                   />
                 </div>
+                <p id="aide-mot-de-passe" className="text-xs text-slate-600 ml-1">
+                  8 caractères minimum. Une phrase de passe longue est plus sûre qu'un mot court et compliqué.
+                </p>
                 {form.motDePasse && (
-                  <div className="mt-2 px-1">
+                  <div className="mt-2 px-1" aria-live="polite">
                     <div className="flex gap-1.5 mb-1.5">
                       {[1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= force ? forceCouleur : "bg-slate-100"}`} />
                       ))}
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{forceLabel}</p>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+                      <span className="sr-only">Robustesse du mot de passe : </span>{forceLabel}
+                    </p>
                   </div>
                 )}
               </div>
@@ -213,7 +226,7 @@ export default function Inscription() {
               <div className="space-y-2">
                 <label htmlFor="confirmMotDePasse" className="block text-sm font-bold text-gray-700 ml-1">Confirmer le mot de passe</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input
                     id="confirmMotDePasse" name="confirmMotDePasse" type="password" required autoComplete="new-password"
                     className={cn(
@@ -221,14 +234,14 @@ export default function Inscription() {
                         champsVus.confirmMotDePasse && form.confirmMotDePasse && form.motDePasse !== form.confirmMotDePasse && "border-red-300 focus:ring-red-100 focus:border-red-400"
                     )}
                     placeholder="••••••••"
-                    value={form.confirmMotDePasse} onChange={handleChange} onBlur={handleBlur} maxLength={128}
+                    value={form.confirmMotDePasse} onChange={handleChange} onBlur={handleBlur} maxLength={72}
                   />
                   {champsVus.confirmMotDePasse && form.confirmMotDePasse && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
                       {form.motDePasse === form.confirmMotDePasse ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <CheckCircle className="w-5 h-5 text-green-500" aria-label="Les mots de passe correspondent" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-red-400" />
+                        <XCircle className="w-5 h-5 text-red-400" aria-label="Les mots de passe ne correspondent pas" />
                       )}
                     </div>
                   )}
@@ -239,7 +252,7 @@ export default function Inscription() {
               <div className="space-y-2">
                 <label htmlFor="niveauEtude" className="block text-sm font-bold text-gray-700 ml-1">Niveau d'étude</label>
                 <div className="relative group">
-                  <School className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <School className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <select
                     id="niveauEtude" name="niveauEtude"
                     className="input-field pl-12 pr-12 h-14 appearance-none cursor-pointer"
@@ -249,8 +262,25 @@ export default function Inscription() {
                       <option key={value} value={value}>{label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none w-5 h-5" />
+                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none w-5 h-5" />
                 </div>
+              </div>
+
+              {/* Consentement (RGPD art. 7 / loi sénégalaise 2008-12) */}
+              <div className="flex items-start gap-3 px-1">
+                <input
+                  id="consentement" name="consentement" type="checkbox" required
+                  className="mt-1 h-5 w-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                  checked={consentement}
+                  onChange={(e) => { setConsentement(e.target.checked); setErreur(""); }}
+                />
+                <label htmlFor="consentement" className="text-sm text-slate-700">
+                  J'accepte que mes données (profil et cours importés) soient traitées pour fournir le service,
+                  y compris par des fournisseurs d'IA, comme décrit dans la{" "}
+                  <Link to="/confidentialite" target="_blank" className="text-primary-700 font-bold underline">
+                    politique de confidentialité
+                  </Link>.
+                </label>
               </div>
 
               <button type="submit" disabled={chargement} className="btn-primary w-full py-4 justify-center text-lg shadow-primary-500/20 mt-4">
@@ -269,7 +299,7 @@ export default function Inscription() {
             </form>
 
             <div className="mt-8 pt-8 border-t border-slate-100 text-center">
-              <p className="text-sm text-slate-500 font-medium">
+              <p className="text-sm text-slate-600 font-medium">
                 Déjà un compte ?{" "}
                 <Link to="/connexion" className="text-primary-600 font-bold hover:text-primary-700 transition-colors ml-1">
                   Se connecter

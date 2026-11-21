@@ -110,7 +110,7 @@ export const exporterFichePro = (fiche) => {
     doc.text("POINTS À RETENIR", 15, y);
     y += 8;
 
-    fiche.contenu.pointsImportants.forEach((point, i) => {
+    fiche.contenu.pointsImportants.forEach((point) => {
       if (y > 275) { doc.addPage(); y = 20; }
       doc.setTextColor(...secondaryColor);
       doc.text("•", 15, y);

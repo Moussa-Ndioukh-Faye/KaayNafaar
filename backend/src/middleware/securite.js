@@ -14,10 +14,41 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   process.exit(1);
 }
 
-const originesAutorisees = (process.env.FRONTEND_URL || "")
-  .split(",")
-  .map((o) => o.trim().replace(/\/$/, "")) // Enlever le slash de fin
-  .filter(Boolean);
+// ── Origines autorisées (CORS + CSRF) ────────────────────────────
+// OWASP : liste blanche explicite. Le joker « *.vercel.app » a été retiré :
+// n'importe qui peut déployer un site sur vercel.app et, avec des cookies
+// SameSite=None, envoyer des requêtes authentifiées au nom de l'utilisateur.
+const ORIGINE_PAR_DEFAUT = "https://kaay-nafaar.vercel.app";
+
+const normaliser = (o) => o.trim().replace(/\/$/, "");
+
+const originesAutorisees = [
+  ...new Set(
+    [ORIGINE_PAR_DEFAUT, ...(process.env.FRONTEND_URL || "").split(",")]
+      .map(normaliser)
+      .filter(Boolean)
+  ),
+];
+
+// Optionnel : expression régulière pour les previews Vercel de CE projet
+// ex. CORS_ORIGIN_REGEX=^https://kaay-nafaar-[a-z0-9]+-moussa-ndioukh-fayes-projects\.vercel\.app$
+let regexOrigine = null;
+if (process.env.CORS_ORIGIN_REGEX) {
+  try {
+    regexOrigine = new RegExp(process.env.CORS_ORIGIN_REGEX);
+  } catch {
+    console.error("⚠️ CORS_ORIGIN_REGEX invalide — ignorée");
+  }
+}
+
+const estOrigineAutorisee = (origine) => {
+  if (!origine) return false;
+  const o = normaliser(origine);
+  if (originesAutorisees.includes(o)) return true;
+  return regexOrigine ? regexOrigine.test(o) : false;
+};
+
+const METHODES_SURES = ["GET", "HEAD", "OPTIONS"];
 
 // ── Rate Limiting global ───────────────────────────────────────────
 const limiteurGlobal = rateLimit({
@@ -77,39 +108,40 @@ const validerTaillePayload = (req, res, next) => {
 // ── Validation CSRF simple (double-submit cookie) ──
 // Vérifie que la requête vient bien du frontend autorisé
 const validerCSRF = (req, res, next) => {
-  const origine = req.headers.origin ? req.headers.origin.replace(/\/$/, "") : null;
-  const referer = req.headers.referer;
-
   // En développement, autoriser localhost sans vérification stricte
   if (process.env.NODE_ENV !== "production") {
     return next();
   }
 
-  // Normaliser les origines autorisées
-  const expandedOrigins = [...originesAutorisees];
-  originesAutorisees.forEach(o => {
-    if (o.endsWith(":80")) expandedOrigins.push(o.replace(":80", ""));
-    if (o.endsWith(":443")) expandedOrigins.push(o.replace(":443", ""));
-    if (!o.includes(":") && o.startsWith("http")) expandedOrigins.push(`${o}:80`);
-  });
+  // Les requêtes de lecture ne modifient rien (OWASP CSRF Cheat Sheet)
+  if (METHODES_SURES.includes(req.method)) return next();
 
-  // Vérifier l'origine (autorise origines fixes ou vercel)
-  const estAutorise = (o) => {
-    if (!o) return false;
-    if (expandedOrigins.includes(o)) return true;
-    if (o.endsWith(".vercel.app")) return true;
-    return false;
-  };
+  const origine = req.headers.origin || null;
+  let origineReferer = null;
+  if (req.headers.referer) {
+    try {
+      origineReferer = new URL(req.headers.referer).origin;
+    } catch {
+      origineReferer = "invalide";
+    }
+  }
 
-  if (origine && !estAutorise(origine)) {
+  if (origine && !estOrigineAutorisee(origine)) {
     console.warn(`[CSRF] Origine bloquée : ${origine}`);
     return res.status(403).json({ success: false, message: "Origine non autorisée." });
   }
 
-  // Vérifier le referer (plus souple, on regarde si ça commence par une origine autorisée ou vercel)
-  if (referer && !expandedOrigins.some((o) => referer.startsWith(o)) && !referer.includes(".vercel.app")) {
-    console.warn(`[CSRF] Référent bloqué : ${referer}`);
+  // Comparaison exacte de l'origine du référent (et non plus un simple startsWith)
+  if (!origine && origineReferer && !estOrigineAutorisee(origineReferer)) {
+    console.warn(`[CSRF] Référent bloqué : ${origineReferer}`);
     return res.status(403).json({ success: false, message: "Référent non autorisé." });
+  }
+
+  // Requête modifiante authentifiée par cookie sans Origin ni Referer : refusée.
+  // Les clients API (mobile, scripts) utilisent l'en-tête Authorization.
+  const authParCookie = Boolean(req.cookies?.token) && !req.headers.authorization;
+  if (!origine && !origineReferer && authParCookie) {
+    return res.status(403).json({ success: false, message: "Origine manquante." });
   }
 
   next();
@@ -122,4 +154,6 @@ module.exports = {
   sanitiserInputs,
   validerTaillePayload,
   validerCSRF,
+  estOrigineAutorisee,
+  originesAutorisees,
 };
