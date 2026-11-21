@@ -20,6 +20,12 @@ jobs:
         working-directory: backend
       - run: npm test
         working-directory: backend
+        env:
+          NODE_ENV: test
+          # Valeurs factices réservées aux tests
+          JWT_SECRET: ci-test-secret-not-for-production-0123456789
+          COOKIE_SECRET: ci-cookie-secret-not-for-production-0123456789
+          GEMINI_API_KEY: ci-dummy-key
 
   lint-backend:
     runs-on: ubuntu-latest
