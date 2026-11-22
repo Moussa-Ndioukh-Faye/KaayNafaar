@@ -26,7 +26,7 @@ export default function VerifierEmail() {
     authAPI
       .verifierEmail(token)
       .then(({ data }) => {
-        connecter(data.token, data.utilisateur);
+        connecter(data.utilisateur);
         setEtat("succes");
         setTimeout(() => navigate("/"), 2500);
       })

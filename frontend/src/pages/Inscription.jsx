@@ -67,7 +67,7 @@ export default function Inscription() {
         setEmailEnAttente(data.email);
         return;
       }
-      connecter(data.token, data.utilisateur);
+      connecter(data.utilisateur);
       navigate("/");
     } catch (error) {
       if (!error.response) {

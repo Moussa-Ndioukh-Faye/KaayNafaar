@@ -71,6 +71,7 @@ jest.mock("../src/models/Course", () => {
 
 jest.mock("../src/models/Fiche", () => {
   const M = function () {};
+  M.findOne = jest.fn().mockResolvedValue(null);
   M.destroy = jest.fn().mockResolvedValue();
   M.findAll = jest.fn().mockResolvedValue([]);
   M.belongsTo = jest.fn();
@@ -80,6 +81,7 @@ jest.mock("../src/models/Fiche", () => {
 
 jest.mock("../src/models/Quiz", () => {
   const M = function () {};
+  M.findOne = jest.fn().mockResolvedValue(null);
   M.destroy = jest.fn().mockResolvedValue();
   M.findAll = jest.fn().mockResolvedValue([]);
   M.belongsTo = jest.fn();
@@ -180,16 +182,18 @@ describe("API Auth", () => {
     const inscription = await request(app)
       .post("/api/auth/inscription")
       .send({ nom: "Test", email: "revoc@test.com", motDePasse: "secret123" });
-    const token = inscription.body.token;
+    // Le jeton de session n'est jamais renvoyé dans le JSON : seulement en cookie httpOnly
+    expect(inscription.body.token).toBeUndefined();
+    const cookie = inscription.headers["set-cookie"];
 
-    const avant = await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${token}`);
+    const avant = await request(app).get("/api/auth/profil").set("Cookie", cookie);
     expect(avant.status).toBe(200);
 
     // Simule un changement de mot de passe depuis une autre session
     const bcrypt = require("bcryptjs");
     mockUsers[0].motDePasse = await bcrypt.hash("nouveauSecret456", 4);
 
-    const apres = await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${token}`);
+    const apres = await request(app).get("/api/auth/profil").set("Cookie", cookie);
     expect(apres.status).toBe(401);
   });
 
@@ -200,7 +204,7 @@ describe("API Auth", () => {
 
     const res = await request(app)
       .get("/api/auth/export")
-      .set("Authorization", `Bearer ${inscription.body.token}`);
+      .set("Cookie", inscription.headers["set-cookie"]);
     expect(res.status).toBe(200);
     expect(res.body.format).toBe("kaay-nafaar-export-v1");
     expect(res.headers["content-disposition"]).toMatch(/attachment/);
@@ -211,5 +215,79 @@ describe("API Auth", () => {
     const faux = jwt.sign({ id: 1 }, "", { algorithm: "none" });
     const res = await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${faux}`);
     expect(res.status).toBe(401);
+  });
+});
+
+describe("Durcissement de la session", () => {
+  const jwt = require("jsonwebtoken");
+  const Quiz = require("../src/models/Quiz");
+  const Fiche = require("../src/models/Fiche");
+
+  const creerCompte = async (email) => {
+    const res = await request(app).post("/api/auth/inscription").send({ nom: "Awa", email, motDePasse: "secret123" });
+    return { cookie: res.headers["set-cookie"], id: mockUsers.find((u) => u.email === email).id };
+  };
+
+  test("le profil ne renvoie jamais le jeton de session au JavaScript", async () => {
+    const { cookie } = await creerCompte("profil-jeton@test.com");
+    const res = await request(app).get("/api/auth/profil").set("Cookie", cookie);
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeUndefined();
+    expect(JSON.stringify(res.body)).not.toMatch(/eyJ/); // aucun JWT dans la réponse
+  });
+
+  test("le cookie de session est HttpOnly et SameSite=Lax", async () => {
+    const res = await request(app).post("/api/auth/inscription").send({ nom: "Awa", email: "cookie@test.com", motDePasse: "secret123" });
+    const cookie = String(res.headers["set-cookie"]);
+    expect(cookie).toMatch(/HttpOnly/i);
+    expect(cookie).toMatch(/SameSite=Lax/i);
+  });
+
+  test("le jeton d'upload dure 5 minutes et ne sert qu'à importer un cours", async () => {
+    const { cookie } = await creerCompte("upload@test.com");
+    const res = await request(app).get("/api/auth/jeton-upload").set("Cookie", cookie);
+    expect(res.status).toBe(200);
+    expect(res.headers["cache-control"]).toMatch(/no-store/);
+
+    const charge = jwt.decode(res.body.jeton);
+    expect(charge.portee).toBe("upload");
+    expect(charge.exp - charge.iat).toBe(300);
+
+    // Refusé partout ailleurs, par exemple pour lire le profil
+    const profil = await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${res.body.jeton}`);
+    expect(profil.status).toBe(401);
+  });
+
+  test("un quiz public d'un autre étudiant ne montre ni ses scores ni son identifiant", async () => {
+    const { cookie } = await creerCompte("curieux@test.com");
+    Quiz.findOne.mockResolvedValueOnce({
+      utilisateurId: 999,
+      toJSON: () => ({ id: 5, titre: "Quiz public", utilisateurId: 999, sessions: [{ score: 3, reponses: ["secret"] }], questions: [] }),
+    });
+    const res = await request(app).get("/api/quiz/5").set("Cookie", cookie);
+    expect(res.status).toBe(200);
+    expect(res.body.quiz.titre).toBe("Quiz public");
+    expect(res.body.quiz.sessions).toBeUndefined();
+    expect(res.body.quiz.utilisateurId).toBeUndefined();
+  });
+
+  test("une fiche publique d'un autre étudiant ne montre pas son historique de révision", async () => {
+    const { cookie } = await creerCompte("lecteur@test.com");
+    Fiche.findOne.mockResolvedValueOnce({
+      utilisateurId: 999,
+      toJSON: () => ({
+        id: 8,
+        titre: "Fiche publique",
+        utilisateurId: 999,
+        coursId: 4,
+        cours: { titre: "Cours privé" },
+        flashcards: [{ question: "Q ?", reponse: "R", nextReview: "2026-12-01", easiness: 2.5, repetitions: 3 }],
+      }),
+    });
+    const res = await request(app).get("/api/fiches/8").set("Cookie", cookie);
+    expect(res.status).toBe(200);
+    expect(res.body.fiche.utilisateurId).toBeUndefined();
+    expect(res.body.fiche.cours).toBeUndefined();
+    expect(res.body.fiche.flashcards).toEqual([{ question: "Q ?", reponse: "R" }]);
   });
 });

@@ -13,6 +13,7 @@ const {
   renvoyerVerification,
   motDePasseOublie,
   reinitialiserMotDePasse,
+  jetonUpload,
   logout,
 } = require("../controllers/authController");
 const { limiteurConnexionCompte, limiteurEmailsSortants } = require("../middleware/securite");
@@ -105,5 +106,8 @@ router.post(
   reinitialiserMotDePasse
 );
 router.post("/logout", logout);
+
+// Jeton de 5 minutes pour envoyer un fichier directement au serveur
+router.get("/jeton-upload", proteger, jetonUpload);
 
 module.exports = router;
