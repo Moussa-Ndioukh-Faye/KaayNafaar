@@ -21,6 +21,13 @@ services:
         value: https://kaay-nafaar.vercel.app
       - key: JWT_EXPIRE
         value: 7d
+      # Modèles IA (modifiables ici quand un fournisseur retire un modèle)
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-2
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
       # Secrets générés par Render (64 caractères aléatoires)
       - key: JWT_SECRET
         generateValue: true
