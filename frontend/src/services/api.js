@@ -82,9 +82,9 @@ export const coursAPI = {
   getCours: (params) => api.get("/courses", { params }),
   getCoursParId: (id) => api.get(`/courses/${id}`),
   creerCours: (data) => {
-    // 💡 Pour l'envoi de fichiers, on utilise l'URL DIRECTE du VPS 
-    // pour contourner la limite de taille (4.5MB/10MB) du proxy Vercel.
-    const directURL = "https://185-98-136-82.sslip.io/api/courses";
+    // 💡 Pour l'envoi de fichiers, on appelle directement le backend (Render)
+    // pour contourner la limite de taille (4,5 Mo) du proxy Vercel.
+    const directURL = `${import.meta.env.VITE_BACKEND_URL || "https://kaay-nafaar-api-1rtt.onrender.com"}/api/courses`;
     
     if (data instanceof FormData) {
       const headers = { "Content-Type": "multipart/form-data" };

@@ -1,5 +1,6 @@
 const { Sequelize } = require("sequelize");
 const path = require("path");
+const { parametres, optionsSSL, postgresConfigure } = require("./connexionPostgres");
 
 const dbConfig = {
   sequelize: null
@@ -16,24 +17,22 @@ const initSequelize = (useSqlite = false) => {
     });
   }
 
-  // Tentative Postgres
-  return new Sequelize(
-    process.env.DB_NAME || "kaay_nafaar_v2",
-    process.env.DB_USER || "user_admin",
-    process.env.DB_PASSWORD || "password_secret",
-    {
-      host: process.env.DB_HOST || "localhost",
-      port: process.env.DB_PORT || 5432,
-      dialect: "postgres",
-      logging: false,
-      pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
-      define: { timestamps: true, underscored: true },
-    }
-  );
+  // Postgres : DATABASE_URL (hébergement géré, SSL) ou variables DB_*
+  const p = parametres();
+  const ssl = optionsSSL();
+  return new Sequelize(p.database, p.user, p.password, {
+    host: p.host,
+    port: p.port,
+    dialect: "postgres",
+    logging: false,
+    dialectOptions: ssl ? { ssl } : {},
+    pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
+    define: { timestamps: true, underscored: true },
+  });
 };
 
 // Premier jet
-dbConfig.sequelize = initSequelize(!process.env.DB_HOST);
+dbConfig.sequelize = initSequelize(!postgresConfigure());
 
 const connectDB = async () => {
   try {
@@ -53,6 +52,13 @@ const connectDB = async () => {
     }
   } catch (err) {
     console.error("❌ Échec de la connexion initiale:", err.message);
+
+    // Les modèles sont liés à l'instance Sequelize créée au démarrage : on ne la recrée pas.
+    // Pooler Supabase : si le projet est introuvable (« tenant/user not found »),
+    // vérifier le nom du pooler (aws-0 ou aws-1) dans le bouton « Connect » de Supabase.
+    if (/tenant\/user/i.test(err.message)) {
+      console.error("ℹ️ Vérifie le nom du pooler Supabase (aws-0-… ou aws-1-…) dans DATABASE_URL.");
+    }
     
     if (dbConfig.sequelize.getDialect() === "postgres") {
       console.warn("⚠️ Basculement d'urgence sur SQLite (Mode Dégradé)...");

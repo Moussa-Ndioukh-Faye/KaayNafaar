@@ -42,6 +42,10 @@ try {
   if (process.env.NODE_ENV === "test" && RedisMock) {
     redisInstance = new RedisMock();
     isMock = true;
+  } else if (!process.env.REDIS_HOST && process.env.NODE_ENV === "production") {
+    // Hébergement sans Redis (ex. Render gratuit) : cache en mémoire, traitements en direct
+    console.warn("ℹ️ REDIS_HOST non défini : mode mémoire (sans file d'attente).");
+    creerMock();
   } else if (!reachable) {
     console.warn("⚠️ Redis injoignable (DNS). Passage en mode mémoire.");
     creerMock();

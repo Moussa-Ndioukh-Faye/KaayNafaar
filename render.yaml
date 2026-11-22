@@ -1,0 +1,39 @@
+# Blueprint Render — backend Kaay Nafaar (offre gratuite)
+# Render → New → Blueprint → choisir ce dépôt. La base est sur Supabase (DATABASE_URL).
+services:
+  - type: web
+    name: kaay-nafaar-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: npm ci --omit=dev --legacy-peer-deps
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    # Déploie main uniquement quand la CI GitHub est verte
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: FRONTEND_URL
+        value: https://kaay-nafaar.vercel.app
+      - key: JWT_EXPIRE
+        value: 7d
+      # Secrets générés par Render (64 caractères aléatoires)
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECRET
+        generateValue: true
+      # À renseigner dans le tableau de bord Render
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false

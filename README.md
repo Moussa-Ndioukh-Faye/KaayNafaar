@@ -193,6 +193,16 @@ npm run preview       # Preview du build
 
 ---
 
+## 🚀 Déploiement
+
+| Partie | Hébergeur | Déclenchement |
+| --- | --- | --- |
+| Frontend | Vercel | Automatique à chaque push sur `main` |
+| Backend | Render (offre gratuite, `render.yaml`) | Automatique sur `main` quand la CI est verte |
+| Base de données | Supabase (Postgres + pgvector) | — |
+
+Sans Redis, le backend traite les cours importés directement (pas de file d'attente). Sur l'offre gratuite de Render, le service se met en veille après 15 minutes sans visite et met environ une minute à se réveiller.
+
 ## ✅ Normes et conformité
 
 | Norme | Application dans le projet |
