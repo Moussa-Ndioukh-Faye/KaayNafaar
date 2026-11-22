@@ -106,7 +106,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
               </div>
             )}
             {fiche.cours && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs font-bold uppercase tracking-wider border border-primary-100 dark:border-primary-900/50">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary rounded-full text-xs font-bold uppercase tracking-wider border border-primary-100 dark:border-primary-900/50">
                 <BookOpen className="w-3 h-3" />
                 {fiche.cours.titre}
               </div>
@@ -193,7 +193,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
                     key={`expl-${i}-${nom}`}
                     className="group p-6 bg-white dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-700 rounded-3xl hover:border-primary-100 dark:hover:border-primary-900/30 transition-all"
                   >
-                    <h4 className="font-bold text-primary-600 dark:text-primary-400 mb-2 uppercase text-xs tracking-[0.08em]">
+                    <h4 className="font-bold text-primary-600 dark:text-primary mb-2 uppercase text-xs tracking-[0.08em]">
                       {nom}
                     </h4>
                     <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">

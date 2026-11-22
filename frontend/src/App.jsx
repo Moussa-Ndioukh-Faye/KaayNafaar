@@ -200,7 +200,7 @@ const Layout = ({ children }) => {
           // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
           tabIndex={0}
           aria-label="Contenu de la page"
-          className="flex-1 overflow-y-auto page-cahier [--marge-x:1rem] md:[--marge-x:2.5rem] pl-7 pr-4 py-6 md:pl-16 md:pr-10 md:py-8 animate-fade-in focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          className="flex-1 overflow-y-auto px-4 py-6 md:px-10 md:py-8 animate-fade-in focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           {children}
         </main>

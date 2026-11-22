@@ -286,7 +286,7 @@ export default function Planning() {
                     </p>
                     <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">
                       {planningGenere.conseils_generaux.map((c, i) => (
-                         <li key={i} className="text-sm text-primary-700 dark:text-primary-400 flex items-start gap-2 leading-relaxed">
+                         <li key={i} className="text-sm text-primary-700 dark:text-primary flex items-start gap-2 leading-relaxed">
                             <div className="w-1.5 h-1.5 rounded-full bg-primary-400 mt-1.5 flex-shrink-0" />
                             {c}
                          </li>
@@ -384,7 +384,7 @@ export default function Planning() {
           {Object.entries(parDate).map(([date, sessions]) => (
             <div key={date} className="relative pl-6 border-l-2 border-gray-100 dark:border-gray-800 pb-2">
               <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-white dark:bg-gray-900 border-4 border-primary-500" />
-              <h3 className="font-display italic text-xl font-medium text-foreground mb-4 pl-2 first-letter:uppercase">
+              <h3 className="font-semibold text-xl font-medium text-foreground mb-4 pl-2 first-letter:uppercase">
                 {date}
               </h3>
               <div className="space-y-4">
@@ -417,7 +417,7 @@ export default function Planning() {
                                {s.matiere}
                              </p>
                              {s.coursId && (
-                                <div className="px-2 py-0.5 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                                <div className="px-2 py-0.5 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary rounded-md text-xs font-bold uppercase tracking-wider flex items-center gap-1">
                                    <BookOpen className="w-2.5 h-2.5" /> lié
                                 </div>
                              )}

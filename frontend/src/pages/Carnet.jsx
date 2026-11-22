@@ -244,7 +244,7 @@ export default function Carnet() {
 
   // Ordinateur portable (lg à 2xl) : la colonne de droite bascule entre Sources et Studio
   const selecteurDroit = (
-    <div role="group" aria-label="Colonne de droite" className="hidden lg:grid 2xl:hidden grid-cols-2 mb-4 rounded-md border border-input bg-card p-1">
+    <div role="group" aria-label="Colonne de droite" className="hidden lg:grid 2xl:hidden grid-cols-2 mb-4 rounded-[10px] bg-foreground/[0.07] p-[3px]">
       {[
         { id: "sources", nom: `Sources (${sourcesIds.length})` },
         { id: "studio", nom: "Studio et notes" },
@@ -255,8 +255,8 @@ export default function Carnet() {
           aria-pressed={panneauDroit === o.id}
           onClick={() => setPanneauDroit(o.id)}
           className={cn(
-            "h-9 rounded-[4px] text-sm font-semibold",
-            panneauDroit === o.id ? "bg-primary text-primary-foreground" : "text-foreground/80 hover:bg-foreground/[0.06]"
+            "h-8 rounded-[8px] text-[0.8125rem] font-semibold transition-colors",
+            panneauDroit === o.id ? "bg-card text-foreground shadow-sm dark:bg-[#636366]" : "text-foreground/80 hover:text-foreground"
           )}
         >
           {o.nom}
@@ -338,12 +338,12 @@ export default function Carnet() {
         )}
         {messages.map((m, i) =>
           m.role === "user" ? (
-            <div key={i} className="ml-auto max-w-[85%] bg-surligneur-pale text-encre border border-encre/15 rounded-sm shadow-md px-4 py-3 rotate-[0.3deg]">
+            <div key={i} className="ml-auto max-w-[85%] bg-primary text-primary-foreground rounded-[20px] rounded-br-md px-4 py-2.5">
               <span className="sr-only">Toi : </span>
               {m.content}
             </div>
           ) : (
-            <div key={i} className="max-w-[95%] bg-card border border-border rounded-md shadow-md px-5 py-4">
+            <div key={i} className="max-w-[95%] bg-card rounded-[20px] rounded-bl-md shadow-sm px-5 py-4">
               <span className="sr-only">Carnet : </span>
               {m.content ? (
                 formatMessage(m.content, { passages: m.passages, surCitation: setPassageOuvert })
@@ -418,7 +418,7 @@ export default function Carnet() {
                   aria-pressed={typeAffiche === type}
                   className={cn(
                     "w-full h-full text-left rounded-md border px-3 py-2.5 transition-colors disabled:opacity-60",
-                    typeAffiche === type ? "border-encre/80 dark:border-foreground/60 bg-secondary/40" : "border-border bg-card hover:bg-secondary/20"
+                    typeAffiche === type ? "border-border bg-secondary/40" : "border-border bg-card hover:bg-secondary/20"
                   )}
                 >
                   <span className="flex items-center gap-2 font-semibold text-foreground text-sm">
@@ -461,7 +461,7 @@ export default function Carnet() {
         ) : (
           <ul className="mt-3 space-y-3">
             {carnet.notes.map((n) => (
-              <li key={n.id} className="bg-surligneur-pale/70 dark:bg-card text-foreground border border-encre/15 dark:border-border rounded-sm px-4 py-3">
+              <li key={n.id} className="bg-surligneur-pale/70 dark:bg-card text-foreground border border-border dark:border-border rounded-sm px-4 py-3">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold leading-snug">{n.titre}</p>
                   <Button
@@ -499,7 +499,7 @@ export default function Carnet() {
       )}
 
       {/* Mobile et tablette : un panneau à la fois */}
-      <div role="group" aria-label="Panneau affiché" className="lg:hidden mt-5 grid grid-cols-3 rounded-md border border-input bg-card p-1">
+      <div role="group" aria-label="Panneau affiché" className="lg:hidden mt-5 grid grid-cols-3 rounded-[10px] bg-foreground/[0.07] p-[3px]">
         {ONGLETS.map((o) => (
           <button
             key={o.id}
@@ -507,8 +507,8 @@ export default function Carnet() {
             aria-pressed={onglet === o.id}
             onClick={() => setOnglet(o.id)}
             className={cn(
-              "h-10 rounded-[4px] text-sm font-semibold",
-              onglet === o.id ? "bg-primary text-primary-foreground" : "text-foreground/80 hover:bg-foreground/[0.06]"
+              "h-9 rounded-[8px] text-sm font-semibold transition-colors",
+              onglet === o.id ? "bg-card text-foreground shadow-sm dark:bg-[#636366]" : "text-foreground/80 hover:text-foreground"
             )}
           >
             {o.nom}

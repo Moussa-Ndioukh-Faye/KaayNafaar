@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Sparkles, Layers, LogIn, Compass } from "lucide-react";
 import { useAuth } from "../App";
 import { LogoComplet } from "../components/marque/Logo";
-import { Eclats, Pointilles } from "../components/marque/Gribouillis";
 
 /**
  * Page 404 — « Question surprise » : l'étudiant choisit sa réponse
@@ -41,47 +40,27 @@ export default function Page404() {
 
       <div className="flex-1 grid place-items-center px-6 py-10">
         <div className="apparition w-full max-w-xl">
-          {/* Le grand 404, avec le zéro « corrigé » au crayon */}
-          <div className="relative mx-auto w-fit select-none" aria-hidden="true">
-            <Eclats className="absolute -left-12 -top-6 rotate-[-18deg]" />
-            <Pointilles className="absolute -right-14 bottom-2 opacity-70" />
-            <p className="font-display font-bold leading-none tracking-tight text-marine dark:text-white text-[7.5rem] sm:text-[9.5rem]">
-              4
-              <span className="relative inline-block text-primary-600">
-                0
-                <svg
-                  viewBox="0 0 100 100"
-                  className="absolute inset-0 m-auto w-[110%] h-[110%] -translate-x-[5%] text-secondary-400"
-                  focusable="false"
-                >
-                  <path
-                    d="M18 52 C 30 72, 70 78, 84 46 C 92 26, 64 12, 42 18 C 22 24, 14 40, 22 56"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
-              4
-            </p>
-          </div>
+          {/* Grand 404, le zéro aux couleurs d'action */}
+          <p className="text-center font-bold leading-none tracking-[-0.05em] text-foreground text-[7.5rem] sm:text-[9.5rem] select-none" aria-hidden="true">
+            4<span className="text-primary">0</span>4
+          </p>
+          <div className="bande-senegal mx-auto mt-3 w-16 rounded-full" aria-hidden="true" />
 
           {/* Carte « question surprise » */}
           <section
             aria-labelledby="titre-404"
-            className="relative mt-6 rounded-xl border border-border bg-card p-7 sm:p-9 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.35)]"
+            className="relative mt-8 rounded-3xl bg-card p-7 sm:p-9 shadow-lg"
           >
-            <span className="absolute -top-3 left-7 rounded-full bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider text-encre">
+            <span className="inline-block rounded-full bg-etoile px-3 py-1 text-xs font-bold uppercase tracking-wider text-[#1c1c1e]">
               Question surprise
             </span>
 
-            <h1 id="titre-404" className="font-display text-2xl sm:text-3xl font-bold text-marine dark:text-white">
+            <h1 id="titre-404" className="mt-4 text-2xl sm:text-3xl font-bold text-foreground">
               Cette page n'est <span className="trait-main">pas au programme</span>.
             </h1>
-            <p className="mt-3 text-gray-600 dark:text-gray-300">
+            <p className="mt-3 text-muted-foreground">
               L'adresse{" "}
-              <code className="rounded-md bg-muted px-1.5 py-0.5 text-sm text-marine dark:text-white break-all">{pathname}</code>{" "}
+              <code className="rounded-md bg-muted px-1.5 py-0.5 text-sm text-foreground break-all">{pathname}</code>{" "}
               n'existe pas ou a été déplacée. Choisis ta réponse :
             </p>
 

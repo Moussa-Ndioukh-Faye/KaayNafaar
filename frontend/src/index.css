@@ -4,78 +4,78 @@
 
 @layer base {
   /*
-   * Identité « Le Cahier » — le cahier Seyès de l'élève sénégalais :
-   * papier crème, encre marine du logo, stylo bleu, surligneur jaune, marge rouge.
+   * Identité « Teranga » — rigueur des interfaces Apple (HIG) + marque Kaay Nafaar :
+   *  - fond groupé gris très clair, surfaces blanches, texte quasi noir
+   *  - bleu roi du logo KN comme couleur d'action
+   *  - vert, jaune et rouge du drapeau sénégalais en accents (succès, étoile, alerte)
+   *  - motif géométrique inspiré du wax, réservé aux grandes surfaces de marque
    */
   :root {
-    --background: 41 45% 93%;      /* papier #f6f1e6 */
-    --foreground: 221 76% 16%;     /* encre #0a1f4a */
+    --background: 240 24% 96%;     /* fond groupé #f2f2f7 */
+    --foreground: 240 3% 11%;      /* label #1c1c1e */
 
-    --card: 43 100% 99%;           /* feuille #fffdf8 */
-    --card-foreground: 221 76% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 3% 11%;
 
-    --popover: 43 100% 99%;
-    --popover-foreground: 221 76% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 3% 11%;
 
-    --primary: 221 100% 43%;       /* stylo bleu #0047db */
-    --primary-foreground: 43 100% 99%;
+    --primary: 221 100% 43%;       /* bleu roi du logo #0047db — 7,1:1 sur blanc */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 47 100% 65%;      /* surligneur #ffd84d */
-    --secondary-foreground: 221 76% 16%;
+    --secondary: 222 100% 95%;     /* bleu teinté #e6eeff : bouton « teinté » iOS */
+    --secondary-foreground: 221 100% 38%;
 
-    --muted: 43 41% 90%;           /* #f0eadb */
-    --muted-foreground: 42 13% 34%; /* #625b4c — 5,9:1 sur le papier */
+    --muted: 240 11% 94%;          /* champ rempli #eeeef2 */
+    --muted-foreground: 240 3% 40%; /* label secondaire #636366 — 5,9:1 sur blanc */
 
-    --accent: 43 52% 88%;
-    --accent-foreground: 221 76% 16%;
+    --accent: 240 11% 94%;
+    --accent-foreground: 240 3% 11%;
 
-    --destructive: 4 63% 48%;      /* marge rouge #c8372d */
-    --destructive-foreground: 43 100% 99%;
+    --destructive: 357 79% 45%;    /* rouge du drapeau, assombri #cf1820 — 5,2:1 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 42 30% 80%;          /* trait de crayon #d9cfb8 */
-    --input: 42 25% 72%;
+    --succes: 148 100% 21%;        /* vert du drapeau assombri #006b33 — 7:1 sur blanc */
+    --etoile: 56 98% 63%;          /* jaune du drapeau #fdef42 */
+
+    --border: 240 6% 87%;          /* séparateur #dcdce1 */
+    --input: 240 3% 57%;          /* #8e8e93 : bord de champ à 3,3:1 (WCAG 1.4.11) */
     --ring: 221 100% 43%;
 
-    --radius: 6px;
-
-    --seyes-fin: 221 100% 43% / 0.035;
-    --seyes-fort: 221 100% 43% / 0.11;
-    --marge: 4 63% 48% / 0.55;
+    --radius: 12px;
   }
 
-  /* « Cahier de nuit » : encre sur papier inversée */
   .dark {
-    --background: 222 49% 8%;
-    --foreground: 41 45% 90%;
+    --background: 0 0% 0%;         /* noir OLED, comme iOS */
+    --foreground: 0 0% 100%;
 
-    --card: 222 41% 12%;
-    --card-foreground: 41 45% 90%;
+    --card: 240 3% 11%;            /* #1c1c1e */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222 41% 12%;
-    --popover-foreground: 41 45% 90%;
+    --popover: 240 2% 17%;         /* #2c2c2e */
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 224 100% 76%;
-    --primary-foreground: 222 49% 8%;
+    --primary: 218 100% 66%;       /* #5291ff — 6,4:1 sur #1c1c1e */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 47 100% 65%;
-    --secondary-foreground: 222 49% 8%;
+    --secondary: 218 45% 18%;
+    --secondary-foreground: 218 100% 74%;
 
-    --muted: 223 32% 16%;
-    --muted-foreground: 41 18% 70%;
+    --muted: 240 2% 17%;
+    --muted-foreground: 240 4% 65%; /* #a1a1a8 */
 
-    --accent: 223 32% 18%;
-    --accent-foreground: 41 45% 90%;
+    --accent: 240 2% 20%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 4 80% 66%;
-    --destructive-foreground: 222 49% 8%;
+    --destructive: 3 100% 64%;     /* #ff4f45 */
+    --destructive-foreground: 0 0% 0%;
 
-    --border: 223 25% 24%;
-    --input: 223 25% 30%;
-    --ring: 224 100% 76%;
+    --succes: 145 63% 49%;         /* #30d158 */
+    --etoile: 56 98% 63%;
 
-    --seyes-fin: 224 100% 76% / 0.03;
-    --seyes-fort: 224 100% 76% / 0.08;
-    --marge: 4 80% 66% / 0.45;
+    --border: 240 3% 22%;
+    --input: 240 3% 46%;
+    --ring: 218 100% 66%;
   }
 }
 
@@ -83,214 +83,187 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    @apply bg-background text-foreground antialiased leading-relaxed font-sans;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    @apply bg-background text-foreground antialiased font-sans;
+    line-height: 1.5;
+    font-feature-settings: "ss01", "cv11";
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
-  /* Titres en Fraunces : un sérif d'édition, chaleureux, à l'opposé des gabarits */
+  /* Titres à la manière d'Apple : même famille, graisse forte, approche serrée */
   h1, h2, h3, h4, .font-display {
-    font-family: "Fraunces Variable", Georgia, ui-serif, serif;
-    font-optical-sizing: auto;
-    font-variation-settings: "SOFT" 40, "WONK" 0;
-    letter-spacing: -0.015em;
-    font-weight: 600;
+    font-family: theme("fontFamily.sans");
+    font-weight: 700;
+    letter-spacing: -0.022em;
+    line-height: 1.15;
     text-wrap: balance;
   }
+  h1 { letter-spacing: -0.028em; }
   p { text-wrap: pretty; }
 
-  /* Chiffres alignés dans les tableaux de bord et les scores */
   .chiffres { font-variant-numeric: tabular-nums lining-nums; }
 
   ::selection {
-    background: #ffd84d;
-    color: #0a1f4a;
+    background: hsl(var(--primary) / 0.22);
   }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
   ::-webkit-scrollbar-thumb {
-    @apply bg-foreground/15 rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-foreground/30;
+    @apply rounded-full;
+    background: hsl(var(--foreground) / 0.18);
+    border: 3px solid transparent;
+    background-clip: padding-box;
   }
 }
 
 @layer components {
-  /* ── Boutons (classes héritées) ───────────────────────────────── */
+  /* ── Boutons (classes héritées) ─────────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-2.5
-           rounded-md font-semibold border border-encre/80 shadow-md
-           transition-[transform,box-shadow] duration-150
-           hover:-translate-x-px hover:-translate-y-px hover:shadow-lg
-           active:translate-x-0 active:translate-y-0 active:shadow-sm
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 h-11
+           rounded-xl font-semibold transition-[filter,transform] duration-150
+           hover:brightness-110 active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed motion-reduce:transform-none;
   }
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground
-           px-5 py-2.5 rounded-md font-semibold border border-encre/80 shadow-md
-           transition-[transform,box-shadow] duration-150
-           hover:-translate-x-px hover:-translate-y-px hover:shadow-lg;
+           px-5 h-11 rounded-xl font-semibold transition-[filter,transform] duration-150
+           hover:brightness-95 active:scale-[0.98] motion-reduce:transform-none;
   }
 
-  /* ── Fiche bristol : la carte de base ─────────────────────────── */
+  /* ── Carte : surface blanche posée sur le fond groupé ───────────── */
   .card-bento {
-    @apply bg-card rounded-lg border border-border p-6 shadow-md;
+    @apply bg-card rounded-2xl p-6 shadow-sm;
   }
 
   .input-field {
-    @apply w-full border border-input rounded-md px-3.5 py-2.5 text-[0.95rem]
-           bg-card text-foreground shadow-inner
-           focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25
-           placeholder:text-muted-foreground/80 transition-colors duration-150;
+    @apply w-full rounded-xl px-3.5 h-11 text-base md:text-[0.95rem]
+           bg-card text-foreground border border-input
+           focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/15
+           placeholder:text-muted-foreground transition-colors duration-150;
   }
 
-  /* Petite étiquette (dates, compteurs, rubriques) — 12 px minimum, jamais 9 px */
+  /* En-tête de section façon liste groupée iOS */
   .etiquette {
-    @apply text-xs font-semibold uppercase text-muted-foreground;
-    letter-spacing: 0.08em;
+    @apply text-[0.8125rem] font-medium uppercase text-muted-foreground;
+    letter-spacing: 0.02em;
   }
 
-  /* ── Papier Seyès : lignes fines tous les 2 mm, ligne forte tous les 8 mm ── */
-  .papier-seyes {
+  /* Anciennes surfaces « cahier » : désormais simples fonds unis */
+  .papier-seyes,
+  .page-cahier,
+  .fond-teinte {
     background-color: hsl(var(--background));
-    background-image:
-      linear-gradient(to bottom, transparent calc(2rem - 1px), hsl(var(--seyes-fort)) calc(2rem - 1px)),
-      linear-gradient(to bottom, transparent calc(0.5rem - 1px), hsl(var(--seyes-fin)) calc(0.5rem - 1px));
-    background-size: 100% 2rem, 100% 0.5rem;
+  }
+  .marge-cahier { position: relative; }
+
+  /* Bande tricolore : la signature sénégalaise, toujours fine et discrète */
+  .bande-senegal {
+    height: 3px;
+    background: linear-gradient(90deg, #00853f 0 33.34%, #fdef42 33.34% 66.67%, #e31b23 66.67% 100%);
   }
 
-  /* Page de l'application : réglure Seyès + marge rouge, qui défilent avec le contenu */
-  .page-cahier {
-    background-color: hsl(var(--background));
-    background-image:
-      linear-gradient(to right, transparent var(--marge-x), hsl(var(--marge)) var(--marge-x),
-        hsl(var(--marge)) calc(var(--marge-x) + 1.5px), transparent calc(var(--marge-x) + 1.5px)),
-      linear-gradient(to bottom, transparent calc(2rem - 1px), hsl(var(--seyes-fort)) calc(2rem - 1px)),
-      linear-gradient(to bottom, transparent calc(0.5rem - 1px), hsl(var(--seyes-fin)) calc(0.5rem - 1px));
-    background-size: 100% 100%, 100% 2rem, 100% 0.5rem;
-    background-attachment: local, local, local;
+  /* Motif géométrique inspiré du wax (losanges et chevrons) */
+  .motif-wax {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2'%3E%3Cpath d='M28 4 L52 28 L28 52 L4 28 Z'/%3E%3Cpath d='M28 16 L40 28 L28 40 L16 28 Z'/%3E%3Cpath d='M0 0 L8 8 M56 0 L48 8 M0 56 L8 48 M56 56 L48 48'/%3E%3C/g%3E%3Ccircle cx='28' cy='28' r='2' fill='%23ffffff'/%3E%3C/svg%3E");
+    background-size: 56px 56px;
   }
 
-  /* Marge rouge du cahier, à gauche du contenu */
-  .marge-cahier {
-    position: relative;
-  }
-  .marge-cahier::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: var(--marge-x, 0);
-    width: 2px;
-    background: hsl(var(--marge));
-    pointer-events: none;
-  }
-
-  /* Surface encre (bandeaux sombres) : marine du logo, lignes à la craie */
+  /* Surface de marque : marine du logo, motif wax très atténué, bande tricolore */
   .surface-marque {
     position: relative;
     isolation: isolate;
     overflow: hidden;
     background-color: #0a1f4a;
-    background-image:
-      linear-gradient(to bottom, transparent calc(2rem - 1px), rgb(255 253 248 / 0.07) calc(2rem - 1px));
-    background-size: 100% 2rem;
-    color: #f6f1e6;
+    color: #ffffff;
+  }
+  .surface-marque::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2'%3E%3Cpath d='M28 4 L52 28 L28 52 L4 28 Z'/%3E%3Cpath d='M28 16 L40 28 L28 40 L16 28 Z'/%3E%3Cpath d='M0 0 L8 8 M56 0 L48 8 M0 56 L8 48 M56 56 L48 48'/%3E%3C/g%3E%3Ccircle cx='28' cy='28' r='2' fill='%23ffffff'/%3E%3C/svg%3E");
+    background-size: 56px 56px;
+    pointer-events: none;
+  }
+  .surface-marque::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00853f 0 33.34%, #fdef42 33.34% 66.67%, #e31b23 66.67% 100%);
+    pointer-events: none;
   }
 
-  /* Fond des sections : papier légèrement réglé */
-  .fond-teinte {
-    background-color: hsl(var(--background));
-    background-image: linear-gradient(to bottom, transparent calc(2rem - 1px), hsl(var(--seyes-fin)) calc(2rem - 1px));
-    background-size: 100% 2rem;
-  }
-
-  /* Mot passé au surligneur : le geste de l'élève qui révise */
+  /* Mot mis en valeur : la couleur d'action, sans effet « surligneur » */
   .trait-main,
   .surligne {
-    position: relative;
-    white-space: nowrap;
-    color: inherit;
-    padding: 0 0.12em;
-    margin: 0 -0.06em;
-    background-image: linear-gradient(
-      100deg,
-      transparent 0.15em,
-      #ffd84d 0.3em,
-      #ffd84d calc(100% - 0.4em),
-      transparent calc(100% - 0.1em)
-    );
-    background-repeat: no-repeat;
-    background-size: 100% 0.62em;
-    background-position: 0 88%;
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
+    color: hsl(var(--primary));
   }
   .surface-marque .trait-main,
-  .surface-marque .surligne,
-  .dark .trait-main,
-  .dark .surligne {
-    color: #0a1f4a;
-    background-size: 100% 100%;
-    background-position: 0 50%;
-    border-radius: 2px;
+  .surface-marque .surligne {
+    color: #fdef42;
   }
 
-  /* Annotation au stylo dans la marge */
+  /* Ancienne « annotation au stylo » : sous-titre sobre en couleur d'action */
   .annotation {
-    @apply font-display italic text-primary;
-    font-variation-settings: "SOFT" 100, "WONK" 1;
+    @apply font-semibold text-primary;
   }
 
-  /* Apparition échelonnée au chargement */
+  /* Apparition échelonnée au chargement, courte et douce */
   @keyframes monte {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: none; }
   }
   .apparition > * {
-    animation: monte 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation: monte 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) both;
   }
-  .apparition > *:nth-child(2) { animation-delay: 60ms; }
-  .apparition > *:nth-child(3) { animation-delay: 120ms; }
-  .apparition > *:nth-child(4) { animation-delay: 180ms; }
-  .apparition > *:nth-child(5) { animation-delay: 240ms; }
-  .apparition > *:nth-child(6) { animation-delay: 300ms; }
+  .apparition > *:nth-child(2) { animation-delay: 50ms; }
+  .apparition > *:nth-child(3) { animation-delay: 100ms; }
+  .apparition > *:nth-child(4) { animation-delay: 150ms; }
+  .apparition > *:nth-child(5) { animation-delay: 200ms; }
+  .apparition > *:nth-child(6) { animation-delay: 250ms; }
+
+  /* Barre supérieure translucide (« matériau » iOS) */
+  .barre-verre {
+    background-color: hsl(var(--background) / 0.82);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
 }
 
-/* ── Filet de sécurité du mode sombre (contraste WCAG 1.4.3) ─────────
- * Des textes gris ou bleu foncé posés sans variante « dark: » deviendraient
- * illisibles sur le fond de nuit : on les ramène sur les couleurs du thème.
- */
+/* ── Filet de sécurité du mode sombre (contraste WCAG 1.4.3) ─────────── */
 @layer utilities {
   .dark .text-gray-400, .dark .text-gray-500, .dark .text-slate-400, .dark .text-slate-500 {
     color: hsl(var(--muted-foreground));
   }
   .dark .text-gray-600, .dark .text-gray-700, .dark .text-gray-800, .dark .text-gray-900,
   .dark .text-slate-600, .dark .text-slate-700, .dark .text-slate-800, .dark .text-slate-900,
-  .dark .text-marine {
-    color: hsl(var(--foreground) / 0.9);
+  .dark .text-marine, .dark .text-encre {
+    color: hsl(var(--foreground) / 0.92);
   }
   .dark .text-primary-600, .dark .text-primary-700, .dark .text-primary-800 {
     color: hsl(var(--primary));
   }
-  .dark .text-emerald-600, .dark .text-emerald-700 { color: #6ee7b7; }
-  .dark .text-red-600, .dark .text-red-700 { color: #fca5a5; }
+  .dark .text-emerald-600, .dark .text-emerald-700, .dark .text-succes { color: hsl(var(--succes)); }
+  .dark .text-red-600, .dark .text-red-700 { color: hsl(var(--destructive)); }
   .dark .text-marge { color: hsl(var(--destructive)); }
 }
 
-/* ── Accessibilité (WCAG 2.2) ─────────────────────────────────── */
+/* ── Accessibilité (WCAG 2.2) ─────────────────────────────────────── */
 @layer base {
-  /* 2.4.7 / 2.4.13 : focus clavier toujours visible */
   :focus-visible {
     outline: 3px solid hsl(var(--ring));
     outline-offset: 2px;
+    border-radius: 6px;
   }
 
-  /* 2.3.3 : respecter la préférence « réduire les animations » */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -302,4 +275,3 @@
     }
   }
 }
-

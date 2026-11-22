@@ -275,7 +275,7 @@ export default function Profil() {
                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Mes données personnelles</h3>
                <p className="text-gray-600 dark:text-gray-300 mt-2 font-medium">
                   Télécharge une copie de toutes tes données (profil, cours, fiches, quiz, progression) au format JSON.
-                  Consulte notre <Link to="/confidentialite" className="underline text-primary-700 dark:text-primary-400 font-bold">politique de confidentialité</Link>.
+                  Consulte notre <Link to="/confidentialite" className="underline text-primary-700 dark:text-primary font-bold">politique de confidentialité</Link>.
                </p>
             </div>
             <Button onClick={exporterDonnees} disabled={exportEnCours} variant="outline" className="rounded-2xl h-12 px-6 font-bold">

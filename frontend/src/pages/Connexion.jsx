@@ -79,7 +79,7 @@ export default function Connexion() {
             <Logo />
           </div>
 
-          <div className="bg-card rounded-xl border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
+          <div className="bg-card rounded-xl border border-border p-8 sm:p-10 shadow-lg">
             {emailNonVerifie ? (
               <EmailEnvoye
                 email={emailNonVerifie}

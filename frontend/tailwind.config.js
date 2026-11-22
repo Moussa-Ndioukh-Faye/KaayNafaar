@@ -33,15 +33,18 @@ module.exports = {
           900: "#0a1f4a",
         },
         marine: {
-          DEFAULT: "#0a1f4a",
+          DEFAULT: "#0a1f4a", // marine du logo, réservé à la marque
           clair: "#13306e",
         },
-        // Identité « Le Cahier » : papier, encre, stylo bleu, surligneur, marge rouge Seyès
-        white: "#fffdf8",
-        papier: { DEFAULT: "#f6f1e6", fonce: "#ece4d2" },
-        encre: { DEFAULT: "#0a1f4a", douce: "#2b3756" },
-        surligneur: { DEFAULT: "#ffd84d", pale: "#fff1b0" },
-        marge: { DEFAULT: "#b02f26", pale: "#f6d9d5" }, // 5,2:1 sur le papier
+        // Anciens noms « cahier » remappés sur l'identité Teranga (Apple + drapeau)
+        papier: { DEFAULT: "#f2f2f7", fonce: "#e5e5ea" },
+        encre: { DEFAULT: "#1c1c1e", douce: "#3a3a3c" },
+        surligneur: { DEFAULT: "#fdef42", pale: "#fff9c4" },
+        marge: { DEFAULT: "#cf1820", pale: "#fde3e4" }, // rouge du drapeau, 5,2:1 sur blanc
+        // Couleurs du drapeau sénégalais
+        senegal: { vert: "#00853f", jaune: "#fdef42", rouge: "#e31b23" },
+        succes: "hsl(var(--succes) / <alpha-value>)",
+        etoile: "hsl(var(--etoile) / <alpha-value>)",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -76,63 +79,59 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Gris légèrement bleutés, accordés au marine du logo
+        // Gris neutres du système Apple
         slate: {
-          50:  "#f8f4ea",
-          100: "#f0eadb",
-          200: "#e3dac4",
-          300: "#cdc1a5",
-          400: "#958b76",
-          500: "#625b4c",
-          600: "#4a4539",
-          700: "#353a48",
-          800: "#1c2336",
-          900: "#121a2c",
-          950: "#0b1120",
+          50:  "#f9f9fb",
+          100: "#f2f2f7",
+          200: "#e5e5ea",
+          300: "#d1d1d6",
+          400: "#aeaeb2",
+          500: "#636366",
+          600: "#48484a",
+          700: "#3a3a3c",
+          800: "#2c2c2e",
+          900: "#1c1c1e",
+          950: "#0d0d0f",
         },
         gray: {
-          50:  "#f8f4ea",
-          100: "#f0eadb",
-          200: "#e3dac4",
-          300: "#cdc1a5",
-          400: "#958b76",
-          500: "#625b4c",
-          600: "#4a4539",
-          700: "#353a48",
-          800: "#1c2336",
-          900: "#121a2c",
-          950: "#0b1120",
+          50:  "#f9f9fb",
+          100: "#f2f2f7",
+          200: "#e5e5ea",
+          300: "#d1d1d6",
+          400: "#aeaeb2",
+          500: "#636366",
+          600: "#48484a",
+          700: "#3a3a3c",
+          800: "#2c2c2e",
+          900: "#1c1c1e",
+          950: "#0d0d0f",
         }
       },
       fontFamily: {
-        sans: ['"Hanken Grotesk Variable"', "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ['"Fraunces Variable"', "Georgia", "ui-serif", "serif"],
+        // Police système d'Apple (SF Pro) ; Hanken Grotesk ailleurs pour un rendu cohérent
+        sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', '"Hanken Grotesk Variable"', "system-ui", '"Segoe UI"', "Roboto", "sans-serif"],
+        display: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', '"Hanken Grotesk Variable"', "system-ui", '"Segoe UI"', "Roboto", "sans-serif"],
       },
-      // Coins nets de papier : fini les grands arrondis « bulle »
+      // Coins arrondis continus, échelle Apple
       borderRadius: {
-        sm: "3px",
-        md: "5px",
+        sm: "6px",
+        md: "10px",
         lg: "var(--radius)",
-        xl: "8px",
-        "2xl": "10px",
-        "3xl": "12px",
+        xl: "14px",
+        "2xl": "18px",
+        "3xl": "24px",
       },
-      // Ombres « feuille posée » : décalées et nettes, sans flou de halo
+      // Ombres diffuses et légères (élévation iOS)
       boxShadow: {
-        sm: "0 1px 0 0 rgb(10 31 74 / 0.08)",
-        DEFAULT: "0 1px 0 0 rgb(10 31 74 / 0.08), 0 1px 3px 0 rgb(10 31 74 / 0.06)",
-        md: "2px 2px 0 0 rgb(10 31 74 / 0.10)",
-        lg: "3px 3px 0 0 rgb(10 31 74 / 0.12)",
-        xl: "4px 4px 0 0 rgb(10 31 74 / 0.14)",
-        "2xl": "6px 6px 0 0 rgb(10 31 74 / 0.16)",
-        papier: "3px 3px 0 0 #0a1f4a",
-        inner: "inset 0 1px 2px 0 rgb(10 31 74 / 0.06)",
+        sm: "0 1px 2px 0 rgb(0 0 0 / 0.04), 0 0 0 0.5px rgb(0 0 0 / 0.04)",
+        DEFAULT: "0 1px 3px 0 rgb(0 0 0 / 0.06), 0 0 0 0.5px rgb(0 0 0 / 0.04)",
+        md: "0 4px 12px -2px rgb(0 0 0 / 0.08), 0 0 0 0.5px rgb(0 0 0 / 0.04)",
+        lg: "0 10px 28px -6px rgb(0 0 0 / 0.12), 0 0 0 0.5px rgb(0 0 0 / 0.05)",
+        xl: "0 18px 40px -10px rgb(0 0 0 / 0.16)",
+        "2xl": "0 28px 60px -16px rgb(0 0 0 / 0.22)",
+        papier: "0 10px 28px -6px rgb(0 0 0 / 0.12)",
+        inner: "inset 0 1px 2px 0 rgb(0 0 0 / 0.05)",
         none: "none",
-      },
-      // Fraunces et Hanken restent élégants : pas de « black » massif
-      fontWeight: {
-        extrabold: "700",
-        black: "750",
       },
       keyframes: {
         "accordion-down": {

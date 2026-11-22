@@ -1,9 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 // Polices auto-hébergées (pas d'appel à Google Fonts : performance + vie privée)
-// Fraunces (titres, avec ses axes optiques) + Hanken Grotesk (texte)
-import "@fontsource-variable/fraunces/full.css";
-import "@fontsource-variable/fraunces/full-italic.css";
+// SF Pro sur les appareils Apple ; Hanken Grotesk ailleurs (Android, Windows, Linux)
 import "@fontsource-variable/hanken-grotesk";
 import "./index.css";
 import App from "./App";

@@ -146,7 +146,7 @@ export default function AssistantIA() {
       {/* Mode, cours de contexte, effacer */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
         {/* Choix du mode : deux boutons à bascule (aria-pressed), sans panneaux d'onglets */}
-        <div role="group" aria-label="Mode de l'assistant" className="inline-flex shrink-0 rounded-md border border-input bg-card p-1">
+        <div role="group" aria-label="Mode de l'assistant" className="inline-flex shrink-0 rounded-[10px] bg-foreground/[0.07] p-[3px]">
           {[
             { valeur: "general", libelle: "Chat", icone: MessageSquare },
             { valeur: "expliquer", libelle: "Expliquer", icone: Search },
@@ -158,8 +158,8 @@ export default function AssistantIA() {
               onClick={() => setModeActif(valeur)}
               className={
                 modeActif === valeur
-                  ? "inline-flex items-center gap-2 h-9 px-4 rounded-[4px] bg-primary text-primary-foreground font-semibold"
-                  : "inline-flex items-center gap-2 h-9 px-4 rounded-[4px] text-foreground/80 hover:bg-foreground/[0.06]"
+                  ? "inline-flex items-center gap-2 h-9 px-4 rounded-[8px] font-semibold bg-card text-foreground shadow-sm dark:bg-[#636366]"
+                  : "inline-flex items-center gap-2 h-9 px-4 rounded-[8px] font-medium text-foreground/80 hover:text-foreground"
               }
             >
               <Icone className="w-4 h-4" aria-hidden="true" />

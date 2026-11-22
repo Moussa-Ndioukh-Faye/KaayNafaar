@@ -35,7 +35,7 @@ export default function Confidentialite() {
         <header className="space-y-4">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm font-bold text-primary-700 dark:text-primary-400 hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-bold text-primary-700 dark:text-primary hover:underline"
           >
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             Retour à Kaay Nafaar
