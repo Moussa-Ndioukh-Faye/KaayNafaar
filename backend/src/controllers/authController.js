@@ -15,10 +15,24 @@ const { supprimerFichier } = require("../utils/fichiers");
 
 const bcrypt = require("bcryptjs");
 const { genererToken } = require("../utils/jeton");
-const { verificationEmailActive, envoyerVerification, hacherJeton } = require("../utils/email");
+const {
+  verificationEmailActive,
+  envoyerVerification,
+  envoyerReinitialisation,
+  notifierMotDePasseModifie,
+  hacherJeton,
+  DUREE_REINITIALISATION_MS,
+} = require("../utils/email");
+const { journaliser, signalerEchecConnexion, masquerEmail } = require("../utils/journalSecurite");
 
 // Champs jamais renvoyés au client
-const CHAMPS_PRIVES = ["motDePasse", "jetonVerification", "jetonVerificationExpire"];
+const CHAMPS_PRIVES = [
+  "motDePasse",
+  "jetonVerification",
+  "jetonVerificationExpire",
+  "jetonReinitialisation",
+  "jetonReinitialisationExpire",
+];
 
 const profilPublic = (u) => ({
   id: u.id,
@@ -143,11 +157,13 @@ const connexion = async (req, res) => {
     if (!utilisateur) {
       // Comparaison factice : même temps de réponse que le compte existe ou non
       await bcrypt.compare(motDePasse, HASH_FACTICE);
+      signalerEchecConnexion(req, emailNettoye, "compte_inconnu");
       return res.status(401).json(erreurAuth);
     }
 
     const motDePasseValide = await utilisateur.verifierMotDePasse(motDePasse);
     if (!motDePasseValide) {
+      signalerEchecConnexion(req, emailNettoye, "mot_de_passe");
       return res.status(401).json(erreurAuth);
     }
 
@@ -258,11 +274,16 @@ const changerMotDePasse = async (req, res) => {
 
     const valide = await utilisateur.verifierMotDePasse(motDePasseActuel);
     if (!valide) {
+      signalerEchecConnexion(req, utilisateur.email, "changement_mot_de_passe");
       return res.status(401).json({ success: false, message: "Mot de passe actuel incorrect." });
     }
 
     utilisateur.motDePasse = nouveauMotDePasse;
     await utilisateur.save();
+    journaliser("mot_de_passe.modifie", req, { utilisateurId: utilisateur.id });
+    notifierMotDePasseModifie(utilisateur).catch((err) =>
+      console.error("Notification changement de mot de passe:", err.message)
+    );
 
     // Les autres sessions sont révoquées (empreinte du mot de passe dans le JWT) :
     // on émet un nouveau jeton pour garder la session courante active.
@@ -392,6 +413,79 @@ const renvoyerVerification = async (req, res) => {
   }
 };
 
+// POST /api/auth/mot-de-passe-oublie — réponse identique que le compte existe ou non
+// (OWASP Forgot Password Cheat Sheet : pas d'énumération des comptes)
+const motDePasseOublie = async (req, res) => {
+  const reponse = {
+    success: true,
+    message:
+      "Si un compte existe pour cette adresse, un email avec un lien de réinitialisation vient d'être envoyé. Le lien est valable 15 minutes.",
+  };
+  try {
+    const email = String(req.body.email).toLowerCase().trim();
+    journaliser("mot_de_passe.demande_reinitialisation", req, { email: masquerEmail(email) });
+
+    const utilisateur = await User.findOne({ where: { email } });
+    if (utilisateur) {
+      // Anti-abus : un envoi par minute au plus
+      const emisLe = utilisateur.jetonReinitialisationExpire
+        ? new Date(utilisateur.jetonReinitialisationExpire).getTime() - DUREE_REINITIALISATION_MS
+        : 0;
+      if (Date.now() - emisLe > 60 * 1000) {
+        await envoyerReinitialisation(utilisateur).catch((err) =>
+          console.error("Erreur envoi email de réinitialisation:", err.message)
+        );
+      }
+    }
+    res.json(reponse);
+  } catch (error) {
+    console.error("Erreur motDePasseOublie:", error);
+    res.json(reponse);
+  }
+};
+
+// POST /api/auth/reinitialiser-mot-de-passe — jeton à usage unique, 15 minutes
+const reinitialiserMotDePasse = async (req, res) => {
+  try {
+    const { token, nouveauMotDePasse } = req.body;
+    const utilisateur = await User.findOne({
+      where: {
+        jetonReinitialisation: hacherJeton(token),
+        jetonReinitialisationExpire: { [Op.gt]: new Date() },
+      },
+    });
+
+    if (!utilisateur) {
+      journaliser("mot_de_passe.jeton_invalide", req, {}, "warn");
+      return res.status(400).json({
+        success: false,
+        code: "JETON_INVALIDE",
+        message: "Ce lien est invalide ou a expiré. Refais une demande de réinitialisation.",
+      });
+    }
+
+    utilisateur.motDePasse = nouveauMotDePasse;
+    utilisateur.jetonReinitialisation = null;
+    utilisateur.jetonReinitialisationExpire = null;
+    // Le lien a été reçu dans la boîte mail : l'adresse est donc confirmée
+    utilisateur.emailVerifie = true;
+    utilisateur.jetonVerification = null;
+    utilisateur.jetonVerificationExpire = null;
+    await utilisateur.save(); // nouveau hash → toutes les sessions existantes sont révoquées
+
+    journaliser("mot_de_passe.reinitialise", req, { utilisateurId: utilisateur.id });
+    notifierMotDePasseModifie(utilisateur).catch((err) =>
+      console.error("Notification réinitialisation:", err.message)
+    );
+
+    // Pas de connexion automatique (OWASP) : l'utilisateur se reconnecte normalement
+    res.json({ success: true, message: "Mot de passe modifié. Tu peux maintenant te connecter." });
+  } catch (error) {
+    console.error("Erreur reinitialiserMotDePasse:", error);
+    res.status(500).json({ success: false, message: "Erreur lors de la réinitialisation." });
+  }
+};
+
 // GET /api/auth/export — Droit à la portabilité (RGPD art. 20)
 const exporterDonnees = async (req, res) => {
   try {
@@ -435,4 +529,17 @@ const logout = (req, res) => {
   res.json({ success: true, message: "Déconnecté avec succès." });
 };
 
-module.exports = { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, exporterDonnees, verifierEmail, renvoyerVerification, logout };
+module.exports = {
+  inscription,
+  connexion,
+  getProfil,
+  mettreAJourProfil,
+  changerMotDePasse,
+  supprimerCompte,
+  exporterDonnees,
+  verifierEmail,
+  renvoyerVerification,
+  motDePasseOublie,
+  reinitialiserMotDePasse,
+  logout,
+};

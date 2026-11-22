@@ -29,8 +29,12 @@ Le projet suit l'**OWASP Top 10 (2021)** et l'**OWASP ASVS** :
 | Injection (A03) | Requêtes paramétrées (Sequelize), validation `express-validator` |
 | Configuration (A05) | Helmet (CSP, HSTS, nosniff…), erreurs 5xx sans détails en production, CORS en liste blanche |
 | Composants (A06) | `npm audit` en CI, Dependabot hebdomadaire |
-| Authentification (A07) | JWT HS256 imposé, cookies `httpOnly`/`Secure`, limitation des tentatives, révocation au changement de mot de passe, politique NIST SP 800-63B (8 caractères min.) |
-| Upload | Nom de fichier aléatoire, contrôle extension + type MIME, 50 Mo max |
+| Authentification (A07) | JWT HS256 imposé, cookies `httpOnly`/`Secure`, limitation des tentatives par IP **et par compte**, révocation au changement de mot de passe, politique NIST SP 800-63B (8 caractères min.) |
+| Mot de passe oublié | Lien par email valable 15 min, usage unique, seule l'empreinte SHA-256 est stockée, réponse identique que le compte existe ou non, pas de connexion automatique, email de notification après modification |
+| Journalisation (A09) | Journal JSON des événements sensibles (échecs de connexion, refus CSRF, limites atteintes, fichiers refusés, réinitialisations), emails masqués ; alerte « activité suspecte » après 5 échecs en 60 s (log + email à `SECURITY_ALERT_EMAIL`) |
+| Coûts / abus | Quotas quotidiens par utilisateur : `AI_QUOTA_JOUR` (100) et `IMPORTS_QUOTA_JOUR` (20) |
+| Upload | Nom de fichier aléatoire, contrôle extension + type MIME **+ signature réelle du contenu** (PDF, PNG, JPEG, texte UTF-8), 50 Mo max |
+| IP du client | `TRUST_PROXY=2` en production (Vercel → Render) pour que les limites s'appliquent à chaque étudiant et non à l'IP de Vercel |
 | CSRF | Vérification stricte de `Origin`/`Referer` sur les requêtes modifiantes |
 
 ## Secrets

@@ -68,6 +68,15 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    // Réinitialisation du mot de passe : empreinte SHA-256 du jeton, jamais le jeton lui-même
+    jetonReinitialisation: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    jetonReinitialisationExpire: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     memoireLongTerme: {
       type: DataTypes.TEXT,
       allowNull: true,

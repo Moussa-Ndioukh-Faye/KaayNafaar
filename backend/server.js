@@ -40,8 +40,10 @@ const {
 
 const app = express();
 
-// Faire confiance au proxy (Caddy/Nginx) pour le HTTPS et les cookies Secure
-app.set("trust proxy", 1);
+// Nombre de proxys de confiance devant le serveur, pour lire la vraie IP du client
+// (limites de requêtes, journal de sécurité). Production : Vercel → Render = 2.
+const sautsProxy = parseInt(process.env.TRUST_PROXY || "1", 10);
+app.set("trust proxy", Number.isNaN(sautsProxy) ? 1 : sautsProxy);
 
 // Logger de requêtes simple (chemin seul : pas de query string dans les logs)
 app.use((req, res, next) => {

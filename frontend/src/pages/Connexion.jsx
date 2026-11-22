@@ -120,9 +120,17 @@ export default function Connexion() {
 
               {/* Mot de passe */}
               <div className="space-y-2">
-                <label htmlFor="motDePasse" className="block text-sm font-bold text-gray-700 ml-1">
-                  Mot de passe
-                </label>
+                <div className="flex items-center justify-between gap-3">
+                  <label htmlFor="motDePasse" className="block text-sm font-bold text-gray-700 ml-1">
+                    Mot de passe
+                  </label>
+                  <Link
+                    to="/mot-de-passe-oublie"
+                    className="text-sm font-semibold text-primary-700 hover:text-primary-800 underline-offset-4 hover:underline"
+                  >
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
                   <input

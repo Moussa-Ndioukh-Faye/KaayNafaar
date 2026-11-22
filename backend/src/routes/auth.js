@@ -1,7 +1,21 @@
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-const { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, exporterDonnees, verifierEmail, renvoyerVerification, logout } = require("../controllers/authController");
+const {
+  inscription,
+  connexion,
+  getProfil,
+  mettreAJourProfil,
+  changerMotDePasse,
+  supprimerCompte,
+  exporterDonnees,
+  verifierEmail,
+  renvoyerVerification,
+  motDePasseOublie,
+  reinitialiserMotDePasse,
+  logout,
+} = require("../controllers/authController");
+const { limiteurConnexionCompte, limiteurEmailsSortants } = require("../middleware/securite");
 const { proteger } = require("../middleware/auth");
 
 // Middleware de validation
@@ -53,7 +67,7 @@ const validerProfil = [
 const validerSuppression = [body("motDePasse").notEmpty().withMessage("Mot de passe requis")];
 
 router.post("/inscription", validerInscription, validate, inscription);
-router.post("/connexion", validerConnexion, validate, connexion);
+router.post("/connexion", limiteurConnexionCompte, validerConnexion, validate, connexion);
 router.get("/profil", proteger, getProfil);
 router.put("/profil", proteger, validerProfil, validate, mettreAJourProfil);
 router.put("/changer-mot-de-passe", proteger, validerChangementMDP, validate, changerMotDePasse);
@@ -69,9 +83,26 @@ router.post(
 );
 router.post(
   "/renvoyer-verification",
+  limiteurEmailsSortants,
   body("email").isEmail().withMessage("Email invalide"),
   validate,
   renvoyerVerification
+);
+
+// Mot de passe oublié (lien par email, 15 minutes, usage unique)
+router.post(
+  "/mot-de-passe-oublie",
+  limiteurEmailsSortants,
+  body("email").isEmail().withMessage("Email invalide"),
+  validate,
+  motDePasseOublie
+);
+router.post(
+  "/reinitialiser-mot-de-passe",
+  body("token").isString().isLength({ min: 20, max: 100 }).withMessage("Lien de réinitialisation invalide"),
+  regleMotDePasse("nouveauMotDePasse"),
+  validate,
+  reinitialiserMotDePasse
 );
 router.post("/logout", logout);
 
