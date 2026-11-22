@@ -82,7 +82,7 @@ export default function Confidentialite() {
           <p>
             Pour générer les fiches, quiz et réponses de l'assistant, des extraits de tes cours sont envoyés à
             des fournisseurs d'intelligence artificielle : Google (Gemini), Groq et, le cas échéant, OpenAI et
-            Tavily (recherche web). L'interface est hébergée par Vercel. Ces prestataires peuvent être situés hors
+            Tavily (recherche web). L'interface est hébergée par Vercel, le serveur par Render, la base de données par Supabase, et les emails de confirmation sont envoyés via Brevo. Ces prestataires peuvent être situés hors
             du Sénégal (notamment aux États-Unis). Nous ne leur transmettons que ce qui est nécessaire au traitement
             demandé et ne vendons jamais tes données.
           </p>
