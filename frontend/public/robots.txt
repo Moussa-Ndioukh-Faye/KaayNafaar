@@ -1,4 +1,24 @@
+# Kaay Nafaar — consignes pour les moteurs de recherche
+# Ce fichier est public par nature : il ne contient aucun secret.
+# Les pages privées sont de toute façon protégées par la connexion ;
+# ces règles évitent seulement qu'elles apparaissent dans Google.
+
 User-agent: *
 Allow: /
+
+# API et liens à usage unique (jetons dans l'adresse)
+Disallow: /api/
+Disallow: /verifier-email
+Disallow: /reinitialiser-mot-de-passe
+
+# Espace étudiant (réservé aux comptes connectés)
+Disallow: /mes-cours
+Disallow: /fiches
+Disallow: /quiz
+Disallow: /planning
+Disallow: /assistant
+Disallow: /bibliotheque
+Disallow: /profil
+Disallow: /analytiques
 
 Sitemap: https://kaay-nafaar.vercel.app/sitemap.xml
