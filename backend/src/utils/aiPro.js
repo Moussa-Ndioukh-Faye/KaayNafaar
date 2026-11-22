@@ -13,7 +13,8 @@ const { redis } = require("../config/redis");
 
 // Configuration des Embeddings (Google Gemini)
 const embeddings = new GoogleGenerativeAIEmbeddings({
-  apiKey: process.env.GEMINI_API_KEY,
+  // Valeur de repli : le serveur démarre même sans clé (les appels IA échoueront proprement)
+  apiKey: process.env.GEMINI_API_KEY || "cle-gemini-non-configuree",
   model: "text-embedding-004",
 });
 
