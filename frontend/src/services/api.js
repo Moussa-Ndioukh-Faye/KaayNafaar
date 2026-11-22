@@ -69,6 +69,9 @@ export const authAPI = {
   // Vérification de l'adresse email
   verifierEmail: (token) => api.post("/auth/verifier-email", { token }),
   renvoyerVerification: (email) => api.post("/auth/renvoyer-verification", { email }),
+  motDePasseOublie: (email) => api.post("/auth/mot-de-passe-oublie", { email }),
+  reinitialiserMotDePasse: (token, nouveauMotDePasse) =>
+    api.post("/auth/reinitialiser-mot-de-passe", { token, nouveauMotDePasse }),
   getProfil: () => api.get("/auth/profil"),
   updateProfil: (data) => api.put("/auth/profil", data),
   changerMotDePasse: (data) => api.put("/auth/changer-mot-de-passe", data),

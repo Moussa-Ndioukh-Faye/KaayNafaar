@@ -9,6 +9,8 @@ const {
   getCours, getCoursParId, creerCours, modifierCours, supprimerCours,
 } = require("../controllers/courseController");
 const { proteger } = require("../middleware/auth");
+const { verifierContenuFichier } = require("../middleware/verifierFichier");
+const { quotaImports } = require("../middleware/quotaIA");
 
 // Configuration de l'upload PDF
 const uploadDir = path.resolve(__dirname, "../../uploads");
@@ -61,7 +63,7 @@ router.use(proteger);
 
 router.get("/", getCours);
 router.get("/:id", getCoursParId);
-router.post("/", upload.single("fichier"), validerCours, validate, creerCours);
+router.post("/", quotaImports, upload.single("fichier"), verifierContenuFichier, validerCours, validate, creerCours);
 router.put("/:id", param("id").isInt({ min: 1 }), validerCours, validate, modifierCours);
 router.delete("/:id", param("id").isInt({ min: 1 }), validate, supprimerCours);
 

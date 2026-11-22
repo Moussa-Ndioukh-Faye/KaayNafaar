@@ -11,6 +11,7 @@
 const crypto = require("crypto");
 
 const DUREE_VALIDITE_MS = 24 * 60 * 60 * 1000; // 24 heures
+const DUREE_REINITIALISATION_MS = 15 * 60 * 1000; // 15 minutes (OWASP Forgot Password)
 
 /** La vérification est active si un fournisseur est configuré, ou forcée (tests, dev) */
 const verificationEmailActive = () =>
@@ -24,12 +25,12 @@ const urlApplication = () =>
     .replace(/\/$/, "");
 
 /** Jeton aléatoire envoyé par email ; seule son empreinte SHA-256 est stockée */
-const genererJetonVerification = () => {
+const genererJetonVerification = (dureeMs = DUREE_VALIDITE_MS) => {
   const jeton = crypto.randomBytes(32).toString("base64url");
   return {
     jeton,
     empreinte: hacherJeton(jeton),
-    expire: new Date(Date.now() + DUREE_VALIDITE_MS),
+    expire: new Date(Date.now() + dureeMs),
   };
 };
 
@@ -38,14 +39,25 @@ const hacherJeton = (jeton) => crypto.createHash("sha256").update(String(jeton))
 const echapper = (texte) =>
   String(texte).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
-const gabaritVerification = ({ nom, lien }) => {
+/** Gabarit commun aux emails transactionnels (HTML + texte brut) */
+const gabarit = ({ nom, sujet, intro, bouton, lien, note }) => {
   const prenom = echapper(String(nom || "").split(" ")[0] || "");
+  const texte =
+    `Bonjour ${prenom},\n\n${intro}\n` +
+    (lien ? `${lien}\n\n` : "\n") +
+    `${note}\n\nL'équipe Kaay Nafaar`;
+  const blocLien = lien
+    ? `<p style="margin:0 0 28px">
+            <a href="${lien}" style="display:inline-block;background:#0047db;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 28px;border-radius:12px">
+              ${echapper(bouton)}
+            </a>
+          </p>
+          <p style="margin:0 0 8px;font-size:13px;color:#5f6b84">Le bouton ne marche pas&nbsp;? Copie ce lien dans ton navigateur&nbsp;:</p>
+          <p style="margin:0 0 24px;font-size:13px;word-break:break-all"><a href="${lien}" style="color:#0047db">${lien}</a></p>`
+    : "";
   return {
-    sujet: "Confirme ton adresse email — Kaay Nafaar",
-    texte:
-      `Bonjour ${prenom},\n\n` +
-      `Bienvenue sur Kaay Nafaar ! Pour activer ton compte, confirme ton adresse email en ouvrant ce lien :\n${lien}\n\n` +
-      `Ce lien est valable 24 heures. Si tu n'as pas créé de compte, ignore simplement cet email.\n\nL'équipe Kaay Nafaar`,
+    sujet,
+    texte,
     html: `<!doctype html>
 <html lang="fr">
 <body style="margin:0;background:#f7f9fc;font-family:Arial,Helvetica,sans-serif;color:#0a1f4a">
@@ -57,19 +69,9 @@ const gabaritVerification = ({ nom, lien }) => {
         </td></tr>
         <tr><td style="padding:32px">
           <h1 style="margin:0 0 12px;font-size:22px">Bonjour ${prenom},</h1>
-          <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#354057">
-            Bienvenue sur Kaay Nafaar&nbsp;! Pour activer ton compte, confirme ton adresse email.
-          </p>
-          <p style="margin:0 0 28px">
-            <a href="${lien}" style="display:inline-block;background:#0047db;color:#ffffff;text-decoration:none;font-weight:bold;padding:14px 28px;border-radius:12px">
-              Confirmer mon email
-            </a>
-          </p>
-          <p style="margin:0 0 8px;font-size:13px;color:#5f6b84">Le bouton ne marche pas&nbsp;? Copie ce lien dans ton navigateur&nbsp;:</p>
-          <p style="margin:0 0 24px;font-size:13px;word-break:break-all"><a href="${lien}" style="color:#0047db">${lien}</a></p>
-          <p style="margin:0;font-size:13px;color:#5f6b84">
-            Ce lien est valable 24&nbsp;heures. Si tu n'as pas créé de compte, ignore simplement cet email.
-          </p>
+          <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#354057">${echapper(intro)}</p>
+          ${blocLien}
+          <p style="margin:0;font-size:13px;color:#5f6b84">${echapper(note)}</p>
         </td></tr>
       </table>
     </td></tr>
@@ -78,6 +80,36 @@ const gabaritVerification = ({ nom, lien }) => {
 </html>`,
   };
 };
+
+const gabaritVerification = ({ nom, lien }) =>
+  gabarit({
+    nom,
+    lien,
+    sujet: "Confirme ton adresse email — Kaay Nafaar",
+    intro: "Bienvenue sur Kaay Nafaar ! Pour activer ton compte, confirme ton adresse email.",
+    bouton: "Confirmer mon email",
+    note: "Ce lien est valable 24 heures. Si tu n'as pas créé de compte, ignore simplement cet email.",
+  });
+
+const gabaritReinitialisation = ({ nom, lien }) =>
+  gabarit({
+    nom,
+    lien,
+    sujet: "Réinitialise ton mot de passe — Kaay Nafaar",
+    intro: "Tu as demandé à changer ton mot de passe. Clique sur le bouton pour en choisir un nouveau.",
+    bouton: "Choisir un nouveau mot de passe",
+    note:
+      "Ce lien est valable 15 minutes et ne fonctionne qu'une fois. " +
+      "Si tu n'es pas à l'origine de cette demande, ignore cet email : ton mot de passe ne change pas.",
+  });
+
+const gabaritMotDePasseModifie = ({ nom }) =>
+  gabarit({
+    nom,
+    sujet: "Ton mot de passe a été modifié — Kaay Nafaar",
+    intro: "Le mot de passe de ton compte Kaay Nafaar vient d'être modifié. Toutes tes sessions ouvertes ont été déconnectées.",
+    note: "Si ce n'est pas toi, utilise tout de suite « Mot de passe oublié » sur la page de connexion pour reprendre la main sur ton compte.",
+  });
 
 /** Envoie un email ; sans fournisseur configuré, l'affiche dans les logs (développement) */
 const envoyerEmail = async ({ destinataire, nom, sujet, html, texte }) => {
@@ -122,10 +154,29 @@ const envoyerVerification = async (utilisateur) => {
   return envoyerEmail({ destinataire: utilisateur.email, nom: utilisateur.nom, sujet, html, texte });
 };
 
+/** Jeton de réinitialisation (15 min, usage unique) puis envoi du lien */
+const envoyerReinitialisation = async (utilisateur) => {
+  const { jeton, empreinte, expire } = genererJetonVerification(DUREE_REINITIALISATION_MS);
+  await utilisateur.update({ jetonReinitialisation: empreinte, jetonReinitialisationExpire: expire });
+
+  const lien = `${urlApplication()}/reinitialiser-mot-de-passe?token=${encodeURIComponent(jeton)}`;
+  const { sujet, html, texte } = gabaritReinitialisation({ nom: utilisateur.nom, lien });
+  return envoyerEmail({ destinataire: utilisateur.email, nom: utilisateur.nom, sujet, html, texte });
+};
+
+/** Prévient le titulaire du compte que son mot de passe a changé */
+const notifierMotDePasseModifie = (utilisateur) => {
+  const { sujet, html, texte } = gabaritMotDePasseModifie({ nom: utilisateur.nom });
+  return envoyerEmail({ destinataire: utilisateur.email, nom: utilisateur.nom, sujet, html, texte });
+};
+
 module.exports = {
   verificationEmailActive,
   envoyerVerification,
+  envoyerReinitialisation,
+  notifierMotDePasseModifie,
   hacherJeton,
   envoyerEmail,
   DUREE_VALIDITE_MS,
+  DUREE_REINITIALISATION_MS,
 };

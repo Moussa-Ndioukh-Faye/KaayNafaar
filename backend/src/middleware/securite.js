@@ -50,28 +50,70 @@ const estOrigineAutorisee = (origine) => {
 
 const METHODES_SURES = ["GET", "HEAD", "OPTIONS"];
 
-// ── Rate Limiting global ───────────────────────────────────────────
+// ── Rate Limiting ─────────────────────────────────────────────────
+// L'IP du client est lue via « trust proxy » (voir TRUST_PROXY dans server.js) :
+// derrière Vercel + Render, il y a deux proxys entre l'étudiant et le serveur.
+const { journaliser } = require("../utils/journalSecurite");
+
+const quandLimiteAtteinte = (nom, message) => (req, res) => {
+  journaliser("limite.atteinte", req, { limiteur: nom }, "warn");
+  res.status(429).json({ success: false, message });
+};
+
+const emailDuCorps = (req) => String(req.body?.email || "").toLowerCase().trim();
+
 const limiteurGlobal = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,                   // 200 requêtes par IP par fenêtre
+  max: parseInt(process.env.LIMITE_GLOBALE || "300", 10), // requêtes par IP par fenêtre
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: "Trop de requêtes. Réessaie dans 15 minutes." },
+  handler: quandLimiteAtteinte("global", "Trop de requêtes. Réessaie dans 15 minutes."),
 });
 
-// Rate limiter strict pour l'authentification (prévention brute force)
+// Rate limiter pour l'authentification, par IP (prévention brute force)
 const limiteurAuth = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20, // 20 tentatives par 15 min
+  max: 30, // 30 échecs par 15 min et par IP
   skipSuccessfulRequests: true,
-  message: { success: false, message: "Trop de tentatives. Réessaie dans 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: quandLimiteAtteinte("auth", "Trop de tentatives. Réessaie dans 15 minutes."),
+});
+
+// Limite par compte : protège un compte même si l'attaquant change d'IP,
+// et n'empêche pas les autres étudiants de se connecter.
+const limiteurConnexionCompte = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // 10 échecs par compte par 15 min
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `compte:${emailDuCorps(req)}`,
+  skip: (req) => !emailDuCorps(req),
+  handler: quandLimiteAtteinte(
+    "connexion-compte",
+    "Trop de tentatives sur ce compte. Réessaie dans 15 minutes ou réinitialise ton mot de passe."
+  ),
+});
+
+// Demandes d'email (mot de passe oublié, renvoi de confirmation) : par adresse
+const limiteurEmailsSortants = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5, // 5 demandes par adresse et par heure
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `email:${emailDuCorps(req)}`,
+  skip: (req) => !emailDuCorps(req),
+  handler: quandLimiteAtteinte("emails", "Trop de demandes pour cette adresse. Réessaie dans une heure."),
 });
 
 // Rate limiter pour les appels IA (coûteux)
 const limiteurIA = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10,              // 10 appels IA par minute par IP
-  message: { success: false, message: "Limite d'appels IA atteinte. Réessaie dans 1 minute." },
+  max: 10, // 10 appels IA par minute par IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: quandLimiteAtteinte("ia", "Limite d'appels IA atteinte. Réessaie dans 1 minute."),
 });
 
 // ── Sanitisation contre les injections NoSQL ─────────────────────
@@ -127,13 +169,13 @@ const validerCSRF = (req, res, next) => {
   }
 
   if (origine && !estOrigineAutorisee(origine)) {
-    console.warn(`[CSRF] Origine bloquée : ${origine}`);
+    journaliser("csrf.refus", req, { origine }, "warn");
     return res.status(403).json({ success: false, message: "Origine non autorisée." });
   }
 
   // Comparaison exacte de l'origine du référent (et non plus un simple startsWith)
   if (!origine && origineReferer && !estOrigineAutorisee(origineReferer)) {
-    console.warn(`[CSRF] Référent bloqué : ${origineReferer}`);
+    journaliser("csrf.refus", req, { referent: origineReferer }, "warn");
     return res.status(403).json({ success: false, message: "Référent non autorisé." });
   }
 
@@ -151,6 +193,8 @@ module.exports = {
   limiteurGlobal,
   limiteurAuth,
   limiteurIA,
+  limiteurConnexionCompte,
+  limiteurEmailsSortants,
   sanitiserInputs,
   validerTaillePayload,
   validerCSRF,

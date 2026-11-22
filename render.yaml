@@ -28,6 +28,16 @@ services:
         value: gemini-embedding-2
       - key: GROQ_MODEL
         value: llama-3.3-70b-versatile
+      # Sécurité : Vercel (rewrite /api) + Render = 2 proxys devant le serveur
+      - key: TRUST_PROXY
+        value: "2"
+      - key: AI_QUOTA_JOUR
+        value: "100"
+      - key: IMPORTS_QUOTA_JOUR
+        value: "20"
+      # Adresse qui reçoit les alertes d'activité suspecte (optionnel)
+      - key: SECURITY_ALERT_EMAIL
+        sync: false
       # Secrets générés par Render (64 caractères aléatoires)
       - key: JWT_SECRET
         generateValue: true
