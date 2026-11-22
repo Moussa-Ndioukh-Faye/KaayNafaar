@@ -155,7 +155,7 @@ export default function MesCours() {
                 <CardTitle className="text-xl">Nouveau cours</CardTitle>
                 <CardDescription>Importe tes connaissances pour que l'IA puisse t'aider à réviser.</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setAfficherFormulaire(false)} className="rounded-full">
+              <Button variant="ghost" size="icon" aria-label="Fermer le formulaire" onClick={() => setAfficherFormulaire(false)} className="rounded-full">
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -242,7 +242,7 @@ export default function MesCours() {
                     {!fichier && <span className="text-[9px] text-gray-500 uppercase tracking-tighter">Supporte les notes manuscrites</span>}
                   </Button>
                   {fichier && (
-                    <Button type="button" variant="ghost" size="icon" onClick={() => setFichier(null)} className="rounded-full text-red-500">
+                    <Button type="button" variant="ghost" size="icon" aria-label="Retirer le fichier" onClick={() => setFichier(null)} className="rounded-full text-red-500">
                       <Trash2 className="w-5 h-5" />
                     </Button>
                   )}
@@ -301,9 +301,9 @@ export default function MesCours() {
                   </div>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon" aria-label={`Supprimer le cours ${c.titre}`}
                     onClick={() => supprimerCours(c.id)}
-                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

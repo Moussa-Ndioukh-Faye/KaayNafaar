@@ -28,6 +28,7 @@ import { exporterFichePro } from "../utils/pdfPro";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
+import { enTexte } from "../lib/texte";
 import {} from "../components/ui/tooltip";
 
 const escHtml = (str) =>
@@ -44,10 +45,10 @@ const genererHTMLFiche = (fiche) => {
   });
 
   const conceptsCles = (fiche.contenu?.conceptsCles || [])
-    .map((c) => `<span class="badge">${escHtml(c)}</span>`).join("");
+    .map((c) => `<span class="badge">${escHtml(enTexte(c))}</span>`).join("");
 
   const pointsImportants = (fiche.contenu?.pointsImportants || [])
-    .map((p) => `<li>${escHtml(p)}</li>`).join("");
+    .map((p) => `<li>${escHtml(enTexte(p))}</li>`).join("");
 
   const explications = Object.entries(fiche.contenu?.explications || {})
     .map(([nom, expl]) => `
@@ -169,7 +170,8 @@ export default function Fiches() {
 
   const handleCoursChange = (e) => {
     const coursId = e.target.value;
-    const c = cours.find((x) => x.id === coursId);
+    // La valeur d'un <select> est toujours une chaîne : on compare des chaînes
+    const c = cours.find((x) => String(x.id) === coursId);
     setGeneration({ coursId, contenu: c?.contenu || "", titre: c?.titre ? `Fiche - ${c.titre}` : "" });
   };
 
@@ -303,7 +305,8 @@ export default function Fiches() {
             <div
               role="button"
               tabIndex={0}
-              aria-label={reponseMontree ? "Réponse affichée" : "Cliquer pour voir la réponse"}
+              aria-expanded={reponseMontree}
+              aria-describedby="consigne-flashcard"
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); !reponseMontree && setReponseMontree(true); } }}
               className={cn(
                 "relative h-80 w-full transition-all duration-500 transform-style-3d cursor-pointer",
@@ -312,6 +315,9 @@ export default function Fiches() {
               )}
               onClick={() => !reponseMontree && setReponseMontree(true)}
             >
+              <span id="consigne-flashcard" className="sr-only">
+                {reponseMontree ? "Réponse affichée." : "Appuie pour voir la réponse."}
+              </span>
               {/* Front side */}
               <Card className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-gray-800 backface-hidden shadow-xl rounded-[2rem] border-2",
@@ -503,7 +509,7 @@ export default function Fiches() {
                 <div className="flex flex-wrap gap-2">
                   {conceptsCles.map((c, i) => (
                     <span key={`concept-${i}`} className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold border border-gray-100 dark:border-gray-700">
-                      {c}
+                      {enTexte(c)}
                     </span>
                   ))}
                 </div>
@@ -524,7 +530,7 @@ export default function Fiches() {
                       <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[10px] text-primary-600">
                          {i + 1}
                       </div>
-                      <span className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{p}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{enTexte(p)}</span>
                     </li>
                   ))}
                 </ul>
@@ -626,10 +632,11 @@ export default function Fiches() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
+              <label htmlFor="fiches-contenu" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
                 Texte du cours à analyser * <span className="text-gray-500 font-normal">({generation.contenu.length}/50 000)</span>
               </label>
               <textarea
+                id="fiches-contenu"
                 className="w-full px-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all h-64 resize-none" 
                 placeholder="Colle ici le contenu complet de ton cours…"
                 value={generation.contenu} 
@@ -743,9 +750,9 @@ export default function Fiches() {
                    </div>
                    <Button 
                       variant="ghost" 
-                      size="icon" 
+                      size="icon" aria-label={`Supprimer la fiche ${fiche.titre}`} 
                       onClick={(e) => { e.stopPropagation(); supprimerFiche(fiche.id); }}
-                      className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                      className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
                    >
                      <Trash2 className="w-4 h-4" />
                    </Button>
@@ -775,7 +782,7 @@ export default function Fiches() {
                   <div className="flex flex-wrap gap-1 mt-4">
                     {fiche.contenu.conceptsCles.slice(0, 2).map((c, i) => (
                       <span key={`cc-${i}`} className="text-[9px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-500 rounded-full border border-gray-100 dark:border-gray-700">
-                        {c}
+                        {enTexte(c)}
                       </span>
                     ))}
                     {fiche.contenu.conceptsCles.length > 2 && (
@@ -787,10 +794,10 @@ export default function Fiches() {
 
               <CardFooter className="pt-2 border-t border-gray-50 dark:border-gray-700 mt-2 flex justify-between items-center group-hover:bg-gray-50/50 dark:group-hover:bg-gray-900/30 transition-colors">
                 <div className="flex gap-1">
-                   <Button variant="ghost" size="icon" onClick={() => telechargerHTML(fiche)} className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600">
+                   <Button variant="ghost" size="icon" aria-label={`Télécharger la fiche ${fiche.titre}`} onClick={() => telechargerHTML(fiche)} className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600">
                       <Download className="w-4 h-4" />
                    </Button>
-                   <Button variant="ghost" size="icon" onClick={() => imprimerFiche(fiche)} className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600">
+                   <Button variant="ghost" size="icon" aria-label={`Imprimer la fiche ${fiche.titre}`} onClick={() => imprimerFiche(fiche)} className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600">
                       <Printer className="w-4 h-4" />
                    </Button>
                 </div>
