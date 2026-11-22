@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageSquare, Search, BookOpen, Trash2, Info, AlertCircle, ChevronRight } from "lucide-react";
 import { iaAPI, coursAPI } from "../services/api";
 import { Button } from "../components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ScrollArea } from "../components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../components/ui/tooltip";
 import BulleMessage from "../components/assistant/BulleMessage";
@@ -146,25 +145,35 @@ export default function AssistantIA() {
 
       {/* Mode, cours de contexte, effacer */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
-        <Tabs value={modeActif} onValueChange={setModeActif} className="w-full md:w-auto">
-          <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl h-auto">
-            <TabsTrigger value="general" className="rounded-xl px-4 py-2 font-bold gap-2">
-              <MessageSquare className="w-4 h-4" aria-hidden="true" />
-              Chat
-            </TabsTrigger>
-            <TabsTrigger value="expliquer" className="rounded-xl px-4 py-2 font-bold gap-2">
-              <Search className="w-4 h-4" aria-hidden="true" />
-              Expliquer
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Choix du mode : deux boutons à bascule (aria-pressed), sans panneaux d'onglets */}
+        <div role="group" aria-label="Mode de l'assistant" className="inline-flex shrink-0 rounded-md border border-input bg-card p-1">
+          {[
+            { valeur: "general", libelle: "Chat", icone: MessageSquare },
+            { valeur: "expliquer", libelle: "Expliquer", icone: Search },
+          ].map(({ valeur, libelle, icone: Icone }) => (
+            <button
+              key={valeur}
+              type="button"
+              aria-pressed={modeActif === valeur}
+              onClick={() => setModeActif(valeur)}
+              className={
+                modeActif === valeur
+                  ? "inline-flex items-center gap-2 h-9 px-4 rounded-[4px] bg-primary text-primary-foreground font-semibold"
+                  : "inline-flex items-center gap-2 h-9 px-4 rounded-[4px] text-foreground/80 hover:bg-foreground/[0.06]"
+              }
+            >
+              <Icone className="w-4 h-4" aria-hidden="true" />
+              {libelle}
+            </button>
+          ))}
+        </div>
 
         <div className="flex-1 w-full flex gap-3">
           <div className="relative flex-1 group">
             <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary-500 transition-colors" aria-hidden="true" />
             <select
               aria-label="Cours utilisé comme contexte"
-              className="w-full pl-10 pr-10 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none shadow-sm cursor-pointer"
+              className="input-field pl-10 pr-10 appearance-none cursor-pointer"
               value={coursContexte}
               onChange={(e) => setCoursContexte(e.target.value)}
             >
@@ -232,7 +241,7 @@ export default function AssistantIA() {
       />
 
       <div className="flex items-center justify-center gap-4 mt-4 mb-2">
-        <p className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-500">
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
           <Info className="w-3 h-3" aria-hidden="true" />
           L'IA peut faire des erreurs, vérifie les informations importantes.
         </p>

@@ -127,18 +127,18 @@ export default function Profil() {
   return (
     <div className="space-y-8 max-w-3xl mx-auto pb-20">
       {/* Header Profile */}
-      <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-card rounded-[2rem] border border-border">
-         <div className="w-24 h-24 rounded-[2rem] surface-marque flex items-center justify-center shadow-lg">
+      <div className="flex flex-col md:flex-row items-center gap-6 p-8 bg-card rounded-xl border border-border">
+         <div className="w-24 h-24 rounded-xl surface-marque flex items-center justify-center shadow-lg">
             <User className="w-12 h-12" />
          </div>
          <div className="flex-1 text-center md:text-left">
-            <h2 className="text-3xl font-black text-gray-900 dark:text-white">{utilisateur?.nom}</h2>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{utilisateur?.nom}</h2>
             <p className="text-gray-500 dark:text-gray-400 font-medium flex items-center justify-center md:justify-start gap-2 mt-1">
                <Mail className="w-4 h-4" />
                {utilisateur?.email}
             </p>
          </div>
-         <Button variant="outline" onClick={deconnecter} className="rounded-xl font-bold border-2 text-red-500 border-red-50 hover:bg-red-50 dark:border-red-900/20 dark:hover:bg-red-900/30">
+         <Button variant="outline" onClick={deconnecter} className="rounded-xl font-bold border-2 text-red-700 border-red-50 hover:bg-red-50 dark:border-red-900/20 dark:hover:bg-red-900/30">
             <LogOut className="w-4 h-4 mr-2" />
             Déconnexion
          </Button>
@@ -158,10 +158,10 @@ export default function Profil() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
          {/* Informations personnelles */}
-         <Card className="rounded-[2rem] shadow-lg border-none overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800">
+         <Card className="rounded-xl shadow-lg border-none overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800">
             <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-6 border-b border-gray-100 dark:border-gray-700">
                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600">
+                  <div className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center text-primary-600">
                      <Settings className="w-4 h-4" />
                   </div>
                   <CardTitle className="text-lg">Paramètres du profil</CardTitle>
@@ -170,12 +170,12 @@ export default function Profil() {
             <form onSubmit={mettreAJourProfil} className="flex-1 flex flex-col">
                <CardContent className="p-6 space-y-4 flex-1">
                   <div className="space-y-2">
-                    <label htmlFor="profil-champ-143" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Nom complet</label>
+                    <label htmlFor="profil-champ-143" className="text-xs font-bold uppercase tracking-[0.08em] text-gray-600 dark:text-gray-300 ml-1">Nom complet</label>
                     <div className="relative">
                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                        <input id="profil-champ-143"
                          type="text"
-                         className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                         className="input-field pl-10 pr-4"
                          value={form.nom}
                          onChange={(e) => setForm({ ...form, nom: e.target.value })}
                          required
@@ -183,12 +183,12 @@ export default function Profil() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="profil-champ-156" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Adresse email</label>
+                    <label htmlFor="profil-champ-156" className="text-xs font-bold uppercase tracking-[0.08em] text-gray-600 dark:text-gray-300 ml-1">Adresse email</label>
                     <div className="relative">
                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                        <input id="profil-champ-156"
                          type="email"
-                         className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                         className="input-field pl-10 pr-4"
                          value={form.email}
                          onChange={(e) => setForm({ ...form, email: e.target.value })}
                          required
@@ -205,10 +205,10 @@ export default function Profil() {
          </Card>
 
          {/* Mot de passe */}
-         <Card className="rounded-[2rem] shadow-lg border-none overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800">
+         <Card className="rounded-xl shadow-lg border-none overflow-hidden h-full flex flex-col bg-white dark:bg-gray-800">
             <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-6 border-b border-gray-100 dark:border-gray-700">
                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600">
+                  <div className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center text-orange-700">
                      <Lock className="w-4 h-4" />
                   </div>
                   <CardTitle className="text-lg">Sécurité</CardTitle>
@@ -217,21 +217,21 @@ export default function Profil() {
             <form onSubmit={changerMotDePasse} className="flex-1 flex flex-col">
                <CardContent className="p-6 space-y-4 flex-1">
                   <div className="space-y-2">
-                    <label htmlFor="profil-champ-190" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Mot de passe actuel</label>
+                    <label htmlFor="profil-champ-190" className="text-xs font-bold uppercase tracking-[0.08em] text-gray-600 dark:text-gray-300 ml-1">Mot de passe actuel</label>
                     <input id="profil-champ-190"
                       type={voirMDP ? "text" : "password"}
-                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                      className="input-field"
                       value={motDePasse.actuel}
                       onChange={(e) => setMotDePasse({ ...motDePasse, actuel: e.target.value })}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="profil-champ-200" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Nouveau mot de passe</label>
+                    <label htmlFor="profil-champ-200" className="text-xs font-bold uppercase tracking-[0.08em] text-gray-600 dark:text-gray-300 ml-1">Nouveau mot de passe</label>
                     <div className="relative">
                        <input id="profil-champ-200"
                          type={voirMDP ? "text" : "password"}
-                         className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                         className="input-field"
                          value={motDePasse.nouveau}
                          onChange={(e) => setMotDePasse({ ...motDePasse, nouveau: e.target.value })}
                          required
@@ -242,17 +242,17 @@ export default function Profil() {
                          onClick={() => setVoirMDP(!voirMDP)}
                          aria-label={voirMDP ? "Masquer les mots de passe" : "Afficher les mots de passe"}
                          aria-pressed={voirMDP}
-                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
+                         className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-md text-muted-foreground hover:text-primary"
                        >
-                          {voirMDP ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {voirMDP ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
                        </button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="profil-champ-220" className="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 ml-1">Confirmation</label>
+                    <label htmlFor="profil-champ-220" className="text-xs font-bold uppercase tracking-[0.08em] text-gray-600 dark:text-gray-300 ml-1">Confirmation</label>
                     <input id="profil-champ-220"
                       type={voirMDP ? "text" : "password"}
-                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white dark:focus:bg-gray-800 transition-all"
+                      className="input-field"
                       value={motDePasse.confirmation}
                       onChange={(e) => setMotDePasse({ ...motDePasse, confirmation: e.target.value })}
                       required
@@ -269,10 +269,10 @@ export default function Profil() {
       </div>
 
       {/* Mes données (RGPD / loi sénégalaise 2008-12) */}
-      <Card className="rounded-[2rem] shadow-lg border-none bg-white dark:bg-gray-800">
+      <Card className="rounded-xl shadow-lg border-none bg-white dark:bg-gray-800">
          <CardContent className="p-8 flex flex-col md:flex-row items-center gap-6">
             <div className="flex-1 text-center md:text-left">
-               <h3 className="text-xl font-black text-gray-900 dark:text-white">Mes données personnelles</h3>
+               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Mes données personnelles</h3>
                <p className="text-gray-600 dark:text-gray-300 mt-2 font-medium">
                   Télécharge une copie de toutes tes données (profil, cours, fiches, quiz, progression) au format JSON.
                   Consulte notre <Link to="/confidentialite" className="underline text-primary-700 dark:text-primary-400 font-bold">politique de confidentialité</Link>.
@@ -286,20 +286,20 @@ export default function Profil() {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="rounded-[2.5rem] border-2 border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10 overflow-hidden">
+      <Card className="rounded-xl border-2 border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10 overflow-hidden">
          <CardContent className="p-8 flex flex-col md:flex-row items-center gap-8">
-            <div className="w-20 h-20 rounded-[2rem] bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0 text-red-600">
+            <div className="w-20 h-20 rounded-xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0 text-red-600">
                <ShieldAlert className="w-10 h-10" />
             </div>
             <div className="flex-1 text-center md:text-left">
-               <h3 className="text-2xl font-black text-red-900 dark:text-red-400">Zone de danger</h3>
+               <h3 className="text-2xl font-bold text-red-900 dark:text-red-400">Zone de danger</h3>
                <p className="text-red-700 dark:text-red-500/70 mt-2 font-medium">
                   La suppression de ton compte est irréversible. Toutes tes fiches, quiz et ta progression seront supprimés de nos serveurs sans possibilité de récupération.
                </p>
             </div>
             <Button 
                onClick={supprimerCompte} 
-               className="rounded-2xl h-14 px-8 font-black bg-red-600 hover:bg-red-700 shadow-xl shadow-red-200 dark:shadow-none transition-transform active:scale-95"
+               className="rounded-2xl h-14 px-8 font-bold bg-red-600 hover:bg-red-700 shadow-md transition-transform active:scale-95"
             >
                <Trash2 className="w-5 h-5 mr-2" />
                Supprimer le compte
@@ -309,7 +309,7 @@ export default function Profil() {
 
       {/* Version Info */}
       <div className="text-center pt-10">
-         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
+         <p className="text-xs font-bold uppercase tracking-[0.3em] text-gray-500 dark:text-gray-400">
              Kaay Nafaar — Version 2.0.0
          </p>
       </div>

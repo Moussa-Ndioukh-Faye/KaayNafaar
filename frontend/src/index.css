@@ -3,67 +3,79 @@
 @tailwind utilities;
 
 @layer base {
-  /* Identité Kaay Nafaar : bleu roi et bleu marine du logo, accent jaune « crayon » */
+  /*
+   * Identité « Le Cahier » — le cahier Seyès de l'élève sénégalais :
+   * papier crème, encre marine du logo, stylo bleu, surligneur jaune, marge rouge.
+   */
   :root {
-    --background: 220 60% 99%;
-    --foreground: 221 76% 16%;
+    --background: 41 45% 93%;      /* papier #f6f1e6 */
+    --foreground: 221 76% 16%;     /* encre #0a1f4a */
 
-    --card: 0 0% 100%;
+    --card: 43 100% 99%;           /* feuille #fffdf8 */
     --card-foreground: 221 76% 16%;
 
-    --popover: 0 0% 100%;
+    --popover: 43 100% 99%;
     --popover-foreground: 221 76% 16%;
 
-    --primary: 221 100% 43%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 221 100% 43%;       /* stylo bleu #0047db */
+    --primary-foreground: 43 100% 99%;
 
-    --secondary: 41 94% 54%;
+    --secondary: 47 100% 65%;      /* surligneur #ffd84d */
     --secondary-foreground: 221 76% 16%;
 
-    --muted: 216 55% 96%;
-    --muted-foreground: 220 17% 40%;
+    --muted: 43 41% 90%;           /* #f0eadb */
+    --muted-foreground: 42 13% 34%; /* #625b4c — 5,9:1 sur le papier */
 
-    --accent: 224 100% 96%;
+    --accent: 43 52% 88%;
     --accent-foreground: 221 76% 16%;
 
-    --destructive: 0 72% 46%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 4 63% 48%;      /* marge rouge #c8372d */
+    --destructive-foreground: 43 100% 99%;
 
-    --border: 216 33% 90%;
-    --input: 216 33% 88%;
+    --border: 42 30% 80%;          /* trait de crayon #d9cfb8 */
+    --input: 42 25% 72%;
     --ring: 221 100% 43%;
 
-    --radius: 1rem;
+    --radius: 6px;
+
+    --seyes-fin: 221 100% 43% / 0.035;
+    --seyes-fort: 221 100% 43% / 0.11;
+    --marge: 4 63% 48% / 0.55;
   }
 
+  /* « Cahier de nuit » : encre sur papier inversée */
   .dark {
-    --background: 222 58% 8%;
-    --foreground: 220 50% 95%;
+    --background: 222 49% 8%;
+    --foreground: 41 45% 90%;
 
-    --card: 222 48% 12%;
-    --card-foreground: 220 50% 95%;
+    --card: 222 41% 12%;
+    --card-foreground: 41 45% 90%;
 
-    --popover: 222 48% 12%;
-    --popover-foreground: 220 50% 95%;
+    --popover: 222 41% 12%;
+    --popover-foreground: 41 45% 90%;
 
-    --primary: 222 100% 68%;
-    --primary-foreground: 222 58% 8%;
+    --primary: 224 100% 76%;
+    --primary-foreground: 222 49% 8%;
 
-    --secondary: 41 94% 58%;
-    --secondary-foreground: 222 58% 8%;
+    --secondary: 47 100% 65%;
+    --secondary-foreground: 222 49% 8%;
 
-    --muted: 222 40% 15%;
-    --muted-foreground: 220 20% 72%;
+    --muted: 223 32% 16%;
+    --muted-foreground: 41 18% 70%;
 
-    --accent: 222 40% 17%;
-    --accent-foreground: 220 50% 95%;
+    --accent: 223 32% 18%;
+    --accent-foreground: 41 45% 90%;
 
-    --destructive: 0 70% 58%;
-    --destructive-foreground: 220 50% 95%;
+    --destructive: 4 80% 66%;
+    --destructive-foreground: 222 49% 8%;
 
-    --border: 222 35% 20%;
-    --input: 222 35% 22%;
-    --ring: 222 100% 68%;
+    --border: 223 25% 24%;
+    --input: 223 25% 30%;
+    --ring: 224 100% 76%;
+
+    --seyes-fin: 224 100% 76% / 0.03;
+    --seyes-fort: 224 100% 76% / 0.08;
+    --marge: 4 80% 66% / 0.45;
   }
 }
 
@@ -76,14 +88,23 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* Titres en Outfit : géométrique et arrondi, comme le logotype */
+  /* Titres en Fraunces : un sérif d'édition, chaleureux, à l'opposé des gabarits */
   h1, h2, h3, h4, .font-display {
-    font-family: "Outfit Variable", ui-sans-serif, system-ui, sans-serif;
-    letter-spacing: -0.02em;
+    font-family: "Fraunces Variable", Georgia, ui-serif, serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 40, "WONK" 0;
+    letter-spacing: -0.015em;
+    font-weight: 600;
+    text-wrap: balance;
   }
+  p { text-wrap: pretty; }
+
+  /* Chiffres alignés dans les tableaux de bord et les scores */
+  .chiffres { font-variant-numeric: tabular-nums lining-nums; }
 
   ::selection {
-    background: hsl(var(--primary) / 0.18);
+    background: #ffd84d;
+    color: #0a1f4a;
   }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -91,107 +112,174 @@
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-primary/20 rounded-full;
+    @apply bg-foreground/15 rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary/40;
+    @apply bg-foreground/30;
   }
 }
 
 @layer components {
-  /* ── Custom Utility Classes (Legacy support & extra polish) ── */
+  /* ── Boutons (classes héritées) ───────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3
-           rounded-xl font-bold shadow-lg shadow-primary/20
-           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
-           transition-all duration-200 active:scale-95
+    @apply inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-2.5
+           rounded-md font-semibold border border-encre/80 shadow-md
+           transition-[transform,box-shadow] duration-150
+           hover:-translate-x-px hover:-translate-y-px hover:shadow-lg
+           active:translate-x-0 active:translate-y-0 active:shadow-sm
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
-  .btn-primary:hover:not(:disabled) {
-    @apply shadow-xl shadow-primary/30 brightness-110;
-  }
-
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 bg-secondary text-secondary-foreground
-           px-6 py-3 rounded-xl font-bold shadow-sm
-           hover:brightness-110 active:scale-95
-           focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
-           transition-all duration-200;
+           px-5 py-2.5 rounded-md font-semibold border border-encre/80 shadow-md
+           transition-[transform,box-shadow] duration-150
+           hover:-translate-x-px hover:-translate-y-px hover:shadow-lg;
   }
 
+  /* ── Fiche bristol : la carte de base ─────────────────────────── */
   .card-bento {
-    @apply bg-card rounded-3xl border border-border p-6 transition-all duration-300;
-    box-shadow: 0 1px 0 hsl(var(--foreground) / 0.04), 0 12px 32px -18px hsl(30 40% 25% / 0.25);
-  }
-  .dark .card-bento {
-    @apply shadow-none;
+    @apply bg-card rounded-lg border border-border p-6 shadow-md;
   }
 
   .input-field {
-    @apply w-full border-2 border-border rounded-2xl px-4 py-3 text-sm
-           bg-muted/50 shadow-inner
-           focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-background
-           placeholder-slate-500 transition-all duration-200;
+    @apply w-full border border-input rounded-md px-3.5 py-2.5 text-[0.95rem]
+           bg-card text-foreground shadow-inner
+           focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25
+           placeholder:text-muted-foreground/80 transition-colors duration-150;
   }
 
-  /* Surface marine : reprend le bleu marine du logo et son trait bleu */
+  /* Petite étiquette (dates, compteurs, rubriques) — 12 px minimum, jamais 9 px */
+  .etiquette {
+    @apply text-xs font-semibold uppercase text-muted-foreground;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── Papier Seyès : lignes fines tous les 2 mm, ligne forte tous les 8 mm ── */
+  .papier-seyes {
+    background-color: hsl(var(--background));
+    background-image:
+      linear-gradient(to bottom, transparent calc(2rem - 1px), hsl(var(--seyes-fort)) calc(2rem - 1px)),
+      linear-gradient(to bottom, transparent calc(0.5rem - 1px), hsl(var(--seyes-fin)) calc(0.5rem - 1px));
+    background-size: 100% 2rem, 100% 0.5rem;
+  }
+
+  /* Page de l'application : réglure Seyès + marge rouge, qui défilent avec le contenu */
+  .page-cahier {
+    background-color: hsl(var(--background));
+    background-image:
+      linear-gradient(to right, transparent var(--marge-x), hsl(var(--marge)) var(--marge-x),
+        hsl(var(--marge)) calc(var(--marge-x) + 1.5px), transparent calc(var(--marge-x) + 1.5px)),
+      linear-gradient(to bottom, transparent calc(2rem - 1px), hsl(var(--seyes-fort)) calc(2rem - 1px)),
+      linear-gradient(to bottom, transparent calc(0.5rem - 1px), hsl(var(--seyes-fin)) calc(0.5rem - 1px));
+    background-size: 100% 100%, 100% 2rem, 100% 0.5rem;
+    background-attachment: local, local, local;
+  }
+
+  /* Marge rouge du cahier, à gauche du contenu */
+  .marge-cahier {
+    position: relative;
+  }
+  .marge-cahier::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--marge-x, 0);
+    width: 2px;
+    background: hsl(var(--marge));
+    pointer-events: none;
+  }
+
+  /* Surface encre (bandeaux sombres) : marine du logo, lignes à la craie */
   .surface-marque {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-    background:
-      radial-gradient(80% 70% at 100% 0%, hsl(221 100% 43% / 0.55), transparent 65%),
-      #0a1f4a;
-    color: #f1f5ff;
-  }
-  .surface-marque::after {
-    content: "";
-    position: absolute;
-    right: -10%;
-    bottom: -18%;
-    width: 75%;
-    height: 70%;
-    z-index: -1;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'%3E%3Cpath d='M10 190 C 90 80, 220 30, 395 18' fill='none' stroke='%233a73ff' stroke-width='16' stroke-linecap='round' opacity='.55'/%3E%3C/svg%3E") no-repeat center / contain;
+    background-color: #0a1f4a;
+    background-image:
+      linear-gradient(to bottom, transparent calc(2rem - 1px), rgb(255 253 248 / 0.07) calc(2rem - 1px));
+    background-size: 100% 2rem;
+    color: #f6f1e6;
   }
 
-  /* Fond teinté des sections (comme les bandeaux pastel des sites e-learning) */
+  /* Fond des sections : papier légèrement réglé */
   .fond-teinte {
-    background-color: hsl(var(--accent));
-    background-image: radial-gradient(hsl(var(--primary) / 0.12) 1.2px, transparent 1.2px);
-    background-size: 22px 22px;
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(to bottom, transparent calc(2rem - 1px), hsl(var(--seyes-fin)) calc(2rem - 1px));
+    background-size: 100% 2rem;
   }
 
-  /* Mot surligné d'un trait dessiné à la main, en écho au trait du logo */
-  .trait-main {
+  /* Mot passé au surligneur : le geste de l'élève qui révise */
+  .trait-main,
+  .surligne {
     position: relative;
     white-space: nowrap;
-    color: hsl(var(--primary));
+    color: inherit;
+    padding: 0 0.12em;
+    margin: 0 -0.06em;
+    background-image: linear-gradient(
+      100deg,
+      transparent 0.15em,
+      #ffd84d 0.3em,
+      #ffd84d calc(100% - 0.4em),
+      transparent calc(100% - 0.1em)
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 0.62em;
+    background-position: 0 88%;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
-  .trait-main::after {
-    content: "";
-    position: absolute;
-    left: -2%;
-    right: -2%;
-    bottom: -0.28em;
-    height: 0.42em;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 24' preserveAspectRatio='none'%3E%3Cpath d='M3 17 C 50 6, 120 3, 197 9' fill='none' stroke='%23f8b41c' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
-    pointer-events: none;
+  .surface-marque .trait-main,
+  .surface-marque .surligne,
+  .dark .trait-main,
+  .dark .surligne {
+    color: #0a1f4a;
+    background-size: 100% 100%;
+    background-position: 0 50%;
+    border-radius: 2px;
+  }
+
+  /* Annotation au stylo dans la marge */
+  .annotation {
+    @apply font-display italic text-primary;
+    font-variation-settings: "SOFT" 100, "WONK" 1;
   }
 
   /* Apparition échelonnée au chargement */
   @keyframes monte {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: none; }
   }
   .apparition > * {
-    animation: monte 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    animation: monte 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
   .apparition > *:nth-child(2) { animation-delay: 60ms; }
   .apparition > *:nth-child(3) { animation-delay: 120ms; }
   .apparition > *:nth-child(4) { animation-delay: 180ms; }
   .apparition > *:nth-child(5) { animation-delay: 240ms; }
   .apparition > *:nth-child(6) { animation-delay: 300ms; }
+}
+
+/* ── Filet de sécurité du mode sombre (contraste WCAG 1.4.3) ─────────
+ * Des textes gris ou bleu foncé posés sans variante « dark: » deviendraient
+ * illisibles sur le fond de nuit : on les ramène sur les couleurs du thème.
+ */
+@layer utilities {
+  .dark .text-gray-400, .dark .text-gray-500, .dark .text-slate-400, .dark .text-slate-500 {
+    color: hsl(var(--muted-foreground));
+  }
+  .dark .text-gray-600, .dark .text-gray-700, .dark .text-gray-800, .dark .text-gray-900,
+  .dark .text-slate-600, .dark .text-slate-700, .dark .text-slate-800, .dark .text-slate-900,
+  .dark .text-marine {
+    color: hsl(var(--foreground) / 0.9);
+  }
+  .dark .text-primary-600, .dark .text-primary-700, .dark .text-primary-800 {
+    color: hsl(var(--primary));
+  }
+  .dark .text-emerald-600, .dark .text-emerald-700 { color: #6ee7b7; }
+  .dark .text-red-600, .dark .text-red-700 { color: #fca5a5; }
+  .dark .text-marge { color: hsl(var(--destructive)); }
 }
 
 /* ── Accessibilité (WCAG 2.2) ─────────────────────────────────── */

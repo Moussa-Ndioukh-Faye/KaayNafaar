@@ -1,47 +1,30 @@
-import {
-  FileText,
-  Sparkles,
-  Trash2,
-  Download,
-  Printer,
-  BrainCircuit,
-  ChevronRight,
-  Clock,
-  Globe,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../ui/card";
+import { Trash2, Download, Printer, ArrowRight, Globe, Layers } from "lucide-react";
 import { Button } from "../ui/button";
+import { cn } from "../../lib/utils";
 import { enTexte } from "../../lib/texte";
 import { telechargerHTML, imprimerFiche } from "../../utils/exportFiche";
 
-/** Carte d'une fiche dans la liste */
+/**
+ * Une fiche de révision présentée comme une fiche bristol :
+ * en-tête séparé par un filet rouge, texte posé sur des lignes bleues.
+ */
 export default function CarteFiche({ fiche, onOuvrir, onSupprimer }) {
+  const concepts = fiche.contenu?.conceptsCles || [];
+  const nbCartes = fiche.flashcards?.length || 0;
+  const inclinaison = Number(fiche.id) % 2 ? "-rotate-[0.5deg]" : "rotate-[0.4deg]";
+
   return (
-    <Card className="group relative rounded-[2rem] overflow-hidden hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-2 bg-white dark:bg-gray-800">
-      <div className="h-2 w-full" style={{ backgroundColor: fiche.couleur || "#6366f1" }} />
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-500 group-hover:text-primary-600 transition-colors">
-              <FileText className="w-4 h-4" />
-            </div>
-            {fiche.genereeParIA && (
-              <div
-                className="p-1.5 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 rounded-lg"
-                title="Générée par IA"
-              >
-                <Sparkles className="w-3 h-3" />
-              </div>
-            )}
-            {fiche.estPublique && (
-              <div
-                className="p-1.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-lg"
-                title="Publique"
-              >
-                <Globe className="w-3 h-3" />
-              </div>
-            )}
-          </div>
+    <article
+      className={cn(
+        "group relative flex flex-col bg-card border border-border rounded-md shadow-md",
+        "transition-[transform,box-shadow] duration-200 hover:rotate-0 hover:-translate-y-0.5 hover:shadow-lg motion-reduce:rotate-0",
+        inclinaison
+      )}
+    >
+      {/* En-tête de la fiche */}
+      <header className="px-5 pt-4 pb-3 border-b-2 border-marge/60">
+        <div className="flex items-center justify-between gap-3">
+          <p className="etiquette truncate">{fiche.matiere || "Fiche de révision"}</p>
           <Button
             variant="ghost"
             size="icon"
@@ -50,80 +33,84 @@ export default function CarteFiche({ fiche, onOuvrir, onSupprimer }) {
               e.stopPropagation();
               onSupprimer(fiche.id);
             }}
-            className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
+            className="w-8 h-8 -mr-2 text-muted-foreground hover:text-marge hover:bg-marge/10 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 aria-hidden="true" />
           </Button>
         </div>
-        <CardTitle className="text-lg font-black leading-tight truncate pr-4 group-hover:text-primary-600 transition-colors">
-          {fiche.titre}
-        </CardTitle>
-        <div className="flex items-center gap-2 mt-2">
-          <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-gray-500">
-            <Clock className="w-3 h-3" />
-            {new Date(fiche.createdAt).toLocaleDateString("fr-FR")}
-          </div>
-          {fiche.flashcards?.length > 0 && (
-            <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              <BrainCircuit className="w-3 h-3" />
-              {fiche.flashcards.length} cards
-            </div>
+        <h3 className="mt-1 text-xl leading-snug">
+          <button
+            type="button"
+            onClick={() => onOuvrir(fiche)}
+            className="text-left text-foreground hover:text-primary focus-visible:outline-none focus-visible:underline underline-offset-4"
+          >
+            {fiche.titre}
+          </button>
+        </h3>
+        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+          <time dateTime={fiche.createdAt} className="chiffres">
+            {new Date(fiche.createdAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+          </time>
+          {nbCartes > 0 && (
+            <span className="flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5" aria-hidden="true" />
+              {nbCartes} carte{nbCartes > 1 ? "s" : ""}
+            </span>
           )}
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed min-h-[4.5rem]">
-          {fiche.contenu?.resume || "Pas de résumé disponible pour cette fiche."}
+          {fiche.estPublique && (
+            <span className="flex items-center gap-1">
+              <Globe className="w-3.5 h-3.5" aria-hidden="true" />
+              Partagée
+            </span>
+          )}
         </p>
-        {fiche.contenu?.conceptsCles?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-4">
-            {fiche.contenu.conceptsCles.slice(0, 2).map((c, i) => (
-              <span
-                key={`cc-${i}`}
-                className="text-[9px] font-bold px-2 py-0.5 bg-gray-50 dark:bg-gray-900 text-gray-500 rounded-full border border-gray-100 dark:border-gray-700"
-              >
-                {enTexte(c)}
+      </header>
+
+      {/* Corps : résumé posé sur la réglure (lignes alignées sur l'interlignage) */}
+      <div
+        className="flex-1 px-5 pt-[0.35rem] pb-2 text-[0.95rem] leading-7 text-foreground/85
+                   bg-[linear-gradient(to_bottom,transparent_calc(1.75rem-1px),hsl(var(--seyes-fort))_calc(1.75rem-1px))]
+                   bg-[length:100%_1.75rem] bg-[position:0_0.35rem]"
+      >
+        <p className="line-clamp-3 min-h-[5.25rem]">{fiche.contenu?.resume || "Pas encore de résumé pour cette fiche."}</p>
+        {concepts.length > 0 && (
+          <p className="mt-1 line-clamp-1">
+            {concepts.slice(0, 3).map((c, i) => (
+              <span key={`cc-${i}`}>
+                {i > 0 && <span className="text-muted-foreground"> · </span>}
+                <span className="surligne font-medium">{enTexte(c)}</span>
               </span>
             ))}
-            {fiche.contenu.conceptsCles.length > 2 && (
-              <span className="text-[9px] font-bold px-2 py-0.5 text-gray-300">
-                +{fiche.contenu.conceptsCles.length - 2}
-              </span>
-            )}
-          </div>
+            {concepts.length > 3 && <span className="text-muted-foreground"> · +{concepts.length - 3}</span>}
+          </p>
         )}
-      </CardContent>
+      </div>
 
-      <CardFooter className="pt-2 border-t border-gray-50 dark:border-gray-700 mt-2 flex justify-between items-center group-hover:bg-gray-50/50 dark:group-hover:bg-gray-900/30 transition-colors">
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Télécharger la fiche ${fiche.titre}`}
-            onClick={() => telechargerHTML(fiche)}
-            className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600"
-          >
-            <Download className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Imprimer la fiche ${fiche.titre}`}
-            onClick={() => imprimerFiche(fiche)}
-            className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600"
-          >
-            <Printer className="w-4 h-4" />
-          </Button>
-        </div>
+      {/* Pied : informations et actions */}
+      <footer className="flex items-center gap-2 px-3 py-2.5 border-t border-border">
+        <span className="mr-auto" />
         <Button
-          onClick={() => onOuvrir(fiche)}
           variant="ghost"
-          className="text-xs font-black uppercase tracking-widest text-primary-600 hover:bg-transparent hover:translate-x-1 transition-all"
+          size="icon"
+          aria-label={`Télécharger la fiche ${fiche.titre}`}
+          onClick={() => telechargerHTML(fiche)}
+          className="w-9 h-9 text-muted-foreground hover:text-primary"
         >
-          Ouvrir <ChevronRight className="w-4 h-4 ml-1" />
+          <Download aria-hidden="true" />
         </Button>
-      </CardFooter>
-    </Card>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Imprimer la fiche ${fiche.titre}`}
+          onClick={() => imprimerFiche(fiche)}
+          className="w-9 h-9 text-muted-foreground hover:text-primary"
+        >
+          <Printer aria-hidden="true" />
+        </Button>
+        <Button onClick={() => onOuvrir(fiche)} variant="ghost" size="sm" className="text-primary font-semibold">
+          Ouvrir <ArrowRight aria-hidden="true" />
+        </Button>
+      </footer>
+    </article>
   );
 }

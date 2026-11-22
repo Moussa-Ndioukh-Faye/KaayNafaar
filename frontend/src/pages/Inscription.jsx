@@ -123,7 +123,7 @@ export default function Inscription() {
             <Logo />
           </div>
 
-          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
+          <div className="bg-card rounded-xl border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
             {emailEnAttente ? (
               <EmailEnvoye email={emailEnAttente} />
             ) : (<>
@@ -134,7 +134,7 @@ export default function Inscription() {
 
             {erreur && (
               <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-700 px-5 py-4 rounded-2xl text-sm mb-6 animate-shake" role="alert">
-                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                <AlertCircle className="w-5 h-5 text-red-700 shrink-0" />
                 <span className="font-semibold">{erreur}</span>
               </div>
             )}
@@ -142,12 +142,12 @@ export default function Inscription() {
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               {/* Nom */}
               <div className="space-y-2">
-                <label htmlFor="nom" className="block text-sm font-bold text-gray-700 ml-1">Nom complet</label>
+                <label htmlFor="nom" className="block text-sm font-semibold text-foreground">Nom complet</label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary w-5 h-5 pointer-events-none" />
                   <input
                     id="nom" name="nom" type="text" required autoComplete="name"
-                    className="input-field pl-12 h-14" placeholder="Jean Dupont"
+                    className="input-field pl-11 h-12" placeholder="Jean Dupont"
                     value={form.nom} onChange={handleChange} onBlur={handleBlur} maxLength={100}
                   />
                 </div>
@@ -155,12 +155,12 @@ export default function Inscription() {
 
               {/* Email */}
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-bold text-gray-700 ml-1">Adresse email</label>
+                <label htmlFor="email" className="block text-sm font-semibold text-foreground">Adresse email</label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary w-5 h-5 pointer-events-none" />
                   <input
                     id="email" name="email" type="email" required autoComplete="email"
-                    className="input-field pl-12 h-14" placeholder="jean@email.com"
+                    className="input-field pl-11 h-12" placeholder="jean@email.com"
                     value={form.email} onChange={handleChange} onBlur={handleBlur} maxLength={254}
                   />
                 </div>
@@ -168,12 +168,12 @@ export default function Inscription() {
 
               {/* Mot de passe */}
               <div className="space-y-2">
-                <label htmlFor="motDePasse" className="block text-sm font-bold text-gray-700 ml-1">Mot de passe</label>
+                <label htmlFor="motDePasse" className="block text-sm font-semibold text-foreground">Mot de passe</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary w-5 h-5 pointer-events-none" />
                   <input
                     id="motDePasse" name="motDePasse" type="password" required autoComplete="new-password"
-                    className="input-field pl-12 h-14" placeholder="Min. 8 caractères"
+                    className="input-field pl-11 h-12" placeholder="Min. 8 caractères"
                     aria-describedby="aide-mot-de-passe"
                     value={form.motDePasse} onChange={handleChange} onBlur={handleBlur} maxLength={72}
                   />
@@ -188,7 +188,7 @@ export default function Inscription() {
                         <div key={i} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${i <= force ? forceCouleur : "bg-slate-100"}`} />
                       ))}
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-600">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-600">
                       <span className="sr-only">Robustesse du mot de passe : </span>{forceLabel}
                     </p>
                   </div>
@@ -197,9 +197,9 @@ export default function Inscription() {
 
               {/* Confirmer mot de passe */}
               <div className="space-y-2">
-                <label htmlFor="confirmMotDePasse" className="block text-sm font-bold text-gray-700 ml-1">Confirmer le mot de passe</label>
+                <label htmlFor="confirmMotDePasse" className="block text-sm font-semibold text-foreground">Confirmer le mot de passe</label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary w-5 h-5 pointer-events-none" />
                   <input
                     id="confirmMotDePasse" name="confirmMotDePasse" type="password" required autoComplete="new-password"
                     className={cn(
@@ -223,9 +223,9 @@ export default function Inscription() {
 
               {/* Niveau d'étude */}
               <div className="space-y-2">
-                <label htmlFor="niveauEtude" className="block text-sm font-bold text-gray-700 ml-1">Niveau d'étude</label>
+                <label htmlFor="niveauEtude" className="block text-sm font-semibold text-foreground">Niveau d'étude</label>
                 <div className="relative group">
-                  <School className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <School className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary w-5 h-5 pointer-events-none" />
                   <select
                     id="niveauEtude" name="niveauEtude"
                     className="input-field pl-12 pr-12 h-14 appearance-none cursor-pointer"
@@ -256,7 +256,7 @@ export default function Inscription() {
                 </label>
               </div>
 
-              <button type="submit" disabled={chargement} className="btn-primary w-full py-4 justify-center text-lg shadow-primary-500/20 mt-4">
+              <button type="submit" disabled={chargement} className="btn-primary w-full py-4 justify-center text-lg mt-4">
                 {chargement ? (
                   <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />

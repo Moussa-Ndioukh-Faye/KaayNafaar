@@ -30,8 +30,8 @@ export default function BoutonsAvis({ msg }) {
 
   if (envoye) {
     return (
-      <div role="status" className="flex items-center gap-1 mt-3 text-[10px] font-bold text-gray-500">
-        <Check className="w-3 h-3 text-emerald-500" aria-hidden="true" />
+      <div role="status" className="flex items-center gap-1 mt-3 text-xs font-bold text-gray-500">
+        <Check className="w-3 h-3 text-emerald-700" aria-hidden="true" />
         Merci de ton retour
       </div>
     );
@@ -39,7 +39,7 @@ export default function BoutonsAvis({ msg }) {
 
   return (
     <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50">
-      <span className="text-[9px] font-black uppercase tracking-widest text-gray-500 mr-1">Utile ?</span>
+      <span className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500 mr-1">Utile ?</span>
       {AVIS.map(({ note, categorie, libelle, icone: Icone, survol }) => (
         <button
           key={note}

@@ -24,7 +24,7 @@ const COULEURS_MATIERE = {
   Informatique: { bg: "bg-sky-50 dark:bg-sky-500/10", text: "text-sky-600 dark:text-sky-400", dot: "bg-sky-500" },
   Mathématiques: { bg: "bg-secondary-50 dark:bg-secondary-500/10", text: "text-secondary-600 dark:text-secondary-400", dot: "bg-secondary-500" },
   Physique: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", dot: "bg-amber-500" },
-  Économie: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", dot: "bg-emerald-500" },
+  Économie: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
 };
 
 function CarteSquelette({ index }) {
@@ -35,8 +35,8 @@ function CarteSquelette({ index }) {
     >
       <div className="p-6 space-y-4">
         <div className="flex justify-between">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800" />
-          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800" />
+          <div className="w-10 h-10 rounded-full border border-border bg-card dark:bg-gray-800" />
+          <div className="w-8 h-8 rounded-full border border-border bg-card dark:bg-gray-800" />
         </div>
         <div className="h-5 w-3/4 rounded-lg bg-gray-100 dark:bg-gray-800" />
         <div className="h-4 w-1/2 rounded-lg bg-gray-100 dark:bg-gray-800" />
@@ -102,7 +102,7 @@ export default function Bibliotheque() {
         <div>
           <div className="flex items-center gap-4 mb-2">
             <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-400 dark:to-primary-500 flex items-center justify-center shadow-lg shadow-primary-200/50 dark:shadow-primary-900/30">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 dark:from-primary-400 dark:to-primary-500 flex items-center justify-center shadow-lg">
                 <Library className="w-7 h-7 text-white" />
               </div>
               <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center">
@@ -110,7 +110,7 @@ export default function Bibliotheque() {
               </div>
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tight">
                 Bibliothèque
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base mt-0.5">
@@ -147,7 +147,7 @@ export default function Bibliotheque() {
 
       {filtresOuverts && (
         <div className="flex flex-wrap items-center gap-3 mb-8 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 animate-in slide-in-from-top-2 duration-200">
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-500 mr-1">Matière</span>
+          <span className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500 mr-1">Matière</span>
           <button
             onClick={() => setMatiere("")}
             className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all ${
@@ -213,7 +213,7 @@ export default function Bibliotheque() {
             return (
               <Card
                 key={fiche.id}
-                className="group relative rounded-3xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-primary-200 dark:hover:border-primary-800/50 hover:shadow-xl hover:shadow-primary-100/20 dark:hover:shadow-primary-950/20 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4"
+                className="group relative rounded-3xl overflow-hidden bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-primary-200 dark:hover:border-primary-800/50 hover:shadow-md hover: dark:hover: transition-all duration-500 animate-in fade-in slide-in-from-bottom-4"
                 style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
               >
                 <div className={`absolute top-0 left-0 right-0 h-1 ${importee ? "bg-emerald-400" : "bg-gradient-to-r from-primary-400 to-primary-600 dark:from-primary-500 dark:to-primary-400"} opacity-60`} />
@@ -227,7 +227,7 @@ export default function Bibliotheque() {
                       {fiche.genereeParIA && (
                         <div className="px-2 py-1 rounded-lg bg-gradient-to-r from-secondary-50 to-secondary-50 dark:from-secondary-900/20 dark:to-secondary-900/20 flex items-center gap-1">
                           <Sparkles className="w-3 h-3 text-secondary-500" />
-                          <span className="text-[9px] font-bold uppercase tracking-widest text-secondary-500">IA</span>
+                          <span className="text-xs font-bold uppercase tracking-[0.08em] text-secondary-500">IA</span>
                         </div>
                       )}
                     </div>
@@ -236,7 +236,7 @@ export default function Bibliotheque() {
                       size="icon" aria-label={importee ? `Fiche ${fiche.titre} déjà importée` : `Importer la fiche ${fiche.titre}`}
                       className={`w-8 h-8 rounded-xl transition-all ${
                         importee
-                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500"
+                          ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700"
                           : "text-gray-300 dark:text-gray-600 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20"
                       }`}
                       onClick={() => !importee && importer(fiche.id, fiche.titre)}
@@ -251,12 +251,12 @@ export default function Bibliotheque() {
                   </CardTitle>
 
                   <div className="flex items-center gap-3 mt-2.5">
-                    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-gray-500">
                       <Clock className="w-3 h-3" />
                       {new Date(fiche.createdAt).toLocaleDateString("fr-FR", { month: "short", day: "numeric", year: "numeric" })}
                     </div>
                     {fiche.matiere && (
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${couleurs.bg} ${couleurs.text}`}>
+                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${couleurs.bg} ${couleurs.text}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${couleurs.dot}`} />
                         {fiche.matiere}
                       </div>
@@ -276,7 +276,7 @@ export default function Bibliotheque() {
                 </CardContent>
 
                 <CardFooter className="pt-3 border-t border-gray-50 dark:border-gray-800 px-6 pb-5 flex justify-between items-center">
-                  <span className="text-[11px] text-gray-500 font-medium">
+                  <span className="text-xs text-gray-500 font-medium">
                     {importee ? "✓ Dans ta bibliothèque" : "Ajouter à mes fiches"}
                   </span>
                   <Button

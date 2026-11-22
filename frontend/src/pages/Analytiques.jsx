@@ -57,7 +57,7 @@ export default function Analytiques() {
     <div className="space-y-8 max-w-6xl mx-auto pb-10">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border border-border bg-card rounded-2xl flex items-center justify-center">
           <BarChart3 className="w-7 h-7 text-primary-600" />
         </div>
         <div>
@@ -76,12 +76,12 @@ export default function Analytiques() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-secondary-50 dark:bg-secondary-900/30 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center">
                   <Layers className="w-5 h-5 text-secondary-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{sm2.totalFlashcards}</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Flashcards</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{sm2.totalFlashcards}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Flashcards</p>
                 </div>
               </div>
             </CardContent>
@@ -89,12 +89,12 @@ export default function Analytiques() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-orange-600" />
+                <div className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-orange-700" />
                 </div>
                 <div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{sm2.duesAujourdhui}</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">À réviser</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{sm2.duesAujourdhui}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">À réviser</p>
                 </div>
               </div>
             </CardContent>
@@ -102,12 +102,12 @@ export default function Analytiques() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <Target className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center">
+                  <Target className="w-5 h-5 text-emerald-700" />
                 </div>
                 <div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{sm2.retention}%</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Rétention</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{sm2.retention}%</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Rétention</p>
                 </div>
               </div>
             </CardContent>
@@ -115,12 +115,12 @@ export default function Analytiques() {
           <Card>
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center">
                   <Activity className="w-5 h-5 text-primary-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{sm2.efMoyen}</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Facilité moy.</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{sm2.efMoyen}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Facilité moy.</p>
                 </div>
               </div>
             </CardContent>
@@ -179,7 +179,7 @@ export default function Analytiques() {
                       <div className="w-1.5 h-1.5 rounded-full bg-secondary-500" title={`${jour.quiz} quiz`} />
                     )}
                     {jour.seances > 0 && (
-                      <div className="text-[8px] font-bold text-primary-600">{jour.seances}</div>
+                      <div className="text-xs font-bold text-primary-600">{jour.seances}</div>
                     )}
                   </div>
                   <div
@@ -189,7 +189,7 @@ export default function Analytiques() {
                     )}
                     style={{ height: `${Math.max((jour.seances / maxActivite) * 120, 4)}px` }}
                   />
-                  <span className="text-[9px] font-bold text-gray-500 uppercase">{jours[new Date(jour.date).getDay()]}</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase">{jours[new Date(jour.date).getDay()]}</span>
                 </div>
               ))}
             </div>
@@ -209,12 +209,12 @@ export default function Analytiques() {
             <CardContent className="p-6 space-y-4">
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <p className="text-3xl font-black text-gray-900 dark:text-white">{feedback.moyenne}</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Moyenne /5</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{feedback.moyenne}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Moyenne /5</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-black text-gray-900 dark:text-white">{feedback.total}</p>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total avis</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{feedback.total}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Total avis</p>
                 </div>
               </div>
               {Object.keys(feedback.repartition).length > 0 && (
@@ -250,42 +250,42 @@ export default function Analytiques() {
                     <BookOpen className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Cours</span>
                   </div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{progression.coursTotal}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{progression.coursTotal}</p>
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-                  <div className="flex items-center gap-2 text-emerald-600 mb-1">
+                  <div className="flex items-center gap-2 text-emerald-700 mb-1">
                     <Layers className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Fiches</span>
                   </div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{progression.fichesTotal}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{progression.fichesTotal}</p>
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                   <div className="flex items-center gap-2 text-secondary-600 mb-1">
                     <BrainCircuit className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Quiz</span>
                   </div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{progression.quizTotal}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{progression.quizTotal}</p>
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
-                  <div className="flex items-center gap-2 text-orange-600 mb-1">
+                  <div className="flex items-center gap-2 text-orange-700 mb-1">
                     <Target className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Score</span>
                   </div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{progression.scoreMoyenQuiz}%</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{progression.scoreMoyenQuiz}%</p>
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                   <div className="flex items-center gap-2 text-amber-600 mb-1">
                     <Activity className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Série</span>
                   </div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{progression.serie} jours</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{progression.serie} jours</p>
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl">
                   <div className="flex items-center gap-2 text-primary-600 mb-1">
                     <Clock className="w-4 h-4" />
                     <span className="text-xs font-bold uppercase tracking-wider">Temps total</span>
                   </div>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white">{Math.round(progression.tempsRevisionTotal / 60)}h</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{Math.round(progression.tempsRevisionTotal / 60)}h</p>
                 </div>
               </div>
             </CardContent>
@@ -305,7 +305,7 @@ export default function Analytiques() {
               <div className="space-y-3">
                 {pointsFaibles.map((p, i) => (
                   <div key={i} className="flex items-center gap-4 p-4 bg-amber-50 dark:bg-amber-900/10 rounded-2xl border border-amber-100 dark:border-amber-900/20">
-                    <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full border border-border bg-card flex items-center justify-center flex-shrink-0">
                       {p.type === "feedback" ? <ThumbsDown className="w-5 h-5 text-amber-600" /> : <BrainCircuit className="w-5 h-5 text-amber-600" />}
                     </div>
                     <div className="flex-1 min-w-0">

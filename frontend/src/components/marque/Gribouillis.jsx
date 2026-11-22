@@ -52,7 +52,7 @@ export function Pastille({ valeur, libelle, icone: Icone, className }) {
       <div>
         {Icone && <Icone className="w-5 h-5 mx-auto mb-1 opacity-90" aria-hidden="true" />}
         <p className="font-display text-3xl font-bold leading-none tabular-nums">{valeur}</p>
-        <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-primary-100">{libelle}</p>
+        <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-primary-100">{libelle}</p>
       </div>
     </div>
   );

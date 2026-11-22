@@ -79,7 +79,7 @@ export default function Connexion() {
             <Logo />
           </div>
 
-          <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
+          <div className="bg-card rounded-xl border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
             {emailNonVerifie ? (
               <EmailEnvoye
                 email={emailNonVerifie}
@@ -94,7 +94,7 @@ export default function Connexion() {
 
             {erreur && (
               <div className="flex items-center gap-3 bg-red-50 border border-red-100 text-red-700 px-5 py-4 rounded-2xl text-sm mb-6 animate-shake" role="alert">
-                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                <AlertCircle className="w-5 h-5 text-red-700 shrink-0" />
                 <span className="font-semibold">{erreur}</span>
               </div>
             )}
@@ -102,15 +102,15 @@ export default function Connexion() {
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               {/* Email */}
               <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-bold text-gray-700 ml-1">
+                <label htmlFor="email" className="block text-sm font-semibold text-foreground">
                   Adresse email
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary w-5 h-5 pointer-events-none" />
                   <input
                     id="email" name="email" type="email"
                     autoComplete="email" required
-                    className="input-field pl-12 h-14"
+                    className="input-field pl-11 h-12"
                     placeholder="ton@email.com"
                     value={form.email} onChange={handleChange}
                     maxLength={254}
@@ -121,23 +121,23 @@ export default function Connexion() {
               {/* Mot de passe */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
-                  <label htmlFor="motDePasse" className="block text-sm font-bold text-gray-700 ml-1">
+                  <label htmlFor="motDePasse" className="block text-sm font-semibold text-foreground">
                     Mot de passe
                   </label>
                   <Link
                     to="/mot-de-passe-oublie"
-                    className="text-sm font-semibold text-primary-700 hover:text-primary-800 underline-offset-4 hover:underline"
+                    className="text-sm font-semibold text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary"
                   >
                     Mot de passe oublié ?
                   </Link>
                 </div>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary-500 transition-colors w-5 h-5" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary w-5 h-5 pointer-events-none" />
                   <input
                     id="motDePasse" name="motDePasse"
                     type={voirMotDePasse ? "text" : "password"}
                     autoComplete="current-password" required
-                    className="input-field pl-12 pr-12 h-14"
+                    className="input-field pl-11 pr-12 h-12"
                     placeholder="••••••••"
                     value={form.motDePasse} onChange={handleChange}
                     maxLength={128}
@@ -145,15 +145,16 @@ export default function Connexion() {
                   <button
                     type="button"
                     onClick={() => setVoirMotDePasse(!voirMotDePasse)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary-600 focus:outline-none transition-colors"
-                    tabIndex={-1}
+                    aria-label={voirMotDePasse ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                    aria-pressed={voirMotDePasse}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-md text-muted-foreground hover:text-primary"
                   >
-                    {voirMotDePasse ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {voirMotDePasse ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
                   </button>
                 </div>
               </div>
 
-              <button type="submit" disabled={chargement} className="btn-primary w-full py-4 justify-center text-lg shadow-primary-500/20 mt-2">
+              <button type="submit" disabled={chargement} className="btn-primary w-full py-4 justify-center text-lg mt-2">
                 {chargement ? (
                   <div className="flex items-center gap-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
