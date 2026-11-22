@@ -21,30 +21,9 @@ const api = axios.create({
   withCredentials: true, // ✅ Envoyer/recevoir les cookies httpOnly
 });
 
-// Token JWT stocké pour les requêtes cross-origin directes (upload de fichiers)
-// Utilise sessionStorage au lieu de la mémoire pour survivre au rafraîchissement de page
-// Le cookie httpOnly (non accessible en JS) reste le mécanisme principal via le proxy Vercel
-const TOKEN_KEY = "jwt_token";
-
-export const setToken = (token) => {
-  if (token) sessionStorage.setItem(TOKEN_KEY, token);
-  else sessionStorage.removeItem(TOKEN_KEY);
-};
-
-export const clearToken = () => {
-  sessionStorage.removeItem(TOKEN_KEY);
-};
-
-const getToken = () => sessionStorage.getItem(TOKEN_KEY);
-
-// Intercepteur REQUEST — ajoute le token JWT si disponible (pour les appels cross-origin directs)
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// Session : uniquement le cookie httpOnly posé par le serveur (inaccessible au JavaScript).
+// Aucun jeton n'est stocké dans le navigateur (ni localStorage, ni sessionStorage) :
+// une éventuelle faille XSS ne peut donc pas voler la session.
 
 // ───────────────────────────────────────────────
 // Intercepteur RESPONSE — gestion token expiré / session terminée
@@ -52,8 +31,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !window.location.pathname.includes("/connexion")) {
-      localStorage.removeItem("utilisateur");
+    // `silencieux` : vérification de session au démarrage, un 401 est alors normal (visiteur)
+    if (error.response?.status === 401 && !error.config?.silencieux && !window.location.pathname.includes("/connexion")) {
       window.location.href = "/connexion?session=expiree";
     }
     return Promise.reject(error);
@@ -72,7 +51,9 @@ export const authAPI = {
   motDePasseOublie: (email) => api.post("/auth/mot-de-passe-oublie", { email }),
   reinitialiserMotDePasse: (token, nouveauMotDePasse) =>
     api.post("/auth/reinitialiser-mot-de-passe", { token, nouveauMotDePasse }),
-  getProfil: () => api.get("/auth/profil"),
+  getProfil: (options = {}) => api.get("/auth/profil", options),
+  // Jeton de 5 minutes, valable uniquement pour envoyer un fichier au serveur
+  jetonUpload: () => api.get("/auth/jeton-upload"),
   updateProfil: (data) => api.put("/auth/profil", data),
   changerMotDePasse: (data) => api.put("/auth/changer-mot-de-passe", data),
   supprimerCompte: (data) => api.delete("/auth/compte", { data }),
@@ -93,10 +74,14 @@ export const coursAPI = {
     const directURL = `${import.meta.env.VITE_BACKEND_URL || "https://kaay-nafaar-api-1rtt.onrender.com"}/api/courses`;
     
     if (data instanceof FormData) {
-      const headers = { "Content-Type": "multipart/form-data" };
-      const token = getToken();
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-      return axios.post(directURL, data, { headers, withCredentials: true });
+      // Le cookie de session n'est pas envoyé à Render (autre domaine) : on demande
+      // d'abord un jeton d'upload de 5 minutes, valable uniquement pour cette route.
+      return api.get("/auth/jeton-upload").then(({ data: { jeton } }) =>
+        axios.post(directURL, data, {
+          headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${jeton}` },
+          timeout: 120000,
+        })
+      );
     }
     return api.post("/courses", data);
   },

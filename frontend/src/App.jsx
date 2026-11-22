@@ -13,7 +13,6 @@ import {
 
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
-import { setToken, clearToken } from "./services/api";
 import { Toaster } from "./components/ui/toaster";
 import { authAPI } from "./services/api";
 
@@ -102,51 +101,41 @@ const AuthProvider = ({ children }) => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
   }, [darkMode]);
 
-  // Restauration de session au démarrage
+  // Restauration de session au démarrage : le serveur lit le cookie httpOnly.
+  // Aucune donnée personnelle n'est gardée dans le navigateur (ordinateurs partagés, cybercafés).
   useEffect(() => {
     let active = true;
-    const restore = async () => {
-      try {
-        const userStr = localStorage.getItem("utilisateur");
-        if (!userStr) throw new Error("Pas d'utilisateur stocké");
-
-        const user = JSON.parse(userStr);
-        setUtilisateur(user); // UI réactive immédiatement
-
-        // Vérification avec le backend (indispensable pour les cookies httpOnly)
-        const profil = await authAPI.getProfil();
-        
-        if (active) {
-          setUtilisateur(profil.data.utilisateur);
-          localStorage.setItem("utilisateur", JSON.stringify(profil.data.utilisateur));
-          if (profil.data.token) setToken(profil.data.token);
-        }
-      } catch (err) {
-        if (active) {
-          // Session expirée — redirection silencieuse
-          localStorage.removeItem("utilisateur");
-          setUtilisateur(null);
-        }
-      } finally {
+    authAPI
+      .getProfil({ silencieux: true })
+      .then(({ data }) => {
+        if (active) setUtilisateur(data.utilisateur);
+      })
+      .catch(() => {
+        if (active) setUtilisateur(null);
+      })
+      .finally(() => {
         if (active) setChargement(false);
-      }
+      });
+    // Nettoyage des anciennes versions qui stockaient le profil et le jeton
+    try {
+      localStorage.removeItem("utilisateur");
+      sessionStorage.removeItem("jwt_token");
+    } catch (_) {
+      /* stockage indisponible */
+    }
+    return () => {
+      active = false;
     };
-    restore();
-    return () => { active = false; };
   }, []);
 
-  const connecter = (token, user) => {
-    if (token) setToken(token);
-    localStorage.setItem("utilisateur", JSON.stringify(user));
-    setUtilisateur(user);
-  };
+  const connecter = (user) => setUtilisateur(user);
 
   const deconnecter = async () => {
     try {
       await authAPI.logout();
-    } catch (_) {}
-    clearToken();
-    localStorage.removeItem("utilisateur");
+    } catch (_) {
+      /* déjà déconnecté */
+    }
     setUtilisateur(null);
     window.location.href = "/connexion";
   };

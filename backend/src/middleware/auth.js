@@ -3,7 +3,10 @@
  */
 
 const User = require("../models/User");
-const { verifierToken, empreinteMotDePasse } = require("../utils/jeton");
+const { verifierToken, empreinteMotDePasse, PORTEE_UPLOAD } = require("../utils/jeton");
+
+// Seule route où un jeton « upload » est accepté
+const estRouteUpload = (req) => req.method === "POST" && req.originalUrl.split("?")[0].replace(/\/$/, "") === "/api/courses";
 
 const proteger = async (req, res, next) => {
   let token;
@@ -25,12 +28,14 @@ const proteger = async (req, res, next) => {
     });
   }
 
-  // Passer le token brut pour les endpoints qui en ont besoin (restauration session frontend)
-  req.tokenJWT = token;
-
   try {
     // Vérifier le token (algorithme imposé)
     const decoded = verifierToken(token);
+
+    // Un jeton « upload » (5 min) ne sert qu'à importer un cours, nulle part ailleurs
+    if (decoded.portee && (decoded.portee !== PORTEE_UPLOAD || !estRouteUpload(req))) {
+      return res.status(401).json({ success: false, message: "Jeton non valable pour cette action." });
+    }
 
     // Récupérer l'utilisateur
     const utilisateur = await User.findByPk(decoded.id);

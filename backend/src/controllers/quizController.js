@@ -47,6 +47,14 @@ const getQuizParId = async (req, res) => {
       return res.status(404).json({ success: false, message: "Quiz introuvable ou privé." });
     }
 
+    // Quiz public d'un autre étudiant : ni ses sessions (scores, réponses) ni son identifiant
+    if (quiz.utilisateurId !== userId) {
+      const quizPublic = quiz.toJSON();
+      delete quizPublic.sessions;
+      delete quizPublic.utilisateurId;
+      return res.json({ success: true, quiz: quizPublic });
+    }
+
     res.json({ success: true, quiz });
   } catch (error) {
     console.error("Erreur getQuizParId:", error);

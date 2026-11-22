@@ -36,10 +36,10 @@ describe("Page Connexion", () => {
   });
 
   test("connecte l'étudiant et l'envoie au tableau de bord", async () => {
-    authAPI.connexion.mockResolvedValue({ data: { token: "jwt", utilisateur: { id: 1, nom: "Awa" } } });
+    authAPI.connexion.mockResolvedValue({ data: { utilisateur: { id: 1, nom: "Awa" } } });
     afficher();
     await remplir("awa@esp.sn", "motdepasse1");
-    await waitFor(() => expect(connecter).toHaveBeenCalledWith("jwt", { id: 1, nom: "Awa" }));
+    await waitFor(() => expect(connecter).toHaveBeenCalledWith({ id: 1, nom: "Awa" }));
     expect(await screen.findByText("Tableau de bord")).toBeInTheDocument();
     expect(authAPI.connexion).toHaveBeenCalledWith({ email: "awa@esp.sn", motDePasse: "motdepasse1" });
   });

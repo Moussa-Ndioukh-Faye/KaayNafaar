@@ -14,7 +14,7 @@ const db = require("../config/database"); // getter : suit le basculement SQLite
 const { supprimerFichier } = require("../utils/fichiers");
 
 const bcrypt = require("bcryptjs");
-const { genererToken } = require("../utils/jeton");
+const { genererToken, genererJetonUpload } = require("../utils/jeton");
 const {
   verificationEmailActive,
   envoyerVerification,
@@ -46,22 +46,23 @@ const profilPublic = (u) => ({
 // Hash bcrypt d'une valeur aléatoire, utilisé contre l'énumération par chronométrage
 const HASH_FACTICE = bcrypt.hashSync(require("crypto").randomBytes(16).toString("hex"), 12);
 
-// Helper pour envoyer le token en cookie httpOnly
-const envoyerTokenCookie = (res, token, req) => {
-  const isLocalhost = req.get("host")?.includes("localhost");
-  const isProd = process.env.NODE_ENV === "production";
-  
-  const options = {
+// Cookie de session : httpOnly (inaccessible au JavaScript), Secure en production,
+// SameSite=Lax (toutes les requêtes passent par le proxy Vercel : même site).
+const optionsCookie = (req) => {
+  const isLocalhost = req?.get?.("host")?.includes("localhost");
+  return {
     httpOnly: true,
-    // Pour que les cookies cross-site (Vercel -> sslip.io) fonctionnent, 
-    // il faut SameSite=None et Secure=true
-    secure: isProd && !isLocalhost,
-    sameSite: isProd && !isLocalhost ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production" && !isLocalhost,
+    sameSite: "lax",
     path: "/",
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 jours
   };
-  res.cookie("token", token, options);
 };
+
+const envoyerTokenCookie = (res, token, req) => {
+  res.cookie("token", token, { ...optionsCookie(req), maxAge: 1000 * 60 * 60 * 24 * 7 }); // 7 jours
+};
+
+const effacerCookie = (res, req) => res.clearCookie("token", optionsCookie(req));
 
 // POST /api/auth/inscription
 const inscription = async (req, res) => {
@@ -125,7 +126,6 @@ const inscription = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Compte créé avec succès",
-      token,
       utilisateur: profilPublic(utilisateur),
     });
   } catch (error) {
@@ -189,7 +189,6 @@ const connexion = async (req, res) => {
     res.json({
       success: true,
       message: "Connexion réussie",
-      token,
       utilisateur: profilPublic(utilisateur),
     });
   } catch (error) {
@@ -209,7 +208,7 @@ const getProfil = async (req, res) => {
       return res.status(404).json({ success: false, message: "Utilisateur introuvable." });
     }
 
-    res.json({ success: true, utilisateur, token: req.tokenJWT });
+    res.json({ success: true, utilisateur });
   } catch (error) {
     console.error("Erreur getProfil:", error);
     res.status(500).json({ success: false, message: "Erreur lors de la récupération du profil." });
@@ -290,7 +289,7 @@ const changerMotDePasse = async (req, res) => {
     const token = genererToken(utilisateur);
     envoyerTokenCookie(res, token, req);
 
-    res.json({ success: true, message: "Mot de passe modifié avec succès.", token });
+    res.json({ success: true, message: "Mot de passe modifié avec succès." });
   } catch (error) {
     console.error("Erreur changerMotDePasse:", error);
     res.status(500).json({ success: false, message: "Erreur lors du changement de mot de passe." });
@@ -341,12 +340,7 @@ const supprimerCompte = async (req, res) => {
     // Fichiers importés sur le disque
     await Promise.all(cours.map((c) => supprimerFichier(c.fichierPDF)));
 
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/",
-    });
+    effacerCookie(res, req);
 
     res.json({ success: true, message: "Compte supprimé définitivement." });
   } catch (error) {
@@ -378,7 +372,7 @@ const verifierEmail = async (req, res) => {
     // Connexion directe après confirmation
     const token = genererToken(utilisateur);
     envoyerTokenCookie(res, token, req);
-    res.json({ success: true, message: "Adresse email confirmée. Bienvenue !", token, utilisateur: profilPublic(utilisateur) });
+    res.json({ success: true, message: "Adresse email confirmée. Bienvenue !", utilisateur: profilPublic(utilisateur) });
   } catch (error) {
     console.error("Erreur verifierEmail:", error);
     res.status(500).json({ success: false, message: "Erreur lors de la vérification." });
@@ -518,14 +512,15 @@ const exporterDonnees = async (req, res) => {
   }
 };
 
+// GET /api/auth/jeton-upload — jeton de 5 minutes, valable uniquement pour importer un cours
+const jetonUpload = (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ success: true, jeton: genererJetonUpload(req.utilisateur) });
+};
+
 // POST /api/auth/logout
 const logout = (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-  });
+  effacerCookie(res, req);
   res.json({ success: true, message: "Déconnecté avec succès." });
 };
 
@@ -541,5 +536,6 @@ module.exports = {
   renvoyerVerification,
   motDePasseOublie,
   reinitialiserMotDePasse,
+  jetonUpload,
   logout,
 };

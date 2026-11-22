@@ -29,6 +29,24 @@ const formaterFiche = (fiche) => {
   };
 };
 
+/**
+ * Version d'une fiche montrée aux autres étudiants (bibliothèque publique) :
+ * sans l'identifiant de l'auteur, sans son cours privé, et sans son historique
+ * de révision des flashcards (dates, facilité, répétitions).
+ */
+const formaterFichePublique = (fiche) => {
+  const data = formaterFiche(fiche);
+  if (!data) return null;
+  const reste = { ...data };
+  delete reste.utilisateurId;
+  delete reste.coursId;
+  delete reste.cours;
+  return {
+    ...reste,
+    flashcards: (data.flashcards || []).map(({ question, reponse }) => ({ question, reponse })),
+  };
+};
+
 // GET /api/fiches
 const getFiches = async (req, res) => {
   try {
@@ -77,7 +95,8 @@ const getFicheParId = async (req, res) => {
       return res.status(404).json({ success: false, message: "Fiche introuvable ou privée." });
     }
 
-    res.json({ success: true, fiche: formaterFiche(fiche) });
+    const estAuteur = userId && fiche.utilisateurId === userId;
+    res.json({ success: true, fiche: estAuteur ? formaterFiche(fiche) : formaterFichePublique(fiche) });
   } catch (error) {
     console.error("Erreur getFicheParId:", error);
     res.status(500).json({ success: false, message: "Impossible de récupérer cette fiche." });
@@ -255,7 +274,8 @@ const mettreAJourFlashcard = async (req, res) => {
 // GET /api/fiches/publique — Liste toutes les fiches publiques (Communauté)
 const getFichesPubliques = async (req, res) => {
   try {
-    const { matiere, search } = req.query;
+    const { matiere } = req.query;
+    const search = typeof req.query.search === "string" ? req.query.search.trim().slice(0, 100) : "";
     const where = { estPublique: true };
 
     if (matiere) where.matiere = matiere;
@@ -273,7 +293,7 @@ const getFichesPubliques = async (req, res) => {
       limit: 50, // Limite pour la bibliothèque publique
     });
 
-    res.json({ success: true, count: fiches.length, fiches: fiches.map(formaterFiche) });
+    res.json({ success: true, count: fiches.length, fiches: fiches.map(formaterFichePublique) });
   } catch (error) {
     console.error("Erreur getFichesPubliques:", error);
     res.status(500).json({ success: false, message: "Erreur lors de la récupération de la bibliothèque." });

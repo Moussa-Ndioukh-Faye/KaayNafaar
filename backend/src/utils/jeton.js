@@ -32,7 +32,18 @@ const genererToken = (utilisateur) => {
   });
 };
 
+// Jeton à portée limitée et très courte durée, utilisé uniquement pour envoyer
+// un fichier directement au serveur (le proxy Vercel limite la taille des requêtes).
+// Le jeton de session, lui, ne quitte jamais le cookie httpOnly.
+const PORTEE_UPLOAD = "upload";
+const genererJetonUpload = (utilisateur) => {
+  const charge = { id: utilisateur.id, portee: PORTEE_UPLOAD };
+  const pwv = empreinteMotDePasse(utilisateur.motDePasse);
+  if (pwv) charge.pwv = pwv;
+  return jwt.sign(charge, process.env.JWT_SECRET, { algorithm: ALGORITHME, expiresIn: "5m" });
+};
+
 const verifierToken = (token) =>
   jwt.verify(token, process.env.JWT_SECRET, { algorithms: [ALGORITHME] });
 
-module.exports = { genererToken, verifierToken, empreinteMotDePasse };
+module.exports = { genererToken, genererJetonUpload, verifierToken, empreinteMotDePasse, PORTEE_UPLOAD };

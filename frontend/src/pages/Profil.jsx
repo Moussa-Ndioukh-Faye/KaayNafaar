@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../App";
 import { Link } from "react-router-dom";
-import { authAPI, setToken } from "../services/api";
+import { authAPI } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
@@ -46,7 +46,7 @@ export default function Profil() {
     try {
       const { data } = await authAPI.updateProfil({ nom: form.nom.trim(), email: form.email.trim() });
       if (data.success) {
-        connecter(null, data.utilisateur);
+        connecter(data.utilisateur);
         setMessage({ type: "success", texte: "Profil mis à jour avec succès !" });
       }
     } catch (_) {
@@ -74,8 +74,7 @@ export default function Profil() {
         nouveauMotDePasse: motDePasse.nouveau,
       });
       if (data.success) {
-        // Les autres sessions sont révoquées : on garde la session courante avec le nouveau jeton
-        if (data.token) setToken(data.token);
+        // Les autres sessions sont révoquées ; le serveur a renouvelé le cookie de cette session
         setMotDePasse({ actuel: "", nouveau: "", confirmation: "" });
         setMessage({ type: "success", texte: "Ton mot de passe a été modifié." });
       }

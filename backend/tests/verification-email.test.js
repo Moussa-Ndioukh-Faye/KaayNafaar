@@ -159,7 +159,8 @@ describe("Vérification de l'adresse email", () => {
 
     const ok = await request(app).post("/api/auth/verifier-email").send({ token: jeton });
     expect(ok.status).toBe(200);
-    expect(ok.body.token).toBeDefined();
+    expect(ok.body.token).toBeUndefined(); // session ouverte par cookie httpOnly uniquement
+    expect(String(ok.headers["set-cookie"])).toMatch(/token=.*HttpOnly/i);
     expect(ok.body.utilisateur.emailVerifie).toBe(true);
     expect(mockUsers[0].jetonVerification).toBeNull();
 
