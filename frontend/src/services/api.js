@@ -84,7 +84,7 @@ export const coursAPI = {
   creerCours: (data) => {
     // 💡 Pour l'envoi de fichiers, on appelle directement le backend (Render)
     // pour contourner la limite de taille (4,5 Mo) du proxy Vercel.
-    const directURL = `${import.meta.env.VITE_BACKEND_URL || "https://kaay-nafaar-api.onrender.com"}/api/courses`;
+    const directURL = `${import.meta.env.VITE_BACKEND_URL || "https://kaay-nafaar-api-1rtt.onrender.com"}/api/courses`;
     
     if (data instanceof FormData) {
       const headers = { "Content-Type": "multipart/form-data" };
