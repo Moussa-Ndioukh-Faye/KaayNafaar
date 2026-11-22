@@ -28,7 +28,7 @@ export default function BoutonCopier({ text }) {
             onClick={copier}
             className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
           >
-            {copie ? <Check className="w-4 h-4 text-emerald-500" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
+            {copie ? <Check className="w-4 h-4 text-emerald-700" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
           </Button>
         </TooltipTrigger>
         <TooltipContent>

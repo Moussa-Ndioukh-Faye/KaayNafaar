@@ -21,8 +21,8 @@ export default function GenerationFiche({
           <ArrowLeft className="w-5 h-5 mr-2" />
           Retour
         </Button>
-        <h2 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-          <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-900/30 rounded-xl flex items-center justify-center">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full border border-border bg-card rounded-xl flex items-center justify-center">
             <Sparkles className="w-6 h-6 text-secondary-600" />
           </div>
           Générer une fiche IA
@@ -39,7 +39,7 @@ export default function GenerationFiche({
         </div>
       )}
 
-      <Card className="rounded-[2rem] shadow-xl overflow-hidden">
+      <Card className="rounded-xl shadow-md overflow-hidden">
         <CardHeader className="p-8 pb-4">
           <CardTitle className="text-xl">Configuration de la génération</CardTitle>
           <CardDescription>
@@ -57,7 +57,7 @@ export default function GenerationFiche({
               </label>
               <select
                 id="fiches-champ-606"
-                className="w-full pl-4 pr-10 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none"
+                className="input-field pl-4 pr-10 appearance-none"
                 onChange={onCoursChange}
                 value={generation.coursId}
               >
@@ -78,7 +78,7 @@ export default function GenerationFiche({
               </label>
               <input
                 id="fiches-champ-617"
-                className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                className="input-field"
                 placeholder="ex: Fiche - Algorithmes de tri"
                 maxLength={200}
                 value={generation.titre}
@@ -99,7 +99,7 @@ export default function GenerationFiche({
             </label>
             <textarea
               id="fiches-contenu"
-              className="w-full px-4 py-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all h-64 resize-none"
+              className="input-field h-64 resize-none"
               placeholder="Colle ici le contenu complet de ton cours…"
               value={generation.contenu}
               maxLength={50000}
@@ -111,7 +111,7 @@ export default function GenerationFiche({
           <Button
             onClick={onLancer}
             disabled={enGeneration || !generation.contenu.trim()}
-            className="flex-1 h-14 rounded-2xl font-black text-lg shadow-lg shadow-primary-200 dark:shadow-none transition-transform active:scale-95"
+            className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-lg transition-transform active:scale-95"
           >
             {enGeneration ? (
               <div className="flex items-center gap-3">
@@ -128,11 +128,11 @@ export default function GenerationFiche({
       </Card>
 
       {texteStream && (
-        <Card className="rounded-3xl bg-gray-900 border-none shadow-2xl overflow-hidden">
+        <Card className="rounded-3xl bg-gray-900 border-none shadow-lg overflow-hidden">
           <CardHeader className="bg-gray-800/50 p-4 border-b border-gray-700">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-[0.08em]">
                 IA en direct
               </span>
             </div>

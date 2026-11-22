@@ -16,17 +16,34 @@ import { useAuth } from "../App";
 import { cn } from "../lib/utils";
 import Logo from "./marque/Logo";
 import { Button } from "./ui/button";
+import BoutonInstaller from "./BoutonInstaller";
 
-const navigation = [
-  { nom: "Tableau de bord", href: "/", icon: LayoutDashboard },
-  { nom: "Mes Cours", href: "/mes-cours", icon: BookOpen },
-  { nom: "Fiches de révision", href: "/fiches", icon: FileText },
-  { nom: "Bibliothèque", href: "/bibliotheque", icon: Globe },
-  { nom: "Quiz", href: "/quiz", icon: BrainCircuit },
-  { nom: "Planning", href: "/planning", icon: Calendar },
-  { nom: "Assistant IA", href: "/assistant", icon: MessageSquare },
-  { nom: "Analytiques", href: "/analytiques", icon: BarChart3 },
-  { nom: "Mon Profil", href: "/profil", icon: Settings },
+// Le menu est le « sommaire » du cahier : rubriques et entrées numérotées
+const sommaire = [
+  {
+    rubrique: "Réviser",
+    entrees: [
+      { nom: "Tableau de bord", href: "/", icon: LayoutDashboard },
+      { nom: "Mes cours", href: "/mes-cours", icon: BookOpen },
+      { nom: "Fiches de révision", href: "/fiches", icon: FileText },
+      { nom: "Quiz", href: "/quiz", icon: BrainCircuit },
+      { nom: "Planning", href: "/planning", icon: Calendar },
+    ],
+  },
+  {
+    rubrique: "Explorer",
+    entrees: [
+      { nom: "Assistant IA", href: "/assistant", icon: MessageSquare },
+      { nom: "Bibliothèque", href: "/bibliotheque", icon: Globe },
+    ],
+  },
+  {
+    rubrique: "Suivre",
+    entrees: [
+      { nom: "Progression", href: "/analytiques", icon: BarChart3 },
+      { nom: "Mon profil", href: "/profil", icon: Settings },
+    ],
+  },
 ];
 
 export default function Sidebar({ ouverte, fermer }) {
@@ -48,73 +65,93 @@ export default function Sidebar({ ouverte, fermer }) {
     navigate("/connexion");
   };
 
+  let numero = 0;
+
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-card border-r border-border transition-colors">
-      <div className="px-7 py-8">
+    <div className="flex flex-col h-full bg-papier-fonce/60 dark:bg-card border-r border-border">
+      <div className="px-6 pt-7 pb-5 border-b border-border">
         <Logo />
       </div>
 
-      <nav aria-label="Navigation principale" className="flex-1 px-4 py-2 space-y-1 overflow-y-auto scrollbar-none">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              end={item.href === "/"}
-              onClick={fermer}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-2xl text-[0.94rem] font-semibold transition-all group relative",
-                  isActive
-                    ? "bg-marine text-white dark:bg-primary-500/20 dark:text-primary-100 shadow-[0_10px_24px_-14px_rgba(10,31,74,0.8)]"
-                    : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-muted"
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon aria-hidden="true" className={cn("w-5 h-5 transition-colors", isActive ? "text-secondary-300" : "text-gray-500 group-hover:text-primary-600")} />
-                  <span className="flex-1">{item.nom}</span>
-                  {isActive && <span aria-hidden="true" className="w-1.5 h-1.5 rounded-full bg-secondary-300" />}
-                </>
-              )}
-            </NavLink>
-          );
-        })}
+      <nav aria-label="Navigation principale" className="flex-1 px-4 py-5 overflow-y-auto scrollbar-none">
+        <p className="font-display italic text-lg text-foreground px-2 mb-3" aria-hidden="true">
+          Sommaire
+        </p>
+        {sommaire.map(({ rubrique, entrees }) => (
+          <div key={rubrique} className="mb-4">
+            <p className="etiquette px-2 mb-1.5">{rubrique}</p>
+            <ul>
+              {entrees.map((item) => {
+                const Icon = item.icon;
+                numero += 1;
+                const num = String(numero).padStart(2, "0");
+                return (
+                  <li key={item.href}>
+                    <NavLink
+                      to={item.href}
+                      end={item.href === "/"}
+                      onClick={fermer}
+                      className={({ isActive }) =>
+                        cn(
+                          "group flex items-center gap-3 px-2 py-2 rounded-md text-[0.95rem] transition-colors",
+                          isActive
+                            ? "text-foreground font-semibold"
+                            : "text-foreground/75 hover:text-foreground hover:bg-foreground/[0.05]"
+                        )
+                      }
+                    >
+                      {({ isActive }) => (
+                        <>
+                          <span aria-hidden="true" className="chiffres w-6 text-xs font-semibold text-muted-foreground">
+                            {num}
+                          </span>
+                          <Icon
+                            aria-hidden="true"
+                            className={cn("w-[18px] h-[18px] shrink-0", isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground")}
+                          />
+                          <span className="flex-1">
+                            <span className={cn(isActive && "surligne")}>{item.nom}</span>
+                          </span>
+                          {isActive && <span className="sr-only">(page actuelle)</span>}
+                        </>
+                      )}
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
 
-      <div className="p-6 mt-auto">
-         <div className="bg-muted/60 rounded-3xl p-5 border border-border">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-white dark:bg-gray-700 rounded-xl flex items-center justify-center text-primary-600 font-black shadow-sm">
-                {utilisateur?.nom?.charAt(0)?.toUpperCase() || "?"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-black text-gray-900 dark:text-white truncate">
-                  {utilisateur?.nom || "Étudiant"}
-                </p>
-                <p className="text-[10px] font-bold text-gray-500 truncate">
-                  {utilisateur?.email || ""}
-                </p>
-              </div>
-            </div>
-            <Button
-              onClick={handleDeconnexion}
-              variant="ghost"
-              aria-label="Se déconnecter"
-              className="w-full justify-start gap-3 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl font-bold px-3"
-            >
-              <LogOut className="w-4 h-4" aria-hidden="true" />
-              Déconnexion
-            </Button>
-            <NavLink
-              to="/confidentialite"
-              className="block mt-2 px-3 text-[11px] font-semibold text-gray-600 dark:text-gray-400 underline hover:text-primary-700"
-            >
-              Confidentialité et données
-            </NavLink>
-         </div>
+      <div className="px-4 pb-5 pt-4 border-t border-border">
+        <div className="flex items-center gap-3 px-2 mb-3">
+          <div
+            aria-hidden="true"
+            className="w-10 h-10 rounded-full bg-card border border-encre/70 dark:border-foreground/40 flex items-center justify-center font-display text-lg text-primary"
+          >
+            {utilisateur?.nom?.charAt(0)?.toUpperCase() || "?"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">{utilisateur?.nom || "Étudiant"}</p>
+            <p className="text-xs text-muted-foreground truncate">{utilisateur?.email || ""}</p>
+          </div>
+        </div>
+        <Button
+          onClick={handleDeconnexion}
+          variant="ghost"
+          className="w-full justify-start gap-3 h-10 px-2 text-marge hover:text-marge hover:bg-marge/10"
+        >
+          <LogOut className="w-4 h-4" aria-hidden="true" />
+          Déconnexion
+        </Button>
+        <BoutonInstaller variante="lien" className="px-2 mt-1 mb-1" />
+        <NavLink
+          to="/confidentialite"
+          className="block mt-1 px-2 text-xs text-muted-foreground underline underline-offset-2 hover:text-primary"
+        >
+          Confidentialité et données
+        </NavLink>
       </div>
     </div>
   );
@@ -128,13 +165,13 @@ export default function Sidebar({ ouverte, fermer }) {
       {ouverte && (
         <div className="fixed inset-0 z-50 md:hidden animate-fade-in">
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-encre/60"
             onClick={fermer}
             role="presentation"
             aria-hidden="true"
           />
           <div
-            className="absolute left-0 top-0 h-full w-72 shadow-2xl animate-slide-right"
+            className="absolute left-0 top-0 h-full w-72 shadow-lg animate-slide-right"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navigation"

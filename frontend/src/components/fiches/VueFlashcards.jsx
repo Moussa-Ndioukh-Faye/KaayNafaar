@@ -73,8 +73,8 @@ export default function VueFlashcards({ fiche, onRetour, onFicheMiseAJour }) {
             </span>
           </div>
           <div className="flex items-center gap-1 mt-1">
-            <RefreshCw className="w-3 h-3 text-orange-500" />
-            <span className="text-[10px] font-bold text-orange-500">{aReviser} à réviser</span>
+            <RefreshCw className="w-3 h-3 text-orange-700" />
+            <span className="text-xs font-bold text-orange-700">{aReviser} à réviser</span>
           </div>
         </div>
       </div>
@@ -112,11 +112,11 @@ export default function VueFlashcards({ fiche, onRetour, onFicheMiseAJour }) {
             {/* Front side */}
             <Card
               className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-gray-800 backface-hidden shadow-xl rounded-[2rem] border-2",
+                "absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-gray-800 backface-hidden shadow-md rounded-xl border-2",
                 reponseMontree ? "pointer-events-none opacity-0" : "opacity-100"
               )}
             >
-              <span className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-widest text-primary-600/50 bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded-lg">
+              <span className="absolute top-6 left-6 text-xs font-bold uppercase tracking-[0.08em] text-primary-600/50 bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded-lg">
                 Question
               </span>
               <p className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
@@ -133,11 +133,11 @@ export default function VueFlashcards({ fiche, onRetour, onFicheMiseAJour }) {
             {/* Back side */}
             <Card
               className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-emerald-50 dark:bg-emerald-900/10 backface-hidden shadow-xl rounded-[2rem] border-2 border-emerald-100 dark:border-emerald-900/30 transform rotate-y-180",
+                "absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-emerald-50 dark:bg-emerald-900/10 backface-hidden shadow-md rounded-xl border-2 border-emerald-100 dark:border-emerald-900/30 transform rotate-y-180",
                 reponseMontree ? "opacity-100" : "pointer-events-none opacity-0"
               )}
             >
-              <span className="absolute top-6 left-6 text-[10px] font-black uppercase tracking-widest text-emerald-600/50 bg-emerald-100/50 dark:bg-emerald-900/30 px-3 py-1 rounded-lg">
+              <span className="absolute top-6 left-6 text-xs font-bold uppercase tracking-[0.08em] text-emerald-700/50 bg-emerald-100/50 dark:bg-emerald-900/30 px-3 py-1 rounded-lg">
                 Réponse
               </span>
               <p className="text-xl font-bold text-emerald-900 dark:text-emerald-100 leading-relaxed">
@@ -158,8 +158,8 @@ export default function VueFlashcards({ fiche, onRetour, onFicheMiseAJour }) {
                   className="flex-1 max-w-[140px] h-14 rounded-2xl border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 group"
                 >
                   <div className="flex flex-col items-center gap-1">
-                    <ThumbsDown className="w-5 h-5 text-red-500" />
-                    <span className="text-[10px] font-black text-red-500 uppercase tracking-wider">
+                    <ThumbsDown className="w-5 h-5 text-red-700" />
+                    <span className="text-xs font-bold text-red-700 uppercase tracking-wider">
                       Difficile
                     </span>
                   </div>
@@ -171,7 +171,7 @@ export default function VueFlashcards({ fiche, onRetour, onFicheMiseAJour }) {
                 >
                   <div className="flex flex-col items-center gap-1">
                     <Meh className="w-5 h-5 text-amber-500" />
-                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-amber-500 uppercase tracking-wider">
                       Moyen
                     </span>
                   </div>
@@ -182,8 +182,8 @@ export default function VueFlashcards({ fiche, onRetour, onFicheMiseAJour }) {
                   className="flex-1 max-w-[140px] h-14 rounded-2xl border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-300 group"
                 >
                   <div className="flex flex-col items-center gap-1">
-                    <ThumbsUp className="w-5 h-5 text-emerald-500" />
-                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-wider">
+                    <ThumbsUp className="w-5 h-5 text-emerald-700" />
+                    <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
                       Facile
                     </span>
                   </div>
@@ -224,7 +224,7 @@ export default function VueFlashcards({ fiche, onRetour, onFicheMiseAJour }) {
                   setIndexFlashcard(0);
                   setReponseMontree(false);
                 }}
-                className="rounded-xl h-12 px-8 font-bold text-emerald-600"
+                className="rounded-xl h-12 px-8 font-bold text-emerald-700"
               >
                 <RotateCcw className="w-5 h-5 mr-2" />
                 Recommencer

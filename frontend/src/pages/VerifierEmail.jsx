@@ -38,7 +38,7 @@ export default function VerifierEmail() {
 
   return (
     <main id="contenu" className="fond-teinte min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-card border border-border rounded-[2rem] p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
+      <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
         <div className="flex justify-center mb-8">
           <LogoComplet className="w-36" />
         </div>

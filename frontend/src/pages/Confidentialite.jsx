@@ -23,7 +23,7 @@ const LienContact = () =>
 
 const Section = ({ titre, children }) => (
   <section className="space-y-3">
-    <h2 className="text-xl font-black text-gray-900 dark:text-white">{titre}</h2>
+    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{titre}</h2>
     <div className="space-y-3 text-gray-700 dark:text-gray-300 leading-relaxed">{children}</div>
   </section>
 );
@@ -31,7 +31,7 @@ const Section = ({ titre, children }) => (
 export default function Confidentialite() {
   return (
     <main id="contenu" className="min-h-screen bg-background py-12 px-4">
-      <article className="max-w-3xl mx-auto bg-card border border-border rounded-[2rem] p-8 md:p-12 space-y-10">
+      <article className="max-w-3xl mx-auto bg-card border border-border rounded-xl p-8 md:p-12 space-y-10">
         <header className="space-y-4">
           <Link
             to="/"
@@ -42,7 +42,7 @@ export default function Confidentialite() {
           </Link>
           <div className="flex items-center gap-3">
             <ShieldCheck className="w-8 h-8 text-primary-600" aria-hidden="true" />
-            <h1 className="text-3xl font-black text-gray-900 dark:text-white">Politique de confidentialité</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Politique de confidentialité</h1>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400">Dernière mise à jour : {MISE_A_JOUR}</p>
         </header>

@@ -1,4 +1,4 @@
-import { screen, waitFor, act } from "@testing-library/react";
+import { screen, waitFor, act, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { rendreAvecRouteur } from "../../test/utils";
@@ -70,9 +70,9 @@ describe("Assistant IA", () => {
   test("le mode « Expliquer » appelle l'explication de concept", async () => {
     rendreAvecRouteur(<AssistantIA />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("tab", { name: /expliquer/i }));
+    await user.click(within(screen.getByRole("group", { name: /mode/i })).getByRole("button", { name: /expliquer/i }));
     await user.type(screen.getByPlaceholderText(/quel concept/i), "Récursivité");
-    await user.click(screen.getByRole("button", { name: /^expliquer$/i }));
+    await user.click(screen.getAllByRole("button", { name: /^expliquer$/i }).at(-1));
     await waitFor(() => expect(iaAPI.expliquerStream).toHaveBeenCalled());
     expect(flux.params).toMatchObject({ concept: "Récursivité" });
     expect(screen.getByText("Explique-moi : Récursivité")).toBeInTheDocument();

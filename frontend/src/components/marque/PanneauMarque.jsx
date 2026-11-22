@@ -1,51 +1,42 @@
-import { Sparkles } from "lucide-react";
 import { LogoComplet } from "./Logo";
-import { Eclats, FlecheCourbe, Pointilles, Pastille } from "./Gribouillis";
 
 const ATOUTS = [
-  { titre: "Des fiches en quelques secondes", texte: "Importe un PDF ou une photo de ton cahier, l'IA en tire l'essentiel." },
-  { titre: "Des quiz qui s'adaptent", texte: "Flashcards et questions calées sur ce que tu maîtrises le moins." },
-  { titre: "Un planning qui tient la route", texte: "Révisions espacées pour arriver serein le jour de l'examen." },
+  { titre: "Des fiches en quelques secondes", texte: "Un PDF ou une photo de ton cahier : l'IA en tire l'essentiel." },
+  { titre: "Des quiz notés sur 20", texte: "Tirés de tes propres cours, avec la correction de chaque réponse." },
+  { titre: "Un planning qui tient la route", texte: "Des révisions espacées, pour arriver serein le jour de l'examen." },
 ];
 
-/** Panneau de présentation des pages de connexion et d'inscription (desktop) */
+/** Panneau des pages de connexion et d'inscription (grand écran) : le tableau noir de la classe */
 export default function PanneauMarque({ titre, accroche }) {
   return (
-    <aside className="fond-teinte relative hidden lg:flex lg:w-[46%] flex-col justify-between p-10 xl:p-14 overflow-hidden">
-      <Pointilles className="absolute bottom-16 right-10 opacity-80" />
+    <aside className="surface-marque relative hidden lg:flex lg:w-[46%] flex-col justify-between p-10 xl:p-14">
+      <LogoComplet ton="clair" className="w-36" />
 
-      <div className="flex items-start justify-between">
-        <LogoComplet className="w-36" />
-        <div className="relative mr-2 mt-2">
-          <Pastille valeur="IA" libelle="à tes côtés" icone={Sparkles} className="w-28 h-28" />
-          <Eclats className="absolute -top-5 -left-7 w-11 h-11 -rotate-45" />
-        </div>
-      </div>
+      <div className="relative max-w-md my-10 apparition">
+        <h2 className="text-5xl xl:text-[3.5rem] leading-[1.04] text-papier">{titre}</h2>
+        <p className="mt-5 text-lg text-papier/80">{accroche}</p>
 
-      <div className="relative max-w-md apparition my-8">
-        <h2 className="text-5xl xl:text-[3.4rem] font-bold leading-[1.08] text-marine dark:text-white">{titre}</h2>
-        <p className="mt-5 text-lg text-gray-600 dark:text-gray-300">{accroche}</p>
-
-        <ol className="mt-8 space-y-3">
+        <ol className="mt-10 space-y-6">
           {ATOUTS.map((a, i) => (
-            <li key={a.titre} className="flex gap-4 rounded-2xl bg-white/85 dark:bg-white/5 border border-border px-4 py-3 backdrop-blur-sm">
-              <span className="grid place-items-center w-10 h-10 shrink-0 rounded-xl bg-primary-600 text-white font-display font-bold">
+            <li key={a.titre} className="grid grid-cols-[2.5rem_1fr] gap-3 border-t border-papier/20 pt-5">
+              <span className="font-display text-4xl leading-none text-surligneur chiffres" aria-hidden="true">
                 {i + 1}
               </span>
               <span>
-                <span className="block font-semibold text-marine dark:text-white">{a.titre}</span>
-                <span className="block mt-0.5 text-sm text-gray-600 dark:text-gray-300">{a.texte}</span>
+                <span className="block font-display text-xl text-papier">{a.titre}</span>
+                <span className="block mt-1 text-papier/75">{a.texte}</span>
               </span>
             </li>
           ))}
         </ol>
-
-        <FlecheCourbe className="absolute -right-28 top-4 hidden xl:block" />
       </div>
 
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
-        Conçu à Dakar · pour les étudiants d'Afrique et d'ailleurs
-      </p>
+      {/* Post-it épinglé au tableau */}
+      <div className="self-end w-48 rotate-[4deg] bg-surligneur text-encre px-4 py-3 shadow-lg" aria-hidden="true">
+        <p className="font-display italic text-lg leading-snug" style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1' }}>
+          Conçu à Dakar, pour les étudiants d'Afrique et d'ailleurs.
+        </p>
+      </div>
     </aside>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { BrainCircuit, Sparkles } from "lucide-react";
+import { BrainCircuit, PenLine } from "lucide-react";
 import { quizAPI, coursAPI, iaAPI } from "../services/api";
 import { Button } from "../components/ui/button";
 import ResultatQuiz from "../components/quiz/ResultatQuiz";
@@ -207,22 +207,17 @@ export default function Quiz() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <div className="w-10 h-10 bg-secondary-100 dark:bg-secondary-900/30 rounded-xl flex items-center justify-center">
-              <BrainCircuit className="w-6 h-6 text-secondary-600" />
-            </div>
-            Quiz & Évaluations
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">
+          <h2 className="text-3xl md:text-4xl text-foreground">Mes quiz</h2>
+          <p className="annotation text-base mt-1">
             {quizList.length} quiz pour tester tes connaissances
           </p>
         </div>
         <Button
           onClick={() => setVue("generer")}
-          className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary-100 dark:shadow-none transition-transform active:scale-95"
+          className="rounded-xl h-11 px-6 font-bold shadow-lg transition-transform active:scale-95"
         >
-          <Sparkles className="w-5 h-5 mr-2" />
-          Nouveau Quiz IA
+          <PenLine aria-hidden="true" />
+          Nouveau quiz
         </Button>
       </div>
 
@@ -237,7 +232,7 @@ export default function Quiz() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-64 bg-gray-100 dark:bg-gray-800 rounded-[2rem] animate-pulse"
+              className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse"
             />
           ))}
         </div>

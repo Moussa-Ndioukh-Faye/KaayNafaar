@@ -9,7 +9,7 @@ function SourcesMessage({ sources }) {
   if (!Array.isArray(sources) || sources.length === 0) return null;
   return (
     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
-      <p className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Sources utilisées :</p>
+      <p className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500 mb-2">Sources utilisées :</p>
       <div className="flex flex-wrap gap-2">
         {sources.map((s, i) =>
           s.isWeb ? (
@@ -18,7 +18,7 @@ function SourcesMessage({ sources }) {
               href={s.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-2 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg border border-primary-100 dark:border-primary-800/50 text-[10px] font-bold hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg border border-primary-100 dark:border-primary-800/50 text-xs font-bold hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
             >
               <Globe className="w-3 h-3" aria-hidden="true" />
               {s.titre}
@@ -28,7 +28,7 @@ function SourcesMessage({ sources }) {
           ) : (
             <div
               key={i}
-              className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg border border-gray-100 dark:border-gray-700 text-[10px] font-bold"
+              className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg border border-gray-100 dark:border-gray-700 text-xs font-bold"
             >
               <BookOpen className="w-3 h-3" aria-hidden="true" />
               {s.titre}
@@ -48,7 +48,7 @@ function IndicateurReflexion() {
         <div className="w-2 h-2 bg-primary-500 rounded-full animate-bounce [animation-duration:800ms] [animation-delay:200ms]" />
         <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce [animation-duration:800ms] [animation-delay:400ms]" />
       </div>
-      <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-2">Analyse IA...</span>
+      <span className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500 ml-2">Analyse IA...</span>
     </div>
   );
 }
@@ -63,8 +63,8 @@ export default function BulleMessage({ msg, enChargement }) {
       <div
         aria-hidden="true"
         className={cn(
-          "w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-1 shadow-sm transition-transform group-hover:scale-105",
-          estEtudiant ? "bg-primary-600 text-white" : "bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-800 text-primary-600"
+          "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-1 border",
+          estEtudiant ? "bg-primary text-primary-foreground border-encre/70" : "bg-card text-primary border-encre/60 dark:border-foreground/40"
         )}
       >
         {estEtudiant ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
@@ -72,10 +72,12 @@ export default function BulleMessage({ msg, enChargement }) {
 
       <div
         className={cn(
-          "relative max-w-[85%] sm:max-w-[75%] rounded-[2rem] px-6 py-5 text-sm shadow-sm transition-all",
+          "relative max-w-[88%] sm:max-w-[75%] px-5 py-4 text-[0.95rem]",
           estEtudiant
-            ? "bg-primary-600 text-white rounded-tr-none"
-            : "bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-none group-hover:shadow-md"
+            ? // La question de l'étudiant : un post-it jaune collé sur la page
+              "bg-surligneur-pale text-encre border border-encre/15 rounded-sm shadow-md rotate-[0.4deg]"
+            : // La réponse : une feuille posée, réglée
+              "bg-card text-card-foreground border border-border rounded-md shadow-md"
         )}
       >
         <span className="sr-only">{estEtudiant ? "Toi :" : "Assistant :"}</span>
@@ -102,7 +104,7 @@ export default function BulleMessage({ msg, enChargement }) {
           </div>
         )}
 
-        <div className={cn("text-[9px] font-black uppercase tracking-widest mt-4 opacity-30", estEtudiant ? "text-right" : "text-left")}>
+        <div className={cn("text-xs mt-3 chiffres", estEtudiant ? "text-right text-encre/60" : "text-left text-muted-foreground")}>
           {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
         </div>
       </div>

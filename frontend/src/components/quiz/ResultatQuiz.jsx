@@ -27,14 +27,14 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
       label: "Score",
       value: `${resultat.score} / ${resultat.total}`,
       icon: Trophy,
-      color: "text-orange-500",
+      color: "text-orange-700",
       bg: "bg-orange-50 dark:bg-orange-900/20",
     },
     {
       label: "Réussite",
       value: `${pct}%`,
       icon: BarChart3,
-      color: "text-emerald-500",
+      color: "text-emerald-700",
       bg: "bg-emerald-50 dark:bg-emerald-900/20",
     },
     {
@@ -48,11 +48,11 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-10">
-      <Card className="rounded-[2rem] shadow-xl overflow-hidden border-none text-center p-8 bg-white dark:bg-gray-800">
+      <Card className="rounded-xl shadow-md overflow-hidden border-none text-center p-8 bg-white dark:bg-gray-800">
         <div className="flex justify-center mb-6">
           <div
             className={cn(
-              "w-24 h-24 rounded-[2rem] flex items-center justify-center shadow-lg",
+              "w-24 h-24 rounded-xl flex items-center justify-center shadow-lg",
               pct >= 80
                 ? "bg-emerald-500 text-white"
                 : pct >= 50
@@ -63,7 +63,7 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
             <Trophy className="w-12 h-12" />
           </div>
         </div>
-        <h2 className="text-3xl font-black text-gray-900 dark:text-white">{bilan.titre}</h2>
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{bilan.titre}</h2>
         <p className="text-gray-500 mt-2">{bilan.message}</p>
 
         <div className="grid grid-cols-3 gap-4 mt-8">
@@ -76,18 +76,18 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
               )}
             >
               <s.icon className={cn("w-5 h-5 mx-auto mb-2", s.color)} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+              <p className="text-xs font-bold uppercase tracking-[0.08em] text-gray-500">
                 {s.label}
               </p>
-              <p className={cn("text-lg font-black", s.color)}>{s.value}</p>
+              <p className={cn("text-lg font-bold", s.color)}>{s.value}</p>
             </div>
           ))}
         </div>
       </Card>
 
       <div className="space-y-4">
-        <h3 className="text-xl font-black text-gray-900 dark:text-white px-2 flex items-center gap-2">
-          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white px-2 flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-700" />
           Correction détaillée
         </h3>
         {quiz.questions.map((q, i) => {
@@ -106,7 +106,7 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
                 <div className="flex items-start gap-4">
                   <div
                     className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 font-black text-xs",
+                      "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-xs",
                       rep?.estCorrecte ? "bg-emerald-500 text-white" : "bg-red-500 text-white"
                     )}
                   >
@@ -118,13 +118,13 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
                     </p>
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="p-3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-                        <p className="text-[9px] font-black uppercase text-gray-500 mb-1">
+                        <p className="text-xs font-bold uppercase text-gray-500 mb-1">
                           Ta réponse
                         </p>
                         <p
                           className={cn(
                             "text-sm font-bold",
-                            rep?.estCorrecte ? "text-emerald-600" : "text-red-600"
+                            rep?.estCorrecte ? "text-emerald-700" : "text-red-600"
                           )}
                         >
                           {rep?.reponseUtilisateur || "Pas de réponse"}
@@ -132,7 +132,7 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
                       </div>
                       {!rep?.estCorrecte && (
                         <div className="p-3 bg-emerald-500 text-white rounded-2xl">
-                          <p className="text-[9px] font-black uppercase text-emerald-100 mb-1">
+                          <p className="text-xs font-bold uppercase text-emerald-100 mb-1">
                             Bonne réponse
                           </p>
                           <p className="text-sm font-bold">{q.reponseCorrecte}</p>
@@ -158,7 +158,7 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
       <div className="flex gap-4">
         <Button
           onClick={onRecommencer}
-          className="flex-1 h-14 rounded-2xl font-black text-lg shadow-lg shadow-primary-200 dark:shadow-none"
+          className="flex-1 h-14 rounded-2xl font-bold text-lg shadow-lg"
         >
           <RotateCcw className="w-5 h-5 mr-2" />
           Recommencer
@@ -166,7 +166,7 @@ export default function ResultatQuiz({ quiz, resultat, onRecommencer, onRetour }
         <Button
           onClick={onRetour}
           variant="outline"
-          className="flex-1 h-14 rounded-2xl font-black text-lg"
+          className="flex-1 h-14 rounded-2xl font-bold text-lg"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Retour à la liste

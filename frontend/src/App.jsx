@@ -13,6 +13,7 @@ import {
 
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
+import BandeauHorsLigne from "./components/BandeauHorsLigne";
 import { Toaster } from "./components/ui/toaster";
 import { authAPI } from "./services/api";
 
@@ -50,7 +51,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="flex items-center justify-center h-screen bg-background p-4">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full border border-border bg-card rounded-2xl flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">⚠️</span>
             </div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Une erreur est survenue</h1>
@@ -141,12 +142,15 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
+    <>
+    <BandeauHorsLigne />
     <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
       <AuthContext.Provider value={{ utilisateur, connecter, deconnecter, chargement }}>
         {children}
         <Toaster />
       </AuthContext.Provider>
     </DarkModeContext.Provider>
+    </>
   );
 };
 
@@ -178,7 +182,7 @@ const Layout = ({ children }) => {
       {/* WCAG 2.4.1 : lien d'évitement vers le contenu principal */}
       <a
         href="#contenu"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-primary-700 focus:text-white focus:font-bold"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:font-semibold"
       >
         Aller au contenu principal
       </a>
@@ -188,7 +192,14 @@ const Layout = ({ children }) => {
       />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar ouvrir={() => setSidebarOuverte(true)} />
-        <main id="contenu" tabIndex={-1} className="flex-1 overflow-y-auto p-4 md:p-8 animate-fade-in focus:outline-none">
+        {/* WCAG 2.1.1 : la zone qui défile doit être atteignable au clavier pour défiler aux flèches */}
+        <main
+          id="contenu"
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+          tabIndex={0}
+          aria-label="Contenu de la page"
+          className="flex-1 overflow-y-auto page-cahier [--marge-x:1rem] md:[--marge-x:2.5rem] pl-7 pr-4 py-6 md:pl-16 md:pr-10 md:py-8 animate-fade-in focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        >
           {children}
         </main>
       </div>

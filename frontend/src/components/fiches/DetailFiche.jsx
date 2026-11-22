@@ -17,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
 import { enTexte } from "../../lib/texte";
-import { exporterFichePro } from "../../utils/pdfPro";
 import { imprimerFiche } from "../../utils/exportFiche";
 
 /** Contenu complet d'une fiche : résumé, concepts, points clés, explications */
@@ -42,7 +41,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
             onClick={() => onPartager(fiche)}
             className={cn(
               "rounded-xl font-bold transition-all",
-              fiche.estPublique ? "bg-emerald-50 text-emerald-600 border-emerald-100" : ""
+              fiche.estPublique ? "bg-emerald-50 text-emerald-700 border-emerald-100" : ""
             )}
           >
             {fiche.estPublique ? (
@@ -55,7 +54,11 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
           <Button
             variant="outline"
             size="sm"
-            onClick={() => exporterFichePro(fiche)}
+            onClick={async () => {
+              // Le générateur PDF (lourd) n'est chargé qu'au moment de l'export
+              const { exporterFichePro } = await import("../../utils/pdfPro");
+              exporterFichePro(fiche);
+            }}
             className="rounded-xl font-bold"
           >
             <Download className="w-4 h-4 mr-2" />
@@ -84,7 +87,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
             variant="ghost"
             size="sm"
             onClick={() => onSupprimer(fiche.id)}
-            className="rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="rounded-xl text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
@@ -92,24 +95,24 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
       </div>
 
       {/* Fiche Content Card */}
-      <Card className="rounded-[2rem] border-none shadow-xl shadow-gray-100 dark:shadow-none overflow-hidden bg-white dark:bg-gray-800">
+      <Card className="rounded-xl border-none shadow-md shadow-gray-100 overflow-hidden bg-white dark:bg-gray-800">
         <div className="h-3 bg-gradient-to-r from-primary-600 via-secondary-400 to-primary-600" />
         <CardHeader className="p-8 pb-4">
           <div className="flex items-center gap-3 mb-4">
             {fiche.genereeParIA && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-secondary-100 dark:border-secondary-900/50">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400 rounded-full text-xs font-bold uppercase tracking-wider border border-secondary-100 dark:border-secondary-900/50">
                 <Sparkles className="w-3 h-3" />
                 Générée par IA
               </div>
             )}
             {fiche.cours && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-[10px] font-black uppercase tracking-wider border border-primary-100 dark:border-primary-900/50">
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-xs font-bold uppercase tracking-wider border border-primary-100 dark:border-primary-900/50">
                 <BookOpen className="w-3 h-3" />
                 {fiche.cours.titre}
               </div>
             )}
           </div>
-          <CardTitle className="text-3xl font-black text-gray-900 dark:text-white leading-tight">
+          <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
             {fiche.titre}
           </CardTitle>
         </CardHeader>
@@ -118,8 +121,8 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
           {fiche.contenu?.resume && (
             <div className="space-y-4">
               <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center">
-                  <FileText className="w-4 h-4 text-orange-600" />
+                <div className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-orange-700" />
                 </div>
                 Résumé synthétique
               </h3>
@@ -132,8 +135,8 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
           {conceptsCles.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <Key className="w-4 h-4 text-emerald-600" />
+                <div className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center">
+                  <Key className="w-4 h-4 text-emerald-700" />
                 </div>
                 Concepts fondamentaux
               </h3>
@@ -153,7 +156,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
           {pointsImportants.length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center">
                   <Star className="w-4 h-4 text-primary-600" />
                 </div>
                 Points à retenir
@@ -164,7 +167,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
                     key={`point-${i}`}
                     className="flex gap-3 p-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700"
                   >
-                    <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 font-black text-[10px] text-primary-600">
+                    <div className="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs text-primary-600">
                       {i + 1}
                     </div>
                     <span className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -179,7 +182,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
           {Object.keys(explications).length > 0 && (
             <div className="space-y-4">
               <h3 className="text-lg font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-secondary-50 dark:bg-secondary-900/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full border border-border bg-card flex items-center justify-center">
                   <MessageSquare className="w-4 h-4 text-secondary-600" />
                 </div>
                 Explications détaillées
@@ -190,7 +193,7 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
                     key={`expl-${i}-${nom}`}
                     className="group p-6 bg-white dark:bg-gray-800 border-2 border-gray-50 dark:border-gray-700 rounded-3xl hover:border-primary-100 dark:hover:border-primary-900/30 transition-all"
                   >
-                    <h4 className="font-black text-primary-600 dark:text-primary-400 mb-2 uppercase text-xs tracking-widest">
+                    <h4 className="font-bold text-primary-600 dark:text-primary-400 mb-2 uppercase text-xs tracking-[0.08em]">
                       {nom}
                     </h4>
                     <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
@@ -204,10 +207,10 @@ export default function DetailFiche({ fiche, onRetour, onPartager, onFlashcards,
 
           {fiche.flashcards?.length > 0 && (
             <div className="pt-8 border-t border-gray-100 dark:border-gray-700 flex flex-col items-center text-center">
-              <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center mb-4">
-                <BrainCircuit className="w-8 h-8 text-emerald-600" />
+              <div className="w-14 h-14 rounded-full border border-border bg-card rounded-2xl flex items-center justify-center mb-4">
+                <BrainCircuit className="w-8 h-8 text-emerald-700" />
               </div>
-              <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                 Prêt pour une session flash ?
               </h3>
               <p className="text-sm text-gray-500 mb-6">

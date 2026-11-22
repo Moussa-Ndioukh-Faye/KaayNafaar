@@ -22,14 +22,14 @@ const ZoneSaisie = forwardRef(function ZoneSaisie(
   );
 
   return (
-    <Card className="rounded-[2.5rem] border bg-white dark:bg-gray-800 p-2 shadow-2xl">
+    <Card className="rounded-xl border bg-white dark:bg-gray-800 p-2 shadow-lg">
       <CardContent className="p-0">
         {mode === "general" ? (
           <div className="flex gap-3 items-end p-2 pl-6">
             <textarea
               ref={refTexte}
               aria-label="Ta question"
-              className="flex-1 resize-none bg-transparent py-4 text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 outline-none max-h-40 min-h-[52px]"
+              className="input-field flex-1 resize-none max-h-40 min-h-[52px]"
               placeholder="Pose ta question ou demande un résumé…"
               value={valeur}
               onChange={(e) => onChange(e.target.value)}
@@ -50,11 +50,11 @@ const ZoneSaisie = forwardRef(function ZoneSaisie(
           </div>
         ) : (
           <div className="flex gap-3 items-center p-3">
-            <div className="flex-1 flex items-center gap-4 bg-gray-50 dark:bg-gray-900 rounded-[1.5rem] px-6 py-1.5 border-2 border-transparent focus-within:border-primary-500 transition-all">
+            <div className="flex-1 flex items-center gap-4 bg-gray-50 dark:bg-gray-900 rounded-lg px-6 py-1.5 border-2 border-transparent focus-within:border-primary-500 transition-all">
               <Search className="w-5 h-5 text-gray-500" aria-hidden="true" />
               <input
                 aria-label="Concept à expliquer"
-                className="flex-1 bg-transparent text-sm font-bold text-gray-900 dark:text-white placeholder-gray-400 outline-none py-3"
+                className="input-field flex-1 font-bold"
                 placeholder="Quel concept veux-tu comprendre ?"
                 value={valeur}
                 onChange={(e) => onChange(e.target.value)}
@@ -66,7 +66,7 @@ const ZoneSaisie = forwardRef(function ZoneSaisie(
             {enChargement ? (
               boutonArret("Arrêter l'explication")
             ) : (
-              <Button onClick={onEnvoyer} disabled={!valeur.trim()} className="px-8 font-black text-sm">
+              <Button onClick={onEnvoyer} disabled={!valeur.trim()} className="px-8 font-bold text-sm">
                 Expliquer <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
               </Button>
             )}

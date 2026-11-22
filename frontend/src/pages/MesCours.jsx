@@ -1,25 +1,57 @@
 import { useState, useEffect, useRef } from "react";
-import { 
-  BookOpen, 
-  Plus, 
-  Search, 
-  Trash2, 
-  Clock, 
-  GraduationCap, 
-  Tag, 
-  FileUp, 
-  X, 
-  CheckCircle2,
-  AlertCircle,
-  FileText,
-  Sparkles
-} from "lucide-react";
+import { BookOpen, Plus, Search, Trash2, FileUp, X, CheckCircle2, AlertCircle } from "lucide-react";
 import { coursAPI } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
 
 const NIVEAUX = ["débutant", "intermédiaire", "avancé"];
+
+// Couleurs de couvertures de cahiers : une par matière, toujours la même
+const COUVERTURES = ["#0047db", "#c8372d", "#1f7a4d", "#d9621e", "#0a1f4a", "#7a3fa0"];
+const couleurMatiere = (matiere = "") =>
+  COUVERTURES[[...matiere].reduce((somme, c) => somme + c.charCodeAt(0), 0) % COUVERTURES.length];
+
+/** Un cours = un cahier : couverture de couleur, reliure piquée, étiquette blanche */
+function CouvertureCahier({ cours: c, onSupprimer }) {
+  const couleur = couleurMatiere(c.matiere);
+  const details = [c.niveau, c.dureeEstimee ? `${c.dureeEstimee} min` : null].filter(Boolean).join(" · ");
+  return (
+    <article
+      className="group relative flex min-h-[10.5rem] rounded-md border border-encre/30 shadow-md overflow-hidden transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg"
+      style={{ backgroundColor: couleur }}
+    >
+      {/* Reliure : bande plus sombre, points de couture */}
+      <div aria-hidden="true" className="w-6 shrink-0 bg-black/25 flex flex-col items-center justify-around py-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span key={i} className="w-1 h-2.5 rounded-full bg-white/70" />
+        ))}
+      </div>
+      <div className="flex-1 flex flex-col p-4">
+        {/* Étiquette du cahier */}
+        <div className="bg-card text-card-foreground rounded-[4px] border-[3px] border-double border-encre/40 px-4 py-3 shadow-sm">
+          <p className="etiquette truncate">{c.matiere || "Matière"}</p>
+          <h3 className="mt-0.5 text-lg leading-snug line-clamp-2">{c.titre}</h3>
+          {details && <p className="mt-1 text-sm text-muted-foreground">{details}</p>}
+        </div>
+        <div className="mt-auto pt-3 flex items-center justify-between gap-2 text-white">
+          <p className="text-sm text-white/90 line-clamp-1">
+            {c.resumeIA ? "Résumé prêt" : Array.isArray(c.tags) && c.tags.length ? c.tags.join(", ") : ""}
+          </p>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Supprimer le cours ${c.titre}`}
+            onClick={() => onSupprimer(c.id)}
+            className="w-9 h-9 text-white hover:text-white hover:bg-white/20 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          >
+            <Trash2 aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+    </article>
+  );
+}
 
 export default function MesCours() {
   const [cours, setCours] = useState([]);
@@ -100,16 +132,11 @@ export default function MesCours() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
-              <BookOpen className="w-6 h-6 text-primary-600" />
-            </div>
-            Mes Cours
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 font-medium">{cours.length} cours enregistrés dans ta bibliothèque</p>
+          <h2 className="text-3xl md:text-4xl text-foreground">Mes cours</h2>
+          <p className="annotation text-base mt-1">{cours.length} cours enregistrés dans ta bibliothèque</p>
         </div>
         {!afficherFormulaire && (
-          <Button onClick={() => setAfficherFormulaire(true)} className="rounded-xl h-11 px-6 font-bold shadow-lg shadow-primary-100 dark:shadow-none transition-transform active:scale-95">
+          <Button onClick={() => setAfficherFormulaire(true)} className="rounded-xl h-11 px-6 font-bold shadow-lg transition-transform active:scale-95">
             <Plus className="w-5 h-5 mr-2" />
             Ajouter un cours
           </Button>
@@ -122,7 +149,7 @@ export default function MesCours() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary-500 transition-colors" />
           <input
             type="search"
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500 transition-all shadow-sm"
+            className="input-field pl-10 pr-4"
             placeholder="Rechercher par titre ou matière…"
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
@@ -148,7 +175,7 @@ export default function MesCours() {
 
       {/* Form Section */}
       {afficherFormulaire && (
-        <Card className="border-2 border-primary-100 dark:border-primary-900/30 shadow-xl rounded-3xl overflow-hidden animate-slide-up">
+        <Card className="border-2 border-primary-100 dark:border-primary-900/30 shadow-md rounded-3xl overflow-hidden animate-slide-up">
           <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-700 p-6">
             <div className="flex justify-between items-center">
               <div>
@@ -166,7 +193,7 @@ export default function MesCours() {
                 <div className="space-y-2">
                   <label htmlFor="mescours-champ-167" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Titre du cours *</label>
                   <input id="mescours-champ-167"
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    className="input-field"
                     placeholder="ex: Introduction à l'Algorithmique" required
                     value={form.titre} maxLength={200}
                     onChange={(e) => setForm({ ...form, titre: e.target.value })}
@@ -175,7 +202,7 @@ export default function MesCours() {
                 <div className="space-y-2">
                   <label htmlFor="mescours-champ-176" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Matière *</label>
                   <input id="mescours-champ-176"
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    className="input-field"
                     placeholder="ex: Informatique" required
                     value={form.matiere} maxLength={100}
                     onChange={(e) => setForm({ ...form, matiere: e.target.value })}
@@ -188,7 +215,7 @@ export default function MesCours() {
                   Contenu du cours * <span className="text-gray-500 font-normal">(Texte brut pour analyse IA)</span>
                 </label>
                 <textarea id="mescours-champ-187"
-                  className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all h-40 resize-none"
+                  className="input-field h-40 resize-none"
                   required
                   placeholder="Colle ici le texte de tes leçons ou notes…"
                   value={form.contenu} maxLength={50000}
@@ -200,7 +227,7 @@ export default function MesCours() {
                 <div className="space-y-2">
                   <label htmlFor="mescours-champ-201" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Niveau</label>
                   <select id="mescours-champ-201" 
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all appearance-none"
+                    className="input-field appearance-none"
                     value={form.niveau} onChange={(e) => setForm({ ...form, niveau: e.target.value })}
                   >
                     {NIVEAUX.map((n) => <option key={n} value={n}>{n.charAt(0).toUpperCase() + n.slice(1)}</option>)}
@@ -209,7 +236,7 @@ export default function MesCours() {
                 <div className="space-y-2">
                   <label htmlFor="mescours-champ-210" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Durée estimée (min)</label>
                   <input id="mescours-champ-210" type="number" min="5" max="300" 
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    className="input-field"
                     value={form.dureeEstimee}
                     onChange={(e) => setForm({ ...form, dureeEstimee: parseInt(e.target.value) || 30 })}
                   />
@@ -217,7 +244,7 @@ export default function MesCours() {
                 <div className="space-y-2">
                   <label htmlFor="mescours-champ-218" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Tags</label>
                   <input id="mescours-champ-218" 
-                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm bg-white dark:bg-gray-800 outline-none focus:ring-2 focus:ring-primary-500 transition-all"
+                    className="input-field"
                     placeholder="tri, algo, mémoire" value={form.tags} maxLength={200}
                     onChange={(e) => setForm({ ...form, tags: e.target.value })}
                   />
@@ -239,10 +266,10 @@ export default function MesCours() {
                     <span className="text-xs font-bold text-gray-500">
                       {fichier ? fichier.name : "PDF ou Photo de notes (OCR)"}
                     </span>
-                    {!fichier && <span className="text-[9px] text-gray-500 uppercase tracking-tighter">Supporte les notes manuscrites</span>}
+                    {!fichier && <span className="text-xs text-gray-500 uppercase tracking-tighter">Supporte les notes manuscrites</span>}
                   </Button>
                   {fichier && (
-                    <Button type="button" variant="ghost" size="icon" aria-label="Retirer le fichier" onClick={() => setFichier(null)} className="rounded-full text-red-500">
+                    <Button type="button" variant="ghost" size="icon" aria-label="Retirer le fichier" onClick={() => setFichier(null)} className="rounded-full text-red-700">
                       <Trash2 className="w-5 h-5" />
                     </Button>
                   )}
@@ -291,60 +318,9 @@ export default function MesCours() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {coursFiltres.map((c) => (
-            <Card key={c.id} className="group relative rounded-3xl overflow-hidden hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-1">
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <FileText className="w-5 h-5 text-primary-600" />
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon" aria-label={`Supprimer le cours ${c.titre}`}
-                    onClick={() => supprimerCours(c.id)}
-                    className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-                <CardTitle className="mt-4 text-lg font-bold truncate group-hover:text-primary-600 transition-colors">{c.titre}</CardTitle>
-                <div className="flex items-center gap-2 flex-wrap mt-2">
-                  <div className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-md">
-                    {c.matiere}
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-md">
-                    <GraduationCap className="w-3 h-3" />
-                    {c.niveau}
-                  </div>
-                  <div className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-md">
-                    <Clock className="w-3 h-3" />
-                    {c.dureeEstimee} min
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed">
-                  {c.contenu}
-                </p>
-              </CardContent>
-              <CardFooter className="pt-0 flex justify-between items-center">
-                {c.tags?.length > 0 && (
-                  <div className="flex gap-1">
-                    <Tag className="w-3 h-3 text-gray-500" />
-                    <span className="text-[10px] text-gray-500 font-medium truncate max-w-[150px]">
-                      {Array.isArray(c.tags) ? c.tags.join(", ") : c.tags}
-                    </span>
-                  </div>
-                )}
-                {c.resumeIA && (
-                  <div className="ml-auto flex items-center gap-1 px-2 py-1 bg-secondary-50 dark:bg-secondary-900/20 rounded-lg">
-                    <Sparkles className="w-3 h-3 text-secondary-600" />
-                    <span className="text-[10px] font-bold text-secondary-600 uppercase">IA OK</span>
-                  </div>
-                )}
-              </CardFooter>
-            </Card>
+            <CouvertureCahier key={c.id} cours={c} onSupprimer={supprimerCours} />
           ))}
         </div>
       )}

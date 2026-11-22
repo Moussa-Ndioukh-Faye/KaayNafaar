@@ -1,112 +1,80 @@
-import { Sparkles, Trash2, Play, RotateCcw, Timer, HelpCircle, BarChart3 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../ui/card";
+import { Trash2, Play, RotateCcw } from "lucide-react";
 import { Button } from "../ui/button";
-import { cn } from "../../lib/utils";
 
-/** Carte d'un quiz dans la liste, avec le score de la dernière session */
+const DIFFICULTE = { facile: "Facile", moyen: "Moyen", difficile: "Difficile" };
+
+/** Note sur 20, à la française (ex. 4/5 → 16) */
+const noteSur20 = (score, total) => (total ? Math.round((score / total) * 200) / 10 : 0).toLocaleString("fr-FR");
+
+/**
+ * Un quiz présenté comme une copie d'examen : l'intitulé en tête,
+ * et la note du dernier essai entourée à l'encre rouge, comme celle du professeur.
+ */
 export default function CarteQuiz({ quiz: q, onCommencer, onSupprimer }) {
   const derniereSession = q.sessions?.[q.sessions.length - 1];
-  const score = derniereSession
-    ? Math.round((derniereSession.score / derniereSession.total) * 100)
-    : null;
+  const nbQuestions = q.questions?.length || 0;
 
   return (
-    <Card className="group relative rounded-[2rem] overflow-hidden hover:shadow-xl hover:border-primary-200 transition-all duration-300 hover:-translate-y-2 bg-white dark:bg-gray-800">
-      <div
-        className={cn(
-          "h-3 w-full",
-          score >= 80
-            ? "bg-emerald-500"
-            : score >= 50
-              ? "bg-orange-500"
-              : score !== null
-                ? "bg-red-500"
-                : "bg-gray-200 dark:bg-gray-700"
-        )}
-      />
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-500 group-hover:text-primary-600 transition-colors">
-              <HelpCircle className="w-6 h-6" />
-            </div>
-            {q.genereeParIA && (
-              <div className="p-1.5 bg-green-50 dark:bg-green-900/30 text-green-600 rounded-lg">
-                <Sparkles className="w-4 h-4" />
-              </div>
-            )}
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSupprimer(q.id);
-            }}
-            aria-label={`Supprimer le quiz ${q.titre}`}
-            className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
-          >
-            <Trash2 className="w-4 h-4" aria-hidden="true" />
-          </Button>
+    <article className="group relative flex flex-col bg-card border border-border rounded-md shadow-md hover:shadow-lg transition-shadow">
+      <div className="flex items-start gap-4 px-5 pt-5">
+        <div className="flex-1 min-w-0">
+          <p className="etiquette">
+            {DIFFICULTE[q.difficulte] || q.difficulte} · {nbQuestions} question{nbQuestions > 1 ? "s" : ""}
+            {q.dureeMinutes ? ` · ${q.dureeMinutes} min` : ""}
+          </p>
+          <h3 className="mt-1.5 text-xl leading-snug text-foreground">{q.titre}</h3>
         </div>
-        <CardTitle className="mt-4 text-xl font-black leading-tight truncate group-hover:text-primary-600 transition-colors">
-          {q.titre}
-        </CardTitle>
-        <div className="flex items-center gap-2 mt-3">
-          <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-secondary-50 dark:bg-secondary-900/50 text-secondary-700 dark:text-secondary-300 rounded-md">
-            {q.difficulte}
-          </span>
-          <span className="flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 bg-primary-50 dark:bg-primary-900/50 text-primary-600 dark:text-primary-300 rounded-md">
-            <Timer className="w-3 h-3" /> {q.dureeMinutes} min
-          </span>
-          <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-md">
-            {q.questions?.length} questions
-          </span>
-        </div>
-      </CardHeader>
 
-      <CardContent className="pb-6">
-        {score !== null ? (
-          <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl">
-            <div
-              className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center font-black text-xs",
-                score >= 80 ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600"
-              )}
-            >
-              {score}%
-            </div>
-            <div className="flex-1">
-              <p className="text-[10px] font-black uppercase tracking-wider text-gray-500">
-                Dernier essai
-              </p>
-              <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
-                {derniereSession.score} / {derniereSession.total} bonnes réponses
-              </p>
-            </div>
-            <BarChart3 className="w-5 h-5 text-gray-300" />
+        {derniereSession ? (
+          <div
+            className="relative shrink-0 w-[4.5rem] h-[4.5rem] -rotate-6 text-marge"
+            role="img"
+            aria-label={`Dernière note : ${noteSur20(derniereSession.score, derniereSession.total)} sur 20`}
+          >
+            <svg viewBox="0 0 72 72" className="absolute inset-0" aria-hidden="true">
+              <path
+                d="M36 5c17 0 31 13 31 30S53 67 35 67 5 54 6 36 19 4 38 6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span aria-hidden="true" className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+              <span className="font-display text-xl font-semibold chiffres">{noteSur20(derniereSession.score, derniereSession.total)}</span>
+              <span className="text-xs font-semibold">/20</span>
+            </span>
           </div>
         ) : (
-          <div className="flex items-center gap-3 p-4 border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-2xl">
-            <Play className="w-5 h-5 text-gray-200" />
-            <p className="text-sm font-bold text-gray-300">Pas encore tenté</p>
-          </div>
+          <p className="annotation text-sm shrink-0 mt-1 -rotate-3">Pas encore tenté</p>
         )}
-      </CardContent>
+      </div>
 
-      <CardFooter className="pt-0">
-        <Button
-          onClick={() => onCommencer(q)}
-          className="w-full h-12 rounded-2xl font-black transition-transform active:scale-95 group-hover:shadow-lg group-hover:shadow-primary-100 dark:group-hover:shadow-none"
-        >
-          {derniereSession ? (
-            <RotateCcw className="w-4 h-4 mr-2" />
-          ) : (
-            <Play className="w-4 h-4 mr-2" />
-          )}
+      {derniereSession && (
+        <p className="px-5 mt-2 text-sm text-muted-foreground">
+          Dernier essai : {derniereSession.score} bonne{derniereSession.score > 1 ? "s" : ""} réponse
+          {derniereSession.score > 1 ? "s" : ""} sur {derniereSession.total}
+        </p>
+      )}
+
+      <div className="mt-auto flex items-center gap-2 px-5 pt-5 pb-5">
+        <Button onClick={() => onCommencer(q)} className="flex-1">
+          {derniereSession ? <RotateCcw aria-hidden="true" /> : <Play aria-hidden="true" />}
           {derniereSession ? "Refaire le quiz" : "Commencer le quiz"}
         </Button>
-      </CardFooter>
-    </Card>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSupprimer(q.id);
+          }}
+          aria-label={`Supprimer le quiz ${q.titre}`}
+          className="text-muted-foreground hover:text-marge hover:bg-marge/10"
+        >
+          <Trash2 aria-hidden="true" />
+        </Button>
+      </div>
+    </article>
   );
 }

@@ -70,9 +70,9 @@ export default function Page404() {
           {/* Carte « question surprise » */}
           <section
             aria-labelledby="titre-404"
-            className="relative mt-6 rounded-[2rem] border border-border bg-card p-7 sm:p-9 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.35)]"
+            className="relative mt-6 rounded-xl border border-border bg-card p-7 sm:p-9 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.35)]"
           >
-            <span className="absolute -top-3 left-7 rounded-full bg-secondary-400 px-3 py-1 text-xs font-bold uppercase tracking-wider text-marine">
+            <span className="absolute -top-3 left-7 rounded-full bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider text-encre">
               Question surprise
             </span>
 
