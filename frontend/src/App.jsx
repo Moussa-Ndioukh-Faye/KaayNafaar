@@ -19,6 +19,8 @@ import { authAPI } from "./services/api";
 
 const Home = lazy(() => import("./pages/Home"));
 const MesCours = lazy(() => import("./pages/MesCours"));
+const Carnets = lazy(() => import("./pages/Carnets"));
+const Carnet = lazy(() => import("./pages/Carnet"));
 const Fiches = lazy(() => import("./pages/Fiches"));
 const Quiz = lazy(() => import("./pages/Quiz"));
 const Planning = lazy(() => import("./pages/Planning"));
@@ -234,6 +236,8 @@ export default function App() {
           <Route path="/mot-de-passe-oublie" element={<SuspenseWrapper><MotDePasseOublie /></SuspenseWrapper>} />
           <Route path="/reinitialiser-mot-de-passe" element={<SuspenseWrapper><ReinitialiserMotDePasse /></SuspenseWrapper>} />
           <Route path="/mes-cours" element={<RouteProtegee><Layout><SuspenseWrapper><MesCours /></SuspenseWrapper></Layout></RouteProtegee>} />
+          <Route path="/carnets" element={<RouteProtegee><Layout><SuspenseWrapper><Carnets /></SuspenseWrapper></Layout></RouteProtegee>} />
+          <Route path="/carnets/:id" element={<RouteProtegee><Layout><SuspenseWrapper><Carnet /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/fiches" element={<RouteProtegee><Layout><SuspenseWrapper><Fiches /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/quiz" element={<RouteProtegee><Layout><SuspenseWrapper><Quiz /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/planning" element={<RouteProtegee><Layout><SuspenseWrapper><Planning /></SuspenseWrapper></Layout></RouteProtegee>} />

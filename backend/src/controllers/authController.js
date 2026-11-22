@@ -9,6 +9,7 @@ const Course = require("../models/Course");
 const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
 const FeedbackIA = require("../models/FeedbackIA");
+const Carnet = require("../models/Carnet");
 const { Op } = require("sequelize");
 const db = require("../config/database"); // getter : suit le basculement SQLite
 const { supprimerFichier } = require("../utils/fichiers");
@@ -321,6 +322,7 @@ const supprimerCompte = async (req, res) => {
     const cours = await Course.findAll({ where: { utilisateurId: uid }, attributes: ["fichierPDF"] });
 
     await FeedbackIA.destroy({ where: { utilisateurId: uid } });
+    await Carnet.destroy({ where: { utilisateurId: uid } });
     await Quiz.destroy({ where: { utilisateurId: uid } });
     await Fiche.destroy({ where: { utilisateurId: uid } });
     await Course.destroy({ where: { utilisateurId: uid } });
@@ -484,13 +486,14 @@ const reinitialiserMotDePasse = async (req, res) => {
 const exporterDonnees = async (req, res) => {
   try {
     const uid = req.utilisateur.id;
-    const [utilisateur, cours, fiches, quiz, progression, feedbacks] = await Promise.all([
+    const [utilisateur, cours, fiches, quiz, progression, feedbacks, carnets] = await Promise.all([
       User.findByPk(uid, { attributes: { exclude: CHAMPS_PRIVES } }),
       Course.findAll({ where: { utilisateurId: uid }, attributes: { exclude: ["fichierPDF"] } }),
       Fiche.findAll({ where: { utilisateurId: uid } }),
       Quiz.findAll({ where: { utilisateurId: uid } }),
       Progression.findOne({ where: { utilisateurId: uid } }),
       FeedbackIA.findAll({ where: { utilisateurId: uid } }),
+      Carnet.findAll({ where: { utilisateurId: uid } }),
     ]);
 
     const date = new Date().toISOString().slice(0, 10);
@@ -505,6 +508,7 @@ const exporterDonnees = async (req, res) => {
       quiz,
       progression,
       feedbacksIA: feedbacks,
+      carnets,
     });
   } catch (error) {
     console.error("Erreur exporterDonnees:", error);

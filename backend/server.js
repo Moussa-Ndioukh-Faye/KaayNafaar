@@ -28,6 +28,7 @@ const quizRoutes = require("./src/routes/quiz");
 const aiRoutes = require("./src/routes/ai");
 const progressionRoutes = require("./src/routes/progression");
 const analyticsRoutes = require("./src/routes/analytics");
+const carnetRoutes = require("./src/routes/carnets");
 const {
   limiteurGlobal,
   limiteurAuth,
@@ -123,6 +124,7 @@ app.use("/api/quiz", validerCSRF, quizRoutes);
 app.use("/api/ai", validerCSRF, limiteurIA, aiRoutes);
 app.use("/api/progression", validerCSRF, progressionRoutes);
 app.use("/api/analytics", validerCSRF, analyticsRoutes);
+app.use("/api/carnets", validerCSRF, carnetRoutes);
 
 // Route de santé
 app.get("/api/health", (req, res) => {

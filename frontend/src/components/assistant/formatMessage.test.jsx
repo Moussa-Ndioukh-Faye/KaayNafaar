@@ -19,3 +19,25 @@ describe("Mise en forme des réponses de l'IA", () => {
     expect(c).toHaveTextContent("<img src=x");
   });
 });
+
+describe("Formules et citations", () => {
+  test("une formule LaTeX est rendue par KaTeX", () => {
+    const c = rendre("L'aire vaut $\\pi r^2$ et\n$$\\int_0^1 x\\,dx = \\frac{1}{2}$$");
+    expect(c.querySelectorAll(".katex").length).toBe(2);
+    expect(c.querySelector(".katex-display")).not.toBeNull();
+  });
+
+  test("une formule malveillante n'injecte ni lien ni script", () => {
+    const c = rendre("$\\href{javascript:alert(1)}{clic}$ et $\\htmlClass{x}{y}$");
+    expect(c.querySelector("a, [href], script")).toBeNull(); // le texte reste affiché, sans devenir un lien
+    expect(c.querySelector(".x")).toBeNull();
+  });
+
+  test("les citations [n] deviennent des boutons qui ouvrent le passage", async () => {
+    const vu = [];
+    const passages = [{ n: 1, titre: "Réseaux", texte: "SSH utilise le port 22." }];
+    const { getByRole } = render(<div>{formatMessage("SSH écoute sur le port 22 [1].", { passages, surCitation: (p) => vu.push(p) })}</div>);
+    getByRole("button", { name: /source 1 : réseaux/i }).click();
+    expect(vu[0].texte).toBe("SSH utilise le port 22.");
+  });
+});

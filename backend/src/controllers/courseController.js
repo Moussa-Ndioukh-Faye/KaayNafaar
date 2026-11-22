@@ -60,6 +60,39 @@ const getCoursParId = async (req, res) => {
 };
 
 // POST /api/courses — Créer un cours
+// POST /api/courses/depuis-lien  { url, matiere?, titre? } — une page web devient un cours
+const { importerLien, ErreurImport } = require("../utils/importLien");
+const importerDepuisLien = async (req, res) => {
+  try {
+    const { titre, texte, url } = await importerLien(req.body.url);
+    const cours = await Course.create({
+      titre: (typeof req.body.titre === "string" && req.body.titre.trim().slice(0, 200)) || titre,
+      matiere: (typeof req.body.matiere === "string" && req.body.matiere.trim().slice(0, 100)) || "Web",
+      contenu: texte,
+      niveau: "intermédiaire",
+      tags: ["web"],
+      dureeEstimee: Math.max(5, Math.round(texte.split(/\s+/).length / 200)),
+      utilisateurId: req.utilisateur.id,
+      fichierPDF: null,
+    });
+    extractionQueue
+      .add("extraire-et-indexer", {
+        coursId: cours.id,
+        fichierPath: null,
+        originalname: "lien.txt",
+        utilisateurId: req.utilisateur.id,
+        titre: cours.titre,
+        contenuDirect: texte,
+      })
+      .catch((err) => console.error("Indexation du lien:", err.message));
+    res.status(201).json({ success: true, message: "Page importée.", cours, source: url });
+  } catch (error) {
+    if (error instanceof ErreurImport) return res.status(400).json({ success: false, message: error.message });
+    console.error("❌ Erreur importerDepuisLien:", error.message);
+    res.status(502).json({ success: false, message: "Impossible d'importer cette page." });
+  }
+};
+
 const creerCours = async (req, res) => {
   try {
     let { titre, matiere, contenu, niveau, tags, dureeEstimee } = req.body;
@@ -183,6 +216,7 @@ const supprimerCours = async (req, res) => {
 };
 
 module.exports = {
+  importerDepuisLien,
   getCours,
   getCoursParId,
   creerCours,

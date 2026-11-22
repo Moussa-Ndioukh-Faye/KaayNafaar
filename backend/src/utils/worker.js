@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const pdf = require("pdf-parse");
 const { extraireTexteImage } = require("./ocr");
 const { indexerCours } = require("./aiPro");
+const { extraireDocx, extrairePptx } = require("./extraction");
 const Course = require("../models/Course");
 
 const queueName = "extraction-cours";
@@ -29,6 +30,10 @@ const traiterCours = async ({ coursId, fichierPath, originalname, utilisateurId,
         contenu = await extraireTexteImage(fichierPath);
       } else if (extension === "txt") {
         contenu = await fs.readFile(fichierPath, "utf8");
+      } else if (extension === "docx") {
+        contenu = await extraireDocx(fichierPath);
+      } else if (extension === "pptx") {
+        contenu = await extrairePptx(fichierPath);
       }
     }
 

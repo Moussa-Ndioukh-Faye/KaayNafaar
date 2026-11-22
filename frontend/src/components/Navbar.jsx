@@ -7,6 +7,7 @@ import { LogoMarque } from "./marque/Logo";
 const titresPages = {
   "/": "Tableau de bord",
   "/mes-cours": "Mes cours",
+  "/carnets": "Carnets",
   "/fiches": "Fiches de révision",
   "/quiz": "Quiz",
   "/planning": "Planning",
@@ -26,7 +27,7 @@ export default function Navbar({ ouvrir }) {
   const location = useLocation();
   const { utilisateur } = useAuth();
   const { darkMode, setDarkMode } = useDarkMode();
-  const titre = titresPages[location.pathname] || "";
+  const titre = titresPages[location.pathname] || (location.pathname.startsWith("/carnets/") ? "Carnet" : "");
 
   return (
     <header className="bg-background/95 border-b border-border px-4 md:px-10 py-3 flex items-center justify-between sticky top-0 z-40">

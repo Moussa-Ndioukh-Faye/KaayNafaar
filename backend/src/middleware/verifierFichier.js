@@ -34,6 +34,9 @@ const VERIFICATIONS = {
   ".jpg": (t) => commencePar(t, [0xff, 0xd8, 0xff]),
   ".jpeg": (t) => commencePar(t, [0xff, 0xd8, 0xff]),
   ".txt": estTexte,
+  // Word et PowerPoint sont des archives ZIP (signature « PK\x03\x04 »)
+  ".docx": (t) => commencePar(t, [0x50, 0x4b, 0x03, 0x04]),
+  ".pptx": (t) => commencePar(t, [0x50, 0x4b, 0x03, 0x04]),
 };
 
 const lireDebut = async (chemin) => {
@@ -64,7 +67,7 @@ const verifierContenuFichier = async (req, res, next) => {
   journaliser("fichier.refuse", req, { extension: ext, mime: req.file.mimetype, taille: req.file.size }, "warn");
   return res.status(400).json({
     success: false,
-    message: "Le contenu du fichier ne correspond pas à son type. Fichiers acceptés : PDF, TXT, JPG, PNG.",
+    message: "Le contenu du fichier ne correspond pas à son type. Fichiers acceptés : PDF, Word, PowerPoint, TXT, JPG, PNG.",
   });
 };
 
