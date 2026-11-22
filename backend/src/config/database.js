@@ -1,6 +1,6 @@
 const { Sequelize } = require("sequelize");
 const path = require("path");
-const { parametres, optionsSSL, resoudreHotePooler, postgresConfigure } = require("./connexionPostgres");
+const { parametres, optionsSSL, resoudreHotePooler, basculerHotePooler, postgresConfigure } = require("./connexionPostgres");
 
 const dbConfig = {
   sequelize: null
@@ -57,6 +57,13 @@ const connectDB = async () => {
     }
   } catch (err) {
     console.error("❌ Échec de la connexion initiale:", err.message);
+
+    // Pooler Supabase : le projet peut être rattaché à l'autre grappe (aws-0 / aws-1)
+    if (/tenant\/user/i.test(err.message) && !dbConfig.bascule && basculerHotePooler()) {
+      dbConfig.bascule = true;
+      dbConfig.sequelize = initSequelize(false);
+      return connectDB();
+    }
     
     if (dbConfig.sequelize.getDialect() === "postgres") {
       console.warn("⚠️ Basculement d'urgence sur SQLite (Mode Dégradé)...");

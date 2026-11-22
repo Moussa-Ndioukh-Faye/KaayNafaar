@@ -66,6 +66,18 @@ const resoudreHotePooler = async () => {
   }
 };
 
+/** Remplace aws-0 par aws-1 (ou l'inverse) dans DATABASE_URL ; renvoie true si modifié */
+const basculerHotePooler = () => {
+  if (!process.env.DATABASE_URL) return false;
+  const url = new URL(process.env.DATABASE_URL);
+  const m = /^aws-(\d)-(.+\.pooler\.supabase\.com)$/.exec(url.hostname);
+  if (!m) return false;
+  url.hostname = `aws-${m[1] === "0" ? "1" : "0"}-${m[2]}`;
+  process.env.DATABASE_URL = url.toString();
+  console.warn(`ℹ️ Nouvel essai via le pooler ${url.hostname}`);
+  return true;
+};
+
 const postgresConfigure = () => Boolean(process.env.DATABASE_URL || process.env.DB_HOST);
 
-module.exports = { parametres, optionsSSL, resoudreHotePooler, postgresConfigure };
+module.exports = { parametres, optionsSSL, resoudreHotePooler, basculerHotePooler, postgresConfigure };
