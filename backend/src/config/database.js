@@ -1,5 +1,6 @@
 const { Sequelize } = require("sequelize");
 const path = require("path");
+const { parametres, optionsSSL, resoudreHotePooler, postgresConfigure } = require("./connexionPostgres");
 
 const dbConfig = {
   sequelize: null
@@ -16,27 +17,30 @@ const initSequelize = (useSqlite = false) => {
     });
   }
 
-  // Tentative Postgres
-  return new Sequelize(
-    process.env.DB_NAME || "kaay_nafaar_v2",
-    process.env.DB_USER || "user_admin",
-    process.env.DB_PASSWORD || "password_secret",
-    {
-      host: process.env.DB_HOST || "localhost",
-      port: process.env.DB_PORT || 5432,
-      dialect: "postgres",
-      logging: false,
-      pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
-      define: { timestamps: true, underscored: true },
-    }
-  );
+  // Postgres : DATABASE_URL (hébergement géré, SSL) ou variables DB_*
+  const p = parametres();
+  const ssl = optionsSSL();
+  return new Sequelize(p.database, p.user, p.password, {
+    host: p.host,
+    port: p.port,
+    dialect: "postgres",
+    logging: false,
+    dialectOptions: ssl ? { ssl } : {},
+    pool: { max: 5, min: 0, acquire: 30000, idle: 10000 },
+    define: { timestamps: true, underscored: true },
+  });
 };
 
 // Premier jet
-dbConfig.sequelize = initSequelize(!process.env.DB_HOST);
+dbConfig.sequelize = initSequelize(!postgresConfigure());
 
 const connectDB = async () => {
   try {
+    if (dbConfig.sequelize.getDialect() === "postgres" && process.env.DATABASE_URL) {
+      const avant = process.env.DATABASE_URL;
+      await resoudreHotePooler();
+      if (process.env.DATABASE_URL !== avant) dbConfig.sequelize = initSequelize(false);
+    }
     await dbConfig.sequelize.authenticate();
     console.log(`🐘 Base de données connectée (${dbConfig.sequelize.getDialect()})`);
 

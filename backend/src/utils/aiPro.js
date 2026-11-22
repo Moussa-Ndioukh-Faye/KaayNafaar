@@ -6,6 +6,7 @@
 const crypto = require("crypto");
 const { GoogleGenerativeAIEmbeddings } = require("@langchain/google-genai");
 const { PGVectorStore } = require("@langchain/community/vectorstores/pgvector");
+const { parametres, optionsSSL } = require("../config/connexionPostgres");
 const { RecursiveCharacterTextSplitter } = require("@langchain/textsplitters");
 const { sequelize } = require("../config/database");
 const { redis } = require("../config/redis");
@@ -18,13 +19,10 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
 
 // Configuration du Vector Store Postgres
 const config = {
-  postgresConnectionOptions: {
-    type: "postgres",
-    host: process.env.DB_HOST || "localhost",
-    port: parseInt(process.env.DB_PORT || "5432"),
-    user: process.env.DB_USER || "user_admin",
-    password: process.env.DB_PASSWORD || "password_secret",
-    database: process.env.DB_NAME || "kaay_nafaar_v2",
+  // Construit à la demande : DATABASE_URL peut être corrigée au démarrage (pooler)
+  get postgresConnectionOptions() {
+    const ssl = optionsSSL();
+    return { type: "postgres", ...parametres(), ...(ssl ? { ssl } : {}) };
   },
   tableName: "course_embeddings",
   columns: {

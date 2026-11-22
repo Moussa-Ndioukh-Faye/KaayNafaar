@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "installCommand": "npm ci",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://185-98-136-82.sslip.io/api/$1" },
+    { "source": "/api/(.*)", "destination": "https://kaay-nafaar-api.onrender.com/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -20,7 +20,7 @@
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://185-98-136-82.sslip.io https://*.vercel.app https://*.trycloudflare.com https://*.google.com https://*.groq.com ws://localhost:*;" }
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://kaay-nafaar-api.onrender.com https://*.vercel.app https://*.google.com https://*.groq.com ws://localhost:*;" }
       ]
     }
   ]
