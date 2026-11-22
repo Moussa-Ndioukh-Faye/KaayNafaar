@@ -16,7 +16,8 @@ const { redis } = require("../config/redis");
 const embeddings = new GoogleGenerativeAIEmbeddings({
   // Valeur de repli : le serveur démarre même sans clé (les appels IA échoueront proprement)
   apiKey: process.env.GEMINI_API_KEY || "cle-gemini-non-configuree",
-  model: "text-embedding-004",
+  // text-embedding-004 a été arrêté le 14 janvier 2026 ; remplaçant recommandé : gemini-embedding-2
+  model: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-2",
 });
 
 // Configuration du Vector Store Postgres

@@ -1,10 +1,12 @@
 const OpenAI = require("openai");
 
+// Modèles réglables sans toucher au code : Google et Groq retirent régulièrement
+// d'anciens modèles (gemini-2.0-flash a été arrêté le 1er juin 2026).
 const PROVIDERS = [
   {
     name: "gemini",
     client: null,
-    model: "gemini-2.0-flash",
+    model: process.env.GEMINI_MODEL || "gemini-3.6-flash",
     baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
     apiKeyEnv: "GEMINI_API_KEY",
     maxRetries: 3,
@@ -13,7 +15,7 @@ const PROVIDERS = [
   {
     name: "groq",
     client: null,
-    model: "llama-3.3-70b-versatile",
+    model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
     baseURL: "https://api.groq.com/openai/v1",
     apiKeyEnv: "GROQ_API_KEY",
     maxRetries: 2,
@@ -36,7 +38,15 @@ const initializeProviders = () => {
       });
     }
   }
-  return PROVIDERS.filter(p => p.client);
+  const actifs = PROVIDERS.filter(p => p.client);
+  if (process.env.NODE_ENV !== "test") {
+    if (actifs.length) {
+      console.log(`🤖 Fournisseurs IA actifs : ${actifs.map(p => `${p.name} (${p.model})`).join(", ")}`);
+    } else {
+      console.error("⚠️ Aucun fournisseur IA configuré : définir GEMINI_API_KEY et/ou GROQ_API_KEY.");
+    }
+  }
+  return actifs;
 };
 
 const estRetryable = (err) => {
