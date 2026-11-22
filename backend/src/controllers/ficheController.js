@@ -7,6 +7,7 @@ const Course = require("../models/Course");
 const Progression = require("../models/Progression");
 const { calculerSM2 } = require("../utils/sm2");
 const { Op } = require("sequelize");
+const { coursPossede } = require("../utils/coursPossede");
 
 const inclureCours = {
   model: Course,
@@ -116,7 +117,7 @@ const creerFiche = async (req, res) => {
       explications: explications || {},
       pointsImportants: pointsImportants || [],
       flashcards: flashcards || [],
-      coursId: coursId || null,
+      coursId: await coursPossede(coursId, req.utilisateur.id),
       couleur: couleur || "#6366f1",
       utilisateurId: req.utilisateur.id,
       genereeParIA: false,

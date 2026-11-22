@@ -5,6 +5,7 @@
 const { Op } = require("sequelize");
 const Quiz = require("../models/Quiz");
 const Progression = require("../models/Progression");
+const { coursPossede } = require("../utils/coursPossede");
 
 // GET /api/quiz
 const getQuiz = async (req, res) => {
@@ -73,7 +74,7 @@ const creerQuiz = async (req, res) => {
       questions: questions || [],
       difficulte: difficulte || "moyen",
       dureeMinutes: dureeMinutes || 10,
-      coursId: coursId || null,
+      coursId: await coursPossede(coursId, req.utilisateur.id),
       utilisateurId: req.utilisateur.id,
     });
 

@@ -1,6 +1,7 @@
 const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
 const FeedbackIA = require("../models/FeedbackIA");
+const { coursPossede } = require("../utils/coursPossede");
 const { AIProviderManager } = require("../utils/aiProviderManager");
 const { rechercherContexte, mettreAJourProfilApprenant } = require("../utils/aiPro");
 const { orchestrerRecherche } = require("../utils/searchOrchestrator");
@@ -146,7 +147,11 @@ const genererFiche = async (req, res) => {
             couleur: raw.couleur || "#6366f1",
             genereeParIA: true,
           };
-          const fiche = await Fiche.create({ ...ficheData, coursId, utilisateurId: req.utilisateur.id });
+          const fiche = await Fiche.create({
+            ...ficheData,
+            coursId: await coursPossede(coursId, req.utilisateur.id),
+            utilisateurId: req.utilisateur.id,
+          });
           res.write(`data: ${JSON.stringify({ done: true, ficheId: fiche.id, fiche: ficheData })}\n\n`);
         } catch (parseError) {
           console.error("❌ Erreur parsing fiche:", parseError, texteComplet);
@@ -191,7 +196,12 @@ const genererQuiz = async (req, res) => {
         if (streamAborted) return;
         try {
           const quizData = JSON.parse(nettoyerJSON(texteComplet));
-          const quiz = await Quiz.create({ ...quizData, difficulte, coursId, utilisateurId: req.utilisateur.id });
+          const quiz = await Quiz.create({
+            ...quizData,
+            difficulte,
+            coursId: await coursPossede(coursId, req.utilisateur.id),
+            utilisateurId: req.utilisateur.id,
+          });
           res.write(`data: ${JSON.stringify({ done: true, quizId: quiz.id, quiz: quizData })}\n\n`);
         } catch (parseError) {
           console.error("❌ Erreur parsing quiz:", parseError, texteComplet);
