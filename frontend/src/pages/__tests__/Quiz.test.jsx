@@ -74,6 +74,7 @@ describe("Page Quiz", () => {
     expect(id).toBe(7);
     expect(corps.reponses).toEqual([{ reponseUtilisateur: "Chiffrement asymétrique" }, { reponseUtilisateur: "22" }]);
     expect(await screen.findByText("2 / 2")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Félicitations !" })).toBeInTheDocument();
   });
 
   test("choisir un cours remplit le contenu à transformer en quiz", async () => {
