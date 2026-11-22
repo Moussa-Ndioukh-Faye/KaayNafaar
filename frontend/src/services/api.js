@@ -85,6 +85,8 @@ export const coursAPI = {
     }
     return api.post("/courses", data);
   },
+  // Une page web (article, cours en ligne, PDF en ligne) devient un cours
+  importerLien: (url, matiere) => api.post("/courses/depuis-lien", { url, matiere }, { timeout: 60000 }),
   modifierCours: (id, data) => api.put(`/courses/${id}`, data),
   supprimerCours: (id) => api.delete(`/courses/${id}`),
 };
@@ -155,7 +157,7 @@ export const iaAPI = {
 /**
  * Fetch avec streaming SSE — gère les Server-Sent Events
  */
-const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
+const fetchStream = (endpoint, body, onDelta, onDone, onError, onPassages) => {
   const controller = new AbortController();
 
   // S'assurer d'inclure le préfixe /api pour le proxy Vercel
@@ -205,7 +207,9 @@ const fetchStream = (endpoint, body, onDelta, onDone, onError) => {
 
             try {
               const parsed = JSON.parse(trimmed.slice(6));
-              if (parsed.error) {
+              if (parsed.passages) {
+                onPassages?.(parsed.passages);
+              } else if (parsed.error) {
                 onError?.(parsed.error);
               } else if (parsed.done) {
                 onDone?.(parsed);
@@ -241,3 +245,20 @@ export const analyticsAPI = {
 };
 
 export default api;
+
+// ═══════════════════════════════════════════════
+// Carnets (plusieurs cours, chat avec citations, studio)
+// ═══════════════════════════════════════════════
+export const carnetsAPI = {
+  lister: () => api.get("/carnets"),
+  creer: (data) => api.post("/carnets", data),
+  obtenir: (id) => api.get(`/carnets/${id}`),
+  modifier: (id, data) => api.put(`/carnets/${id}`, data),
+  supprimer: (id) => api.delete(`/carnets/${id}`),
+  ajouterNote: (id, note) => api.post(`/carnets/${id}/notes`, note),
+  supprimerNote: (id, noteId) => api.delete(`/carnets/${id}/notes/${noteId}`),
+  // La génération peut prendre du temps sur les modèles gratuits
+  studio: (id, type) => api.post(`/carnets/${id}/studio`, { type }, { timeout: 120000 }),
+  chatStream: (id, messages, { onPassages, onDelta, onDone, onError }) =>
+    fetchStream(`/carnets/${id}/chat`, { messages }, onDelta, onDone, onError, onPassages),
+};

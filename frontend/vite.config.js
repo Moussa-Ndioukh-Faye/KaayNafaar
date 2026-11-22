@@ -39,7 +39,7 @@ const pwa = VitePWA({
   workbox: {
     globPatterns: ["**/*.{js,css,html,woff2,png,svg,ico,webp}"],
     // Polices : seul le jeu « latin » est préchargé (le reste se charge à la demande)
-    globIgnores: ["**/google*.html", "**/og-image*", "**/*-latin-ext-*.woff2", "**/*-vietnamese-*.woff2", "**/*-cyrillic*.woff2", "**/*-greek*.woff2", "**/html2canvas*", "**/purify*", "**/index.es-*", "**/jspdf*", "**/pdfPro*"],
+    globIgnores: ["**/google*.html", "**/og-image*", "**/*-latin-ext-*.woff2", "**/*-vietnamese-*.woff2", "**/*-cyrillic*.woff2", "**/*-greek*.woff2", "**/html2canvas*", "**/purify*", "**/index.es-*", "**/jspdf*", "**/pdfPro*", "**/KaTeX_*"],
     maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
     navigateFallback: "/index.html",
     navigateFallbackDenylist: [/^\/api\//],

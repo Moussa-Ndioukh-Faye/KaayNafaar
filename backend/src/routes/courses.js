@@ -6,7 +6,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const { body, param } = require("express-validator");
 const {
-  getCours, getCoursParId, creerCours, modifierCours, supprimerCours,
+  getCours, getCoursParId, creerCours, modifierCours, supprimerCours, importerDepuisLien,
 } = require("../controllers/courseController");
 const { proteger } = require("../middleware/auth");
 const { verifierContenuFichier } = require("../middleware/verifierFichier");
@@ -23,6 +23,9 @@ const TYPES_AUTORISES = {
   ".jpg": ["image/jpeg"],
   ".jpeg": ["image/jpeg"],
   ".png": ["image/png"],
+  // Office : certains téléphones envoient un type générique ; la signature du fichier est vérifiée ensuite
+  ".docx": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/octet-stream", "application/zip"],
+  ".pptx": ["application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/octet-stream", "application/zip"],
 };
 
 const storage = multer.diskStorage({
@@ -39,7 +42,7 @@ const upload = multer({
     const ext = path.extname(file.originalname).toLowerCase();
     const mimes = TYPES_AUTORISES[ext];
     if (mimes && mimes.includes(file.mimetype)) return cb(null, true);
-    const err = new Error("Fichiers acceptés : PDF, TXT, JPG, PNG.");
+    const err = new Error("Fichiers acceptés : PDF, Word, PowerPoint, TXT, JPG, PNG.");
     err.code = "TYPE_FICHIER_INVALIDE";
     cb(err);
   },
@@ -63,6 +66,14 @@ router.use(proteger);
 
 router.get("/", getCours);
 router.get("/:id", getCoursParId);
+router.post(
+  "/depuis-lien",
+  quotaImports,
+  body("url").isString().isLength({ min: 8, max: 2000 }).withMessage("Lien invalide"),
+  body("matiere").optional().isString().isLength({ max: 100 }),
+  validate,
+  importerDepuisLien
+);
 router.post("/", quotaImports, upload.single("fichier"), verifierContenuFichier, validerCours, validate, creerCours);
 router.put("/:id", param("id").isInt({ min: 1 }), validerCours, validate, modifierCours);
 router.delete("/:id", param("id").isInt({ min: 1 }), validate, supprimerCours);

@@ -89,6 +89,16 @@ jest.mock("../src/models/Quiz", () => {
   return M;
 });
 
+jest.mock("../src/models/Carnet", () => {
+  const M = function () {};
+  M.destroy = jest.fn().mockResolvedValue();
+  M.findAll = jest.fn().mockResolvedValue([]);
+  M.findOne = jest.fn().mockResolvedValue(null);
+  M.belongsTo = jest.fn();
+  M.hasMany = jest.fn();
+  return M;
+});
+
 jest.mock("../src/models/FeedbackIA", () => {
   const M = function () {};
   M.destroy = jest.fn().mockResolvedValue();

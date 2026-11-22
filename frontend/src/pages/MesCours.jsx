@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { BookOpen, Plus, Search, Trash2, FileUp, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { BookOpen, Plus, Search, Trash2, FileUp, X, CheckCircle2, AlertCircle, Link2 } from "lucide-react";
 import { coursAPI } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -66,6 +66,28 @@ export default function MesCours() {
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState("");
   const [succes, setSucces] = useState("");
+  const [lien, setLien] = useState("");
+  const [importLien, setImportLien] = useState(false);
+
+  // Une page web (article, cours en ligne, PDF en ligne) devient un cours
+  const importerDepuisLien = async (e) => {
+    e.preventDefault();
+    if (!lien.trim()) return;
+    setImportLien(true);
+    setErreur("");
+    setSucces("");
+    try {
+      const { data } = await coursAPI.importerLien(lien.trim());
+      setCours((l) => [data.cours, ...l]);
+      setLien("");
+      setSucces("Page importée : elle est maintenant dans tes cours.");
+      setTimeout(() => setSucces(""), 4000);
+    } catch (err) {
+      setErreur(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || "Impossible d'importer cette page.");
+    } finally {
+      setImportLien(false);
+    }
+  };
   const fileInputRef = useRef();
 
   useEffect(() => { chargerCours(); }, []);
@@ -144,6 +166,27 @@ export default function MesCours() {
       </div>
 
       {/* Search and Feedback */}
+      <form onSubmit={importerDepuisLien} className="flex flex-col sm:flex-row gap-2 sm:items-end max-w-2xl">
+        <div className="flex-1 space-y-1.5">
+          <label htmlFor="lien-cours" className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Link2 className="w-4 h-4" aria-hidden="true" />
+            Importer une page web
+          </label>
+          <input
+            id="lien-cours"
+            type="url"
+            inputMode="url"
+            className="input-field"
+            placeholder="https://… (article, cours en ligne, PDF)"
+            value={lien}
+            onChange={(e) => setLien(e.target.value)}
+          />
+        </div>
+        <Button type="submit" variant="outline" disabled={importLien || !lien.trim()}>
+          {importLien ? "Import en cours…" : "Importer"}
+        </Button>
+      </form>
+
       <div className="flex flex-col md:flex-row gap-4 items-center">
         <div className="relative w-full max-w-md group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-primary-500 transition-colors" />
@@ -252,9 +295,9 @@ export default function MesCours() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="mescours-champ-228" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Fichier (PDF ou Image pour OCR)</label>
+                <label htmlFor="mescours-champ-228" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">Fichier (PDF, Word, PowerPoint ou photo de notes)</label>
                 <div className="flex items-center gap-4">
-                  <input id="mescours-champ-228" ref={fileInputRef} type="file" accept=".pdf,.txt,.jpg,.jpeg,.png" className="hidden"
+                  <input id="mescours-champ-228" ref={fileInputRef} type="file" accept=".pdf,.docx,.pptx,.txt,.jpg,.jpeg,.png" className="hidden"
                     onChange={(e) => {
                       const f = e.target.files[0];
                       if (f && f.size > 10 * 1024 * 1024) { setErreur("Fichier trop grand (max 10 Mo)."); return; }
@@ -264,7 +307,7 @@ export default function MesCours() {
                   <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} className="rounded-xl border-dashed border-2 h-20 flex-1 flex flex-col items-center justify-center gap-1 hover:border-primary-400 hover:bg-primary-50/30 transition-all">
                     <FileUp className={cn("w-5 h-5", fichier ? "text-primary-600" : "text-gray-500")} />
                     <span className="text-xs font-bold text-gray-500">
-                      {fichier ? fichier.name : "PDF ou Photo de notes (OCR)"}
+                      {fichier ? fichier.name : "PDF, Word, PowerPoint ou photo de notes"}
                     </span>
                     {!fichier && <span className="text-xs text-gray-500 uppercase tracking-tighter">Supporte les notes manuscrites</span>}
                   </Button>

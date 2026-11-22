@@ -10,7 +10,8 @@ import {
   Settings,
   LogOut,
   Globe,
-  BarChart3
+  BarChart3,
+  NotebookPen
 } from "lucide-react";
 import { useAuth } from "../App";
 import { cn } from "../lib/utils";
@@ -25,6 +26,7 @@ const sommaire = [
     entrees: [
       { nom: "Tableau de bord", href: "/", icon: LayoutDashboard },
       { nom: "Mes cours", href: "/mes-cours", icon: BookOpen },
+      { nom: "Carnets", href: "/carnets", icon: NotebookPen },
       { nom: "Fiches de révision", href: "/fiches", icon: FileText },
       { nom: "Quiz", href: "/quiz", icon: BrainCircuit },
       { nom: "Planning", href: "/planning", icon: Calendar },

@@ -33,7 +33,8 @@ module.exports = {
     "jsx-a11y/click-events-have-key-events": "warn",
     "jsx-a11y/no-static-element-interactions": "warn",
     "jsx-a11y/no-noninteractive-element-interactions": "warn",
-    "jsx-a11y/label-has-associated-control": "warn",
+    // Le texte d'une étiquette peut être dans des <span> imbriqués (titre + détail)
+    "jsx-a11y/label-has-associated-control": ["warn", { depth: 3 }],
     "jsx-a11y/anchor-is-valid": "warn",
     "jsx-a11y/heading-has-content": "warn",
     "jsx-a11y/media-has-caption": "warn",
