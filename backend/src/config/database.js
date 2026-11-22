@@ -1,6 +1,6 @@
 const { Sequelize } = require("sequelize");
 const path = require("path");
-const { parametres, optionsSSL, resoudreHotePooler, basculerHotePooler, postgresConfigure } = require("./connexionPostgres");
+const { parametres, optionsSSL, postgresConfigure } = require("./connexionPostgres");
 
 const dbConfig = {
   sequelize: null
@@ -36,11 +36,6 @@ dbConfig.sequelize = initSequelize(!postgresConfigure());
 
 const connectDB = async () => {
   try {
-    if (dbConfig.sequelize.getDialect() === "postgres" && process.env.DATABASE_URL) {
-      const avant = process.env.DATABASE_URL;
-      await resoudreHotePooler();
-      if (process.env.DATABASE_URL !== avant) dbConfig.sequelize = initSequelize(false);
-    }
     await dbConfig.sequelize.authenticate();
     console.log(`🐘 Base de données connectée (${dbConfig.sequelize.getDialect()})`);
 
@@ -58,11 +53,11 @@ const connectDB = async () => {
   } catch (err) {
     console.error("❌ Échec de la connexion initiale:", err.message);
 
-    // Pooler Supabase : le projet peut être rattaché à l'autre grappe (aws-0 / aws-1)
-    if (/tenant\/user/i.test(err.message) && !dbConfig.bascule && basculerHotePooler()) {
-      dbConfig.bascule = true;
-      dbConfig.sequelize = initSequelize(false);
-      return connectDB();
+    // Les modèles sont liés à l'instance Sequelize créée au démarrage : on ne la recrée pas.
+    // Pooler Supabase : si le projet est introuvable (« tenant/user not found »),
+    // vérifier le nom du pooler (aws-0 ou aws-1) dans le bouton « Connect » de Supabase.
+    if (/tenant\/user/i.test(err.message)) {
+      console.error("ℹ️ Vérifie le nom du pooler Supabase (aws-0-… ou aws-1-…) dans DATABASE_URL.");
     }
     
     if (dbConfig.sequelize.getDialect() === "postgres") {
