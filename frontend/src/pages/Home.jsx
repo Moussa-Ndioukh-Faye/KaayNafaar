@@ -217,8 +217,8 @@ export default function Home() {
                         </span>
                       </div>
                     </div>
-                    <Link to="/planning">
-                      <Button size="icon" variant="ghost" className="rounded-full group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                    <Link to="/planning" aria-label="Voir le planning de révision">
+                      <Button size="icon" tabIndex={-1} aria-hidden="true" variant="ghost" className="rounded-full group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
                         <ArrowRight className="w-5 h-5" />
                       </Button>
                     </Link>

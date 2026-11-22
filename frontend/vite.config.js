@@ -9,6 +9,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Tests de l'interface (Vitest + Testing Library)
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./src/test/setup.js"],
+    css: false,
+    include: ["src/**/*.test.{js,jsx}"],
+  },
   server: {
     port: 3000,
     host: process.env.VITE_HOST || "localhost",

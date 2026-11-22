@@ -55,7 +55,8 @@ export default function Quiz() {
   }, []);
 
   const handleCoursChange = (e) => {
-    const c = cours.find((x) => x.id === e.target.value);
+    // La valeur d'un <select> est toujours une chaîne : on compare des chaînes
+    const c = cours.find((x) => String(x.id) === e.target.value);
     setGeneration({ ...generation, coursId: e.target.value, contenu: c?.contenu || "", titre: c?.titre ? `Quiz - ${c.titre}` : "" });
   };
 
@@ -273,6 +274,8 @@ export default function Quiz() {
               <div className="grid grid-cols-1 gap-4">
                 {question.options.map((opt, i) => (
                   <button key={`opt-${i}`}
+                    type="button"
+                    aria-pressed={reponseDonnee === opt}
                     onClick={() => repondre(opt)}
                     className={cn(
                       "w-full text-left p-6 rounded-3xl border-2 transition-all duration-200 group flex items-center gap-4",
@@ -281,7 +284,7 @@ export default function Quiz() {
                         : "border-gray-50 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 hover:border-primary-200 dark:hover:border-primary-900/50"
                     )}
                   >
-                    <div className={cn(
+                    <div aria-hidden="true" className={cn(
                        "w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm transition-colors",
                        reponseDonnee === opt ? "bg-primary-600 text-white" : "bg-white dark:bg-gray-700 text-gray-500 group-hover:text-primary-500"
                     )}>
@@ -293,7 +296,7 @@ export default function Quiz() {
                     )}>
                        {opt}
                     </span>
-                    {reponseDonnee === opt && <CheckCircle2 className="w-5 h-5 text-primary-600" />}
+                    {reponseDonnee === opt && <CheckCircle2 className="w-5 h-5 text-primary-600" aria-hidden="true" />}
                   </button>
                 ))}
               </div>
@@ -519,9 +522,10 @@ export default function Quiz() {
                         variant="ghost" 
                         size="icon" 
                         onClick={(e) => { e.stopPropagation(); supprimerQuiz(q.id); }}
-                        className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                        aria-label={`Supprimer le quiz ${q.titre}`}
+                        className="text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-all"
                      >
-                       <Trash2 className="w-4 h-4" />
+                       <Trash2 className="w-4 h-4" aria-hidden="true" />
                      </Button>
                   </div>
                   <CardTitle className="mt-4 text-xl font-black leading-tight truncate group-hover:text-primary-600 transition-colors">

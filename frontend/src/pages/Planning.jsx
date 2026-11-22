@@ -204,7 +204,7 @@ export default function Planning() {
                       <CardDescription>Laisse l'IA organiser tes révisions en fonction de tes cours.</CardDescription>
                    </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => { setAfficherGenerateur(false); setPlanningGenere(null); }} className="rounded-full">
+                <Button variant="ghost" size="icon" aria-label="Fermer le générateur" onClick={() => { setAfficherGenerateur(false); setPlanningGenere(null); }} className="rounded-full">
                    <X className="w-5 h-5" />
                 </Button>
              </div>
@@ -311,7 +311,7 @@ export default function Planning() {
            <CardHeader className="bg-gray-50/50 dark:bg-gray-800/50 p-8 border-b border-gray-100 dark:border-gray-700">
               <div className="flex justify-between items-center">
                  <CardTitle className="text-xl">Planifier une session</CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => setAfficherFormulaire(false)} className="rounded-full">
+                 <Button variant="ghost" size="icon" aria-label="Fermer le formulaire" onClick={() => setAfficherFormulaire(false)} className="rounded-full">
                     <X className="w-5 h-5" />
                  </Button>
               </div>

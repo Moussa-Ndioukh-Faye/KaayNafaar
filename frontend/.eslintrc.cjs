@@ -43,6 +43,22 @@ module.exports = {
       files: ["*.config.js", "*.cjs"],
       env: { node: true, commonjs: true },
     },
+    // Fichiers de test : variables globales de Vitest (describe, test, expect, vi…)
+    {
+      files: ["src/**/*.test.js", "src/**/*.test.jsx", "src/test/**"],
+      env: { node: true },
+      globals: {
+        describe: "readonly",
+        test: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+        beforeAll: "readonly",
+        afterAll: "readonly",
+        vi: "readonly",
+      },
+    },
   ],
   ignorePatterns: ["node_modules/", "dist/"],
 };

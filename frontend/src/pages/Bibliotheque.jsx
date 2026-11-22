@@ -133,7 +133,7 @@ export default function Bibliotheque() {
           </div>
           <Button
             variant="outline"
-            size="icon"
+            size="icon" aria-label={filtresOuverts ? "Masquer les filtres" : "Afficher les filtres"} aria-expanded={filtresOuverts}
             className="h-11 w-11 rounded-xl border-gray-200 dark:border-gray-700"
             onClick={() => setFiltresOuverts(!filtresOuverts)}
           >
@@ -233,7 +233,7 @@ export default function Bibliotheque() {
                     </div>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="icon" aria-label={importee ? `Fiche ${fiche.titre} déjà importée` : `Importer la fiche ${fiche.titre}`}
                       className={`w-8 h-8 rounded-xl transition-all ${
                         importee
                           ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500"

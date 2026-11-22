@@ -97,7 +97,7 @@ const CopyButton = ({ text }) => {
         <TooltipTrigger asChild>
           <Button 
             variant="ghost" 
-            size="icon" 
+            size="icon" aria-label={copied ? "Copié" : "Copier la réponse"} 
             onClick={handleCopy}
             className="w-8 h-8 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20"
           >
@@ -390,7 +390,7 @@ export default function AssistantIA() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" onClick={reinitialiser} className="rounded-2xl flex-shrink-0 border-2 border-gray-100 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500">
+                <Button variant="outline" size="icon" aria-label="Effacer la conversation" onClick={reinitialiser} className="rounded-2xl flex-shrink-0 border-2 border-gray-100 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </TooltipTrigger>
@@ -553,14 +553,14 @@ export default function AssistantIA() {
               />
               <div className="pb-2 flex gap-2">
                 {enChargement ? (
-                  <Button onClick={annuler} variant="destructive" size="icon">
+                  <Button onClick={annuler} variant="destructive" size="icon" aria-label="Arrêter la réponse">
                     <Square className="w-5 h-5 fill-current" />
                   </Button>
                 ) : (
                   <Button
                     onClick={envoyerMessage}
                     disabled={!input.trim()}
-                    size="icon"
+                    size="icon" aria-label="Envoyer le message"
                   >
                     <Send className="w-5 h-5" />
                   </Button>
@@ -582,7 +582,7 @@ export default function AssistantIA() {
                 />
               </div>
               {enChargement ? (
-                <Button onClick={annuler} variant="destructive" size="icon">
+                <Button onClick={annuler} variant="destructive" size="icon" aria-label="Arrêter l'explication">
                   <Square className="w-5 h-5 fill-current" />
                 </Button>
               ) : (
