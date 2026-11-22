@@ -175,6 +175,7 @@ if (require.main === module) {
       console.log(`\n🛑 Signal ${signal} reçu, arrêt gracieux...`);
       await new Promise((resolve) => server.close(resolve));
       await worker.close();
+      await require("./src/utils/aiPro").fermerVectorStore().catch(() => {});
       await redis.quit();
       console.log("👋 Arrêt terminé");
       process.exit(0);
