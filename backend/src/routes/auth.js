@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
-const { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, exporterDonnees, logout } = require("../controllers/authController");
+const { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, exporterDonnees, verifierEmail, renvoyerVerification, logout } = require("../controllers/authController");
 const { proteger } = require("../middleware/auth");
 
 // Middleware de validation
@@ -59,6 +59,20 @@ router.put("/profil", proteger, validerProfil, validate, mettreAJourProfil);
 router.put("/changer-mot-de-passe", proteger, validerChangementMDP, validate, changerMotDePasse);
 router.delete("/compte", proteger, validerSuppression, validate, supprimerCompte);
 router.get("/export", proteger, exporterDonnees);
+
+// Vérification de l'adresse email
+router.post(
+  "/verifier-email",
+  body("token").isString().isLength({ min: 20, max: 100 }).withMessage("Lien de vérification invalide"),
+  validate,
+  verifierEmail
+);
+router.post(
+  "/renvoyer-verification",
+  body("email").isEmail().withMessage("Email invalide"),
+  validate,
+  renvoyerVerification
+);
 router.post("/logout", logout);
 
 module.exports = router;

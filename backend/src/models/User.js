@@ -54,6 +54,20 @@ const User = sequelize.define(
         derniereAnalyse: null,
       },
     },
+    // Vérification de l'adresse email (jeton haché SHA-256, valable 24 h)
+    emailVerifie: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    jetonVerification: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    jetonVerificationExpire: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
     memoireLongTerme: {
       type: DataTypes.TEXT,
       allowNull: true,

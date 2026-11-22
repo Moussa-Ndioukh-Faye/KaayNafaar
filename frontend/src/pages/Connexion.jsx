@@ -16,6 +16,7 @@ import { authAPI } from "../services/api";
 import { useAuth } from "../App";
 import Logo from "../components/marque/Logo";
 import PanneauMarque from "../components/marque/PanneauMarque";
+import EmailEnvoye from "../components/auth/EmailEnvoye";
 
 export default function Connexion() {
   const [searchParams] = useSearchParams();
@@ -25,6 +26,7 @@ export default function Connexion() {
   const [voirMotDePasse, setVoirMotDePasse] = useState(false);
   const { connecter } = useAuth();
   const navigate = useNavigate();
+  const [emailNonVerifie, setEmailNonVerifie] = useState("");
 
   const handleChange = (e) => {
     const value = e.target.name === "email" ? e.target.value.trim() : e.target.value;
@@ -52,6 +54,8 @@ export default function Connexion() {
     } catch (error) {
       if (!error.response) {
         setErreur("Impossible de joindre le serveur. Vérifie que le backend est démarré.");
+      } else if (error.response.data?.code === "EMAIL_NON_VERIFIE") {
+        setEmailNonVerifie(error.response.data.email || form.email);
       } else {
         setErreur(error.response.data?.message || "Erreur de connexion.");
       }
@@ -76,6 +80,13 @@ export default function Connexion() {
           </div>
 
           <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
+            {emailNonVerifie ? (
+              <EmailEnvoye
+                email={emailNonVerifie}
+                message="Ton adresse n'est pas encore confirmée. Le lien a été envoyé à"
+                delaiInitial={0}
+              />
+            ) : (<>
             <div className="mb-8">
               <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">Connexion</h1>
               <p className="text-slate-500 mt-1 font-medium">Connecte-toi pour continuer tes révisions</p>
@@ -160,6 +171,7 @@ export default function Connexion() {
                 <Link to="/confidentialite" className="underline hover:text-primary-700">Politique de confidentialité</Link>
               </p>
             </div>
+            </>)}
           </div>
         </div>
       </main>

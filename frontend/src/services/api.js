@@ -66,6 +66,9 @@ api.interceptors.response.use(
 export const authAPI = {
   inscription: (data) => api.post("/auth/inscription", data),
   connexion: (data) => api.post("/auth/connexion", data),
+  // Vérification de l'adresse email
+  verifierEmail: (token) => api.post("/auth/verifier-email", { token }),
+  renvoyerVerification: (email) => api.post("/auth/renvoyer-verification", { email }),
   getProfil: () => api.get("/auth/profil"),
   updateProfil: (data) => api.put("/auth/profil", data),
   changerMotDePasse: (data) => api.put("/auth/changer-mot-de-passe", data),

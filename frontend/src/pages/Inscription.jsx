@@ -15,6 +15,7 @@ import { authAPI } from "../services/api";
 import { useAuth } from "../App";
 import Logo from "../components/marque/Logo";
 import PanneauMarque from "../components/marque/PanneauMarque";
+import EmailEnvoye from "../components/auth/EmailEnvoye";
 import { cn } from "../lib/utils";
 
 export default function Inscription() {
@@ -22,6 +23,7 @@ export default function Inscription() {
     nom: "", email: "", motDePasse: "", confirmMotDePasse: "", niveauEtude: "licence",
   });
   const [consentement, setConsentement] = useState(false);
+  const [emailEnAttente, setEmailEnAttente] = useState("");
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
   const [champsVus, setChampsVus] = useState({});
@@ -61,6 +63,10 @@ export default function Inscription() {
         motDePasse: form.motDePasse,
         niveauEtude: form.niveauEtude,
       });
+      if (data.verificationRequise) {
+        setEmailEnAttente(data.email);
+        return;
+      }
       connecter(data.token, data.utilisateur);
       navigate("/");
     } catch (error) {
@@ -118,6 +124,9 @@ export default function Inscription() {
           </div>
 
           <div className="bg-card rounded-[2rem] border border-border p-8 sm:p-10 shadow-[0_24px_60px_-32px_rgba(10,31,74,0.28)]">
+            {emailEnAttente ? (
+              <EmailEnvoye email={emailEnAttente} />
+            ) : (<>
             <div className="mb-8">
               <h1 className="text-4xl font-semibold text-gray-900 dark:text-white">Créer un compte</h1>
               <p className="text-slate-600 mt-1 font-medium">C'est gratuit et prend moins d'une minute</p>
@@ -270,6 +279,7 @@ export default function Inscription() {
                 </Link>
               </p>
             </div>
+            </>)}
           </div>
         </div>
       </main>

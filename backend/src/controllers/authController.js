@@ -15,6 +15,19 @@ const { supprimerFichier } = require("../utils/fichiers");
 
 const bcrypt = require("bcryptjs");
 const { genererToken } = require("../utils/jeton");
+const { verificationEmailActive, envoyerVerification, hacherJeton } = require("../utils/email");
+
+// Champs jamais renvoyés au client
+const CHAMPS_PRIVES = ["motDePasse", "jetonVerification", "jetonVerificationExpire"];
+
+const profilPublic = (u) => ({
+  id: u.id,
+  nom: u.nom,
+  email: u.email,
+  niveauEtude: u.niveauEtude,
+  avatar: u.avatar,
+  emailVerifie: u.emailVerifie,
+});
 
 // Hash bcrypt d'une valeur aléatoire, utilisé contre l'énumération par chronométrage
 const HASH_FACTICE = bcrypt.hashSync(require("crypto").randomBytes(16).toString("hex"), 12);
@@ -58,16 +71,39 @@ const inscription = async (req, res) => {
       });
     }
 
+    const verificationRequise = verificationEmailActive();
+
     const utilisateur = await User.create({
       nom: nom.trim(),
       email: emailNettoye,
       motDePasse,
       niveauEtude: niveauEtude || "licence",
+      // Sans fournisseur d'email configuré, le compte est actif immédiatement
+      emailVerifie: !verificationRequise,
     });
 
     await Progression.create({
       utilisateurId: utilisateur.id,
     });
+
+    if (verificationRequise) {
+      let emailEnvoye = true;
+      try {
+        await envoyerVerification(utilisateur);
+      } catch (err) {
+        emailEnvoye = false;
+        console.error("Erreur envoi email de vérification:", err.message);
+      }
+      // Pas de session tant que l'adresse n'est pas confirmée
+      return res.status(201).json({
+        success: true,
+        verificationRequise: true,
+        email: utilisateur.email,
+        message: emailEnvoye
+          ? "Compte créé. Un email de confirmation vient de t'être envoyé."
+          : "Compte créé, mais l'email de confirmation n'a pas pu partir. Demande un nouvel envoi.",
+      });
+    }
 
     const token = genererToken(utilisateur);
     envoyerTokenCookie(res, token, req);
@@ -76,12 +112,7 @@ const inscription = async (req, res) => {
       success: true,
       message: "Compte créé avec succès",
       token,
-      utilisateur: {
-        id: utilisateur.id,
-        nom: utilisateur.nom,
-        email: utilisateur.email,
-        niveauEtude: utilisateur.niveauEtude,
-      },
+      utilisateur: profilPublic(utilisateur),
     });
   } catch (error) {
     console.error("Erreur inscription:", error);
@@ -120,6 +151,16 @@ const connexion = async (req, res) => {
       return res.status(401).json(erreurAuth);
     }
 
+    // Adresse email non confirmée : pas de session
+    if (verificationEmailActive() && !utilisateur.emailVerifie) {
+      return res.status(403).json({
+        success: false,
+        code: "EMAIL_NON_VERIFIE",
+        email: utilisateur.email,
+        message: "Confirme d'abord ton adresse email : clique sur le lien reçu par email.",
+      });
+    }
+
     // Mettre à jour la dernière connexion (optionnel, sans bloquer)
     Progression.update(
       { stats: { dernierConnexion: new Date() } },
@@ -133,13 +174,7 @@ const connexion = async (req, res) => {
       success: true,
       message: "Connexion réussie",
       token,
-      utilisateur: {
-        id: utilisateur.id,
-        nom: utilisateur.nom,
-        email: utilisateur.email,
-        niveauEtude: utilisateur.niveauEtude,
-        avatar: utilisateur.avatar,
-      },
+      utilisateur: profilPublic(utilisateur),
     });
   } catch (error) {
     console.error("Erreur connexion:", error);
@@ -151,7 +186,7 @@ const connexion = async (req, res) => {
 const getProfil = async (req, res) => {
   try {
     const utilisateur = await User.findByPk(req.utilisateur.id, {
-      attributes: { exclude: ["motDePasse"] },
+      attributes: { exclude: CHAMPS_PRIVES },
     });
 
     if (!utilisateur) {
@@ -185,12 +220,23 @@ const mettreAJourProfil = async (req, res) => {
 
     const champs = {};
     if (nom) champs.nom = nom.trim();
-    if (email) champs.email = email.toLowerCase().trim();
+    const nouvelEmail = email && email.toLowerCase().trim() !== req.utilisateur.email;
+    if (nouvelEmail) {
+      champs.email = email.toLowerCase().trim();
+      // Nouvelle adresse : à confirmer (la session en cours reste active)
+      if (verificationEmailActive()) champs.emailVerifie = false;
+    }
 
     await req.utilisateur.update(champs);
 
+    if (nouvelEmail && verificationEmailActive()) {
+      envoyerVerification(req.utilisateur).catch((err) =>
+        console.error("Erreur envoi email de vérification:", err.message)
+      );
+    }
+
     const utilisateur = await User.findByPk(req.utilisateur.id, {
-      attributes: { exclude: ["motDePasse"] },
+      attributes: { exclude: CHAMPS_PRIVES },
     });
 
     res.json({ success: true, utilisateur });
@@ -288,12 +334,70 @@ const supprimerCompte = async (req, res) => {
   }
 };
 
+// POST /api/auth/verifier-email — confirme l'adresse avec le jeton reçu par email
+const verifierEmail = async (req, res) => {
+  try {
+    const utilisateur = await User.findOne({
+      where: {
+        jetonVerification: hacherJeton(req.body.token),
+        jetonVerificationExpire: { [Op.gt]: new Date() },
+      },
+    });
+
+    if (!utilisateur) {
+      return res.status(400).json({
+        success: false,
+        code: "JETON_INVALIDE",
+        message: "Ce lien est invalide ou a expiré. Demande un nouvel email de confirmation.",
+      });
+    }
+
+    await utilisateur.update({ emailVerifie: true, jetonVerification: null, jetonVerificationExpire: null });
+
+    // Connexion directe après confirmation
+    const token = genererToken(utilisateur);
+    envoyerTokenCookie(res, token, req);
+    res.json({ success: true, message: "Adresse email confirmée. Bienvenue !", token, utilisateur: profilPublic(utilisateur) });
+  } catch (error) {
+    console.error("Erreur verifierEmail:", error);
+    res.status(500).json({ success: false, message: "Erreur lors de la vérification." });
+  }
+};
+
+// POST /api/auth/renvoyer-verification — réponse identique que le compte existe ou non
+const renvoyerVerification = async (req, res) => {
+  const reponse = {
+    success: true,
+    message: "Si un compte non confirmé existe pour cette adresse, un nouvel email vient d'être envoyé.",
+  };
+  try {
+    if (!verificationEmailActive()) return res.json(reponse);
+
+    const utilisateur = await User.findOne({ where: { email: String(req.body.email).toLowerCase().trim() } });
+    if (utilisateur && !utilisateur.emailVerifie) {
+      // Anti-abus : un envoi par minute au plus
+      const emisLe = utilisateur.jetonVerificationExpire
+        ? new Date(utilisateur.jetonVerificationExpire).getTime() - 24 * 60 * 60 * 1000
+        : 0;
+      if (Date.now() - emisLe > 60 * 1000) {
+        await envoyerVerification(utilisateur).catch((err) =>
+          console.error("Erreur envoi email de vérification:", err.message)
+        );
+      }
+    }
+    res.json(reponse);
+  } catch (error) {
+    console.error("Erreur renvoyerVerification:", error);
+    res.json(reponse);
+  }
+};
+
 // GET /api/auth/export — Droit à la portabilité (RGPD art. 20)
 const exporterDonnees = async (req, res) => {
   try {
     const uid = req.utilisateur.id;
     const [utilisateur, cours, fiches, quiz, progression, feedbacks] = await Promise.all([
-      User.findByPk(uid, { attributes: { exclude: ["motDePasse"] } }),
+      User.findByPk(uid, { attributes: { exclude: CHAMPS_PRIVES } }),
       Course.findAll({ where: { utilisateurId: uid }, attributes: { exclude: ["fichierPDF"] } }),
       Fiche.findAll({ where: { utilisateurId: uid } }),
       Quiz.findAll({ where: { utilisateurId: uid } }),
@@ -331,4 +435,4 @@ const logout = (req, res) => {
   res.json({ success: true, message: "Déconnecté avec succès." });
 };
 
-module.exports = { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, exporterDonnees, logout };
+module.exports = { inscription, connexion, getProfil, mettreAJourProfil, changerMotDePasse, supprimerCompte, exporterDonnees, verifierEmail, renvoyerVerification, logout };

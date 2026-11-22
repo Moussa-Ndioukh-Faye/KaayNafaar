@@ -30,6 +30,7 @@ const Profil = lazy(() => import("./pages/Profil"));
 const Analytiques = lazy(() => import("./pages/Analytiques"));
 const Confidentialite = lazy(() => import("./pages/Confidentialite"));
 const Presentation = lazy(() => import("./pages/Presentation"));
+const VerifierEmail = lazy(() => import("./pages/VerifierEmail"));
 const Page404 = lazy(() => import("./pages/Page404"));
 
 class ErrorBoundary extends React.Component {
@@ -227,6 +228,7 @@ export default function App() {
           {/* Pages protégées */}
           <Route path="/" element={<Accueil />} />
           <Route path="/presentation" element={<SuspenseWrapper><Presentation /></SuspenseWrapper>} />
+          <Route path="/verifier-email" element={<SuspenseWrapper><VerifierEmail /></SuspenseWrapper>} />
           <Route path="/mes-cours" element={<RouteProtegee><Layout><SuspenseWrapper><MesCours /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/fiches" element={<RouteProtegee><Layout><SuspenseWrapper><Fiches /></SuspenseWrapper></Layout></RouteProtegee>} />
           <Route path="/quiz" element={<RouteProtegee><Layout><SuspenseWrapper><Quiz /></SuspenseWrapper></Layout></RouteProtegee>} />

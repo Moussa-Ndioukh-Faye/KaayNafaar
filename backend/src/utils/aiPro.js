@@ -6,6 +6,7 @@
 const crypto = require("crypto");
 const { GoogleGenerativeAIEmbeddings } = require("@langchain/google-genai");
 const { PGVectorStore } = require("@langchain/community/vectorstores/pgvector");
+const { Pool } = require("pg");
 const { parametres, optionsSSL } = require("../config/connexionPostgres");
 const { RecursiveCharacterTextSplitter } = require("@langchain/textsplitters");
 const { sequelize } = require("../config/database");
@@ -32,6 +33,46 @@ const config = {
     contentColumnName: "text",
     metadataColumnName: "metadata",
   },
+};
+
+/**
+ * Vector store partagé (une seule instance pour tout le processus).
+ *
+ * Avant : PGVectorStore.initialize() était appelé à chaque recherche et à chaque
+ * indexation. Chaque appel créait un nouveau pool de connexions PostgreSQL jamais
+ * fermé, et relançait un appel d'embedding pour mesurer la dimension des vecteurs.
+ * Sur Supabase (nombre de connexions limité), l'appli finissait par être refusée.
+ */
+let vectorStorePromise = null;
+let poolVecteurs = null;
+
+const obtenirVectorStore = () => {
+  if (!vectorStorePromise) {
+    poolVecteurs = new Pool({
+      ...config.postgresConnectionOptions,
+      max: parseInt(process.env.VECTOR_POOL_MAX || "3", 10),
+      idleTimeoutMillis: 30000,
+    });
+    poolVecteurs.on("error", (err) => console.error("[Vector store] Erreur de connexion:", err.message));
+
+    vectorStorePromise = PGVectorStore.initialize(embeddings, { ...config, pool: poolVecteurs }).catch((err) => {
+      // Échec (base ou clé IA indisponible) : on réessaiera au prochain appel
+      vectorStorePromise = null;
+      const pool = poolVecteurs;
+      poolVecteurs = null;
+      if (pool) pool.end().catch(() => {});
+      throw err;
+    });
+  }
+  return vectorStorePromise;
+};
+
+/** Ferme proprement les connexions du vector store (arrêt du serveur, tests) */
+const fermerVectorStore = async () => {
+  const pool = poolVecteurs;
+  vectorStorePromise = null;
+  poolVecteurs = null;
+  if (pool) await pool.end();
 };
 
 const CACHE_EMBEDDING_PREFIX = "embedding:";
@@ -94,7 +135,7 @@ const rechercherContexteHybride = async (query, userId, k = 6) => {
     } catch (_) { /* Redis non disponible */ }
 
     // 2. Vector search + Keyword search
-    const vectorStore = await PGVectorStore.initialize(embeddings, config);
+    const vectorStore = await obtenirVectorStore();
     const [vectorResults, keywordResults] = await Promise.all([
       vectorStore.similaritySearch(query, k * 2, { utilisateurId: userId }).catch(() => []),
       rechercherParMotsCles(query, userId, k * 2).catch(() => []),
@@ -180,7 +221,7 @@ const indexerCours = async (text, metadata) => {
   try {
     const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
     const docs = await splitter.createDocuments([text], [metadata]);
-    const vectorStore = await PGVectorStore.initialize(embeddings, config);
+    const vectorStore = await obtenirVectorStore();
     await vectorStore.addDocuments(docs);
     try {
       if (redis && typeof redis.incr === 'function') {
@@ -220,5 +261,7 @@ module.exports = {
   rechercherContexte,
   rechercherContexteHybride,
   obtenirEmbedding,
-  mettreAJourProfilApprenant
+  mettreAJourProfilApprenant,
+  obtenirVectorStore,
+  fermerVectorStore,
 };
