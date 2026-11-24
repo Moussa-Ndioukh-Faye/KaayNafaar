@@ -69,7 +69,7 @@ export default function Sidebar({ ouverte, fermer }) {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-card/70 dark:bg-card border-r border-border">
+    <div className="flex flex-col h-full bg-card border-r border-border">
       <div className="bande-senegal" aria-hidden="true" />
       <div className="px-5 pt-6 pb-4">
         <Logo />
@@ -165,7 +165,7 @@ export default function Sidebar({ ouverte, fermer }) {
             aria-hidden="true"
           />
           <div
-            className="absolute left-0 top-0 h-full w-72 shadow-2xl animate-slide-right bg-background"
+            className="absolute left-0 top-0 h-full w-[18rem] max-w-[85vw] shadow-2xl animate-slide-right bg-background pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navigation"
