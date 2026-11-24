@@ -152,7 +152,7 @@ export default function Home() {
             Nanga def, <span className="surligne">{prenom}</span>
           </h1>
           <p className="mt-2 text-xl text-muted-foreground">On révise quoi aujourd'hui ?</p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 grid grid-cols-1 sm:flex sm:flex-wrap gap-3">
             <Button asChild size="lg">
               <Link to="/mes-cours">
                 <PlusCircle aria-hidden="true" />

@@ -1,5 +1,5 @@
 import { useLocation, Link } from "react-router-dom";
-import { Menu, Sun, Moon, User } from "lucide-react";
+import { Sun, Moon, User } from "lucide-react";
 import { useAuth, useDarkMode } from "../App";
 import { Button } from "./ui/button";
 import { LogoMarque } from "./marque/Logo";
@@ -17,32 +17,23 @@ const titresPages = {
   "/profil": "Mon profil",
 };
 
-export default function Navbar({ ouvrir }) {
+export default function Navbar() {
   const location = useLocation();
   const { utilisateur } = useAuth();
   const { darkMode, setDarkMode } = useDarkMode();
   const titre = titresPages[location.pathname] || (location.pathname.startsWith("/carnets/") ? "Carnet" : "");
 
   return (
-    <header className="barre-verre border-b border-border/70 px-4 md:px-10 h-16 flex items-center justify-between sticky top-0 z-40">
+    <header className="barre-verre border-b border-border/70 px-4 md:px-10 pt-[env(safe-area-inset-top)] flex items-center justify-between sticky top-0 z-40">
+      <div className="h-14 md:h-16 flex flex-1 items-center justify-between">
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={ouvrir}
-          aria-label="Ouvrir le menu"
-          className="md:hidden rounded-xl"
-        >
-          <Menu className="w-5 h-5" />
-        </Button>
-
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 group md:hidden" aria-label="Tableau de bord">
-             <LogoMarque className="w-9 h-9" />
+             <LogoMarque className="w-8 h-8" />
           </Link>
           
           {titre && (
-            <div className="hidden md:block">
+            <div>
               {/* Titre de page (h1), sauf sur le tableau de bord qui a sa propre salutation */}
               {location.pathname === "/" ? (
                 <p className="text-[1.0625rem] font-semibold text-foreground leading-none">{titre}</p>
@@ -82,6 +73,7 @@ export default function Navbar({ ouvrir }) {
             {utilisateur?.nom?.charAt(0)?.toUpperCase() || <User className="w-5 h-5" aria-hidden="true" />}
           </span>
         </Link>
+      </div>
       </div>
     </header>
   );
