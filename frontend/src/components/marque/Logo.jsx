@@ -39,9 +39,9 @@ export default function Logo({ className, ton = "auto" }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <LogoMarque ton={ton} className="w-11" />
-      <span className="font-display text-[1.4rem] font-bold leading-none tracking-tight">
+      <span className="text-[1.3rem] font-bold leading-none tracking-[-0.03em]">
         <span className={clair ? "text-white" : "text-marine dark:text-white"}>Kaay </span>
-        <span className={clair ? "text-primary-300" : "text-primary-600 dark:text-primary-400"}>Nafaar</span>
+        <span className={clair ? "text-primary-300" : "text-primary-600 dark:text-primary"}>Nafaar</span>
       </span>
     </span>
   );

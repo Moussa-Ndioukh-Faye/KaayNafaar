@@ -17,12 +17,6 @@ const titresPages = {
   "/profil": "Mon profil",
 };
 
-// Comme en haut d'une page de cahier : la date du jour, écrite au stylo
-const dateDuJour = () => {
-  const d = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-  return `Le ${d}`;
-};
-
 export default function Navbar({ ouvrir }) {
   const location = useLocation();
   const { utilisateur } = useAuth();
@@ -30,7 +24,7 @@ export default function Navbar({ ouvrir }) {
   const titre = titresPages[location.pathname] || (location.pathname.startsWith("/carnets/") ? "Carnet" : "");
 
   return (
-    <header className="bg-background/95 border-b border-border px-4 md:px-10 py-3 flex items-center justify-between sticky top-0 z-40">
+    <header className="barre-verre border-b border-border/70 px-4 md:px-10 h-16 flex items-center justify-between sticky top-0 z-40">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -49,12 +43,11 @@ export default function Navbar({ ouvrir }) {
           
           {titre && (
             <div className="hidden md:block">
-              <p className="annotation text-sm leading-none mb-1 first-letter:uppercase">{dateDuJour()}</p>
               {/* Titre de page (h1), sauf sur le tableau de bord qui a sa propre salutation */}
               {location.pathname === "/" ? (
-                <p className="font-display text-xl font-semibold text-foreground leading-none">{titre}</p>
+                <p className="text-[1.0625rem] font-semibold text-foreground leading-none">{titre}</p>
               ) : (
-                <h1 className="font-display text-xl font-semibold text-foreground leading-none">{titre}</h1>
+                <h1 className="text-[1.0625rem] font-semibold text-foreground leading-none">{titre}</h1>
               )}
             </div>
           )}
@@ -69,14 +62,14 @@ export default function Navbar({ ouvrir }) {
           aria-label={darkMode ? "Activer le mode clair" : "Activer le mode sombre"}
           className="w-10 h-10"
         >
-          {darkMode ? <Sun className="w-5 h-5 text-secondary" aria-hidden="true" /> : <Moon className="w-5 h-5" aria-hidden="true" />}
+          {darkMode ? <Sun className="w-5 h-5 text-etoile" aria-hidden="true" /> : <Moon className="w-5 h-5" aria-hidden="true" />}
         </Button>
         
         <div className="h-6 w-px bg-border" aria-hidden="true" />
 
         <Link
            to="/profil"
-           className="flex items-center gap-3 pl-2 cursor-pointer group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+           className="flex items-center gap-3 pl-2 cursor-pointer group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="hidden sm:flex flex-col items-end">
             <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -85,8 +78,8 @@ export default function Navbar({ ouvrir }) {
             <span className="text-xs text-muted-foreground">Compte étudiant</span>
           </span>
           <span className="sr-only">Mon profil</span>
-          <span className="w-10 h-10 rounded-full bg-card border border-encre/70 dark:border-foreground/40 flex items-center justify-center text-primary">
-            <User className="w-5 h-5" aria-hidden="true" />
+          <span className="w-10 h-10 rounded-full bg-gradient-to-b from-[#3d7bff] to-[#0047db] flex items-center justify-center text-sm font-semibold text-white">
+            {utilisateur?.nom?.charAt(0)?.toUpperCase() || <User className="w-5 h-5" aria-hidden="true" />}
           </span>
         </Link>
       </div>

@@ -4,26 +4,23 @@ import { cva } from "class-variance-authority";
 
 import { cn } from "@/lib/utils"
 
-// Boutons « tampon » : bord encre, ombre nette décalée, enfoncés au clic
-const pression =
-  "border border-encre/85 dark:border-foreground/70 shadow-[2px_2px_0_0_#0a1f4a] dark:shadow-[2px_2px_0_0_rgb(0_0_0/0.6)] " +
-  "hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_0_#0a1f4a] dark:hover:shadow-[3px_3px_0_0_rgb(0_0_0/0.6)] " +
-  "active:translate-x-0.5 active:translate-y-0.5 active:shadow-none";
+// Boutons à la manière d'iOS : pleins, arrondis continus, léger enfoncement au toucher
+const pression = "active:scale-[0.97] motion-reduce:transform-none";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold ring-offset-background " +
-    "transition-[transform,box-shadow,background-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 " +
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[0.9375rem] font-semibold ring-offset-background " +
+    "transition-[transform,filter,background-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 " +
     "focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:size-[1.15em] [&_svg]:shrink-0 motion-reduce:transform-none",
   {
     variants: {
       variant: {
-        default: `bg-primary text-primary-foreground hover:bg-primary/95 ${pression}`,
-        destructive: `bg-destructive text-destructive-foreground ${pression}`,
-        outline: `bg-card text-foreground hover:bg-secondary/40 ${pression}`,
-        secondary: `bg-secondary text-secondary-foreground ${pression}`,
-        ghost: "text-foreground hover:bg-foreground/[0.06]",
-        link: "text-primary underline underline-offset-4 decoration-primary/40 hover:decoration-primary",
+        default: `bg-primary text-primary-foreground hover:brightness-110 ${pression}`,
+        destructive: `bg-destructive text-destructive-foreground hover:brightness-110 ${pression}`,
+        outline: `bg-card text-foreground border border-border shadow-sm hover:bg-muted ${pression}`,
+        secondary: `bg-secondary text-secondary-foreground hover:brightness-[0.97] ${pression}`,
+        ghost: "text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.1]",
+        link: "text-primary hover:underline underline-offset-4",
       },
       size: {
         default: "h-11 px-5",

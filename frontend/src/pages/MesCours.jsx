@@ -7,47 +7,46 @@ import { cn } from "../lib/utils";
 
 const NIVEAUX = ["débutant", "intermédiaire", "avancé"];
 
-// Couleurs de couvertures de cahiers : une par matière, toujours la même
-const COUVERTURES = ["#0047db", "#c8372d", "#1f7a4d", "#d9621e", "#0a1f4a", "#7a3fa0"];
+// Une teinte par matière, toujours la même (bleu du logo + couleurs du drapeau)
+const COUVERTURES = ["#0047db", "#cf1820", "#00853f", "#e8590c", "#5b4bdb", "#0b7f9e"];
 const couleurMatiere = (matiere = "") =>
   COUVERTURES[[...matiere].reduce((somme, c) => somme + c.charCodeAt(0), 0) % COUVERTURES.length];
 
-/** Un cours = un cahier : couverture de couleur, reliure piquée, étiquette blanche */
-function CouvertureCahier({ cours: c, onSupprimer }) {
+/** Carte de cours : pastille de couleur de la matière, titre, détails */
+function CarteCours({ cours: c, onSupprimer }) {
   const couleur = couleurMatiere(c.matiere);
   const details = [c.niveau, c.dureeEstimee ? `${c.dureeEstimee} min` : null].filter(Boolean).join(" · ");
   return (
-    <article
-      className="group relative flex min-h-[10.5rem] rounded-md border border-encre/30 shadow-md overflow-hidden transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-lg"
-      style={{ backgroundColor: couleur }}
-    >
-      {/* Reliure : bande plus sombre, points de couture */}
-      <div aria-hidden="true" className="w-6 shrink-0 bg-black/25 flex flex-col items-center justify-around py-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <span key={i} className="w-1 h-2.5 rounded-full bg-white/70" />
-        ))}
-      </div>
-      <div className="flex-1 flex flex-col p-4">
-        {/* Étiquette du cahier */}
-        <div className="bg-card text-card-foreground rounded-[4px] border-[3px] border-double border-encre/40 px-4 py-3 shadow-sm">
+    <article className="group relative flex flex-col min-h-[9.5rem] rounded-2xl bg-card p-5 shadow-sm transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none">
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="grid place-items-center w-10 h-10 shrink-0 rounded-[11px] text-white"
+          style={{ backgroundColor: couleur }}
+        >
+          <BookOpen className="w-5 h-5" strokeWidth={2.2} />
+        </span>
+        <div className="flex-1 min-w-0">
           <p className="etiquette truncate">{c.matiere || "Matière"}</p>
           <h3 className="mt-0.5 text-lg leading-snug line-clamp-2">{c.titre}</h3>
-          {details && <p className="mt-1 text-sm text-muted-foreground">{details}</p>}
         </div>
-        <div className="mt-auto pt-3 flex items-center justify-between gap-2 text-white">
-          <p className="text-sm text-white/90 line-clamp-1">
-            {c.resumeIA ? "Résumé prêt" : Array.isArray(c.tags) && c.tags.length ? c.tags.join(", ") : ""}
-          </p>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={`Supprimer le cours ${c.titre}`}
-            onClick={() => onSupprimer(c.id)}
-            className="w-9 h-9 text-white hover:text-white hover:bg-white/20 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-          >
-            <Trash2 aria-hidden="true" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Supprimer le cours ${c.titre}`}
+          onClick={() => onSupprimer(c.id)}
+          className="w-9 h-9 -mr-2 -mt-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+        >
+          <Trash2 aria-hidden="true" />
+        </Button>
+      </div>
+      <div className="mt-auto pt-4 flex items-center justify-between gap-2 text-sm text-muted-foreground">
+        <span className="truncate">{details}</span>
+        {c.resumeIA ? (
+          <span className="shrink-0 rounded-full bg-succes/15 px-2.5 py-0.5 text-xs font-semibold text-succes">Résumé prêt</span>
+        ) : Array.isArray(c.tags) && c.tags.length ? (
+          <span className="truncate">{c.tags.join(", ")}</span>
+        ) : null}
       </div>
     </article>
   );
@@ -363,7 +362,7 @@ export default function MesCours() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {coursFiltres.map((c) => (
-            <CouvertureCahier key={c.id} cours={c} onSupprimer={supprimerCours} />
+            <CarteCours key={c.id} cours={c} onSupprimer={supprimerCours} />
           ))}
         </div>
       )}

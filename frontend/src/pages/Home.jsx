@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, FileText, BrainCircuit, Calendar, PlusCircle, MessageSquare, Clock, ArrowRight, Layers } from "lucide-react";
+import { BookOpen, FileText, BrainCircuit, Calendar, PlusCircle, MessageSquare, Award, ChevronRight, Layers } from "lucide-react";
 import { progressionAPI, coursAPI, fichesAPI, quizAPI } from "../services/api";
 import { useAuth } from "../App";
 import { Button } from "../components/ui/button";
@@ -9,55 +9,68 @@ import { cn } from "../lib/utils";
 /** Score en pourcentage → note sur 20, comme sur un bulletin (ex. 78 % → 15,6) */
 const surVingt = (pct) => (Math.round((Number(pct) || 0) * 2) / 10).toLocaleString("fr-FR");
 
-/** Le « tampon » du professeur : la série de jours, entourée à l'encre rouge */
-function TamponSerie({ serie }) {
+/** Anneau de série, à la manière des anneaux d'activité : objectif 7 jours */
+function AnneauSerie({ serie }) {
+  const rayon = 52;
+  const tour = 2 * Math.PI * rayon;
+  const part = Math.min(serie / 7, 1);
   return (
     <div
-      className="relative w-28 h-28 md:w-40 md:h-40 shrink-0 -rotate-6 select-none"
+      className="flex items-center gap-5 rounded-2xl bg-card p-5 shadow-sm"
       role="img"
-      aria-label={serie > 0 ? `${serie} jour${serie > 1 ? "s" : ""} de révision d'affilée` : "Aucune série en cours"}
+      aria-label={serie > 0 ? `${serie} jour${serie > 1 ? "s" : ""} de révision d'affilée, objectif 7` : "Aucune série en cours"}
     >
-      <svg viewBox="0 0 160 160" className="absolute inset-0 w-full h-full text-marge" aria-hidden="true">
-        <circle cx="80" cy="80" r="70" fill="none" stroke="currentColor" strokeWidth="3" />
-        <circle cx="80" cy="80" r="62" fill="none" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2 4" />
+      <svg viewBox="0 0 128 128" className="w-24 h-24 shrink-0 -rotate-90" aria-hidden="true">
+        <circle cx="64" cy="64" r={rayon} fill="none" strokeWidth="14" className="stroke-succes/15" />
+        <circle
+          cx="64" cy="64" r={rayon} fill="none" strokeWidth="14" strokeLinecap="round"
+          className="stroke-succes transition-[stroke-dashoffset] duration-700"
+          strokeDasharray={tour}
+          strokeDashoffset={tour * (1 - part)}
+        />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-marge" aria-hidden="true">
-        <span className="font-display text-4xl md:text-6xl font-semibold leading-none chiffres">{serie}</span>
-        <span className="mt-1 w-[70%] text-center leading-tight text-[0.62rem] md:text-[0.72rem] font-semibold uppercase tracking-[0.1em]">
-          {serie > 1 ? "jours de suite" : serie === 1 ? "jour de suite" : "à démarrer"}
-        </span>
+      <div aria-hidden="true">
+        <p className="etiquette">Série</p>
+        <p className="text-4xl font-bold tracking-tight chiffres leading-none mt-1">
+          {serie}
+          <span className="text-lg font-semibold text-muted-foreground"> / 7 j</span>
+        </p>
+        <p className="mt-1.5 text-sm text-muted-foreground max-w-[12rem]">
+          {serie === 0 ? "Une révision aujourd'hui et la série commence." : serie >= 7 ? "Objectif de la semaine atteint." : "Continue demain pour garder le rythme."}
+        </p>
       </div>
     </div>
   );
 }
 
-/** Une colonne du bulletin (cours, fiches, quiz, moyenne) */
-function CaseBulletin({ libelle, valeur, detail, vers, icone: Icone }) {
+/** Carte de statistique façon app Santé : pastille colorée, grand chiffre, libellé */
+function CarteStat({ libelle, valeur, detail, vers, icone: Icone, teinte }) {
   return (
     <Link
       to={vers}
-      className="group relative flex flex-col justify-between p-5 min-h-[8.5rem] hover:bg-secondary/25 focus-visible:bg-secondary/25 transition-colors"
+      className="group flex flex-col gap-3 rounded-2xl bg-card p-5 shadow-sm transition-transform hover:-translate-y-0.5 active:scale-[0.99] motion-reduce:transform-none"
     >
-      <span className="etiquette flex items-center gap-2">
-        <Icone className="w-4 h-4" aria-hidden="true" />
-        {libelle}
+      <span className="flex items-center justify-between">
+        <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <span aria-hidden="true" className={cn("grid place-items-center w-7 h-7 rounded-[8px] text-white", teinte)}>
+            <Icone className="w-4 h-4" strokeWidth={2.2} />
+          </span>
+          {libelle}
+        </span>
+        <ChevronRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
       </span>
-      <span className="font-display text-5xl font-semibold leading-none text-foreground chiffres">{valeur}</span>
-      {detail && <span className="text-sm text-muted-foreground">{detail}</span>}
-      <ArrowRight
-        className="absolute top-5 right-5 w-4 h-4 text-muted-foreground opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all"
-        aria-hidden="true"
-      />
+      <span className="text-[2.5rem] font-bold tracking-tight leading-none text-foreground chiffres">{valeur}</span>
+      {detail && <span className="text-sm text-muted-foreground -mt-1">{detail}</span>}
     </Link>
   );
 }
 
 const RACCOURCIS = [
-  { titre: "Ajouter un cours", detail: "PDF, photo de cahier ou texte", vers: "/mes-cours", icone: PlusCircle },
-  { titre: "Générer une fiche", detail: "Résumé, notions clés, flashcards", vers: "/fiches", icone: FileText },
-  { titre: "Lancer un quiz", detail: "Vérifie ce que tu as retenu", vers: "/quiz", icone: BrainCircuit },
-  { titre: "Réviser les flashcards", detail: "Les cartes dues aujourd'hui d'abord", vers: "/fiches", icone: Layers },
-  { titre: "Poser une question", detail: "L'assistant s'appuie sur tes cours", vers: "/assistant", icone: MessageSquare },
+  { titre: "Ajouter un cours", detail: "PDF, Word, PowerPoint, photo ou page web", vers: "/mes-cours", icone: PlusCircle, teinte: "bg-[#00853f]" },
+  { titre: "Générer une fiche", detail: "Résumé, notions clés, flashcards", vers: "/fiches", icone: FileText, teinte: "bg-[#f5c400] text-[#1c1c1e]" },
+  { titre: "Lancer un quiz", detail: "Vérifie ce que tu as retenu", vers: "/quiz", icone: BrainCircuit, teinte: "bg-[#cf1820]" },
+  { titre: "Réviser les flashcards", detail: "Les cartes dues aujourd'hui d'abord", vers: "/fiches", icone: Layers, teinte: "bg-[#e8590c]" },
+  { titre: "Poser une question", detail: "L'assistant s'appuie sur tes cours", vers: "/assistant", icone: MessageSquare, teinte: "bg-[#5b4bdb]" },
 ];
 
 export default function Home() {
@@ -126,26 +139,27 @@ export default function Home() {
 
   const prenom = utilisateur?.nom?.split(" ")[0] || "";
 
+  const date = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const lien = "text-[0.9375rem] font-medium text-primary hover:underline underline-offset-4";
+
   return (
-    <div className="max-w-6xl mx-auto pb-12 space-y-12 apparition">
-      {/* En-tête de page de cahier : salutation en wolof, tampon de série */}
-      <section className="flex flex-col-reverse gap-8 md:flex-row md:items-center md:justify-between pt-2">
+    <div className="max-w-6xl mx-auto pb-12 space-y-10 apparition">
+      {/* Grand titre façon « Aujourd'hui » d'iOS, salutation en wolof */}
+      <section className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end pt-1">
         <div className="max-w-2xl">
-          <h1 className="text-[2.6rem] md:text-[3.6rem] leading-[1.02] text-foreground">
-            Nanga def, <span className="surligne">{prenom}</span>.
-            <span className="block font-normal italic text-foreground/80 mt-1">On révise quoi aujourd'hui ?</span>
+          <p className="etiquette">{date}</p>
+          <h1 className="mt-1 text-[2.25rem] md:text-[3rem] leading-[1.05] text-foreground">
+            Nanga def, <span className="surligne">{prenom}</span>
           </h1>
-          <p className="mt-5 text-lg text-muted-foreground max-w-xl">
-            Importe un cours, transforme-le en fiche et en quiz, puis révise au bon moment.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <p className="mt-2 text-xl text-muted-foreground">On révise quoi aujourd'hui ?</p>
+          <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild size="lg">
               <Link to="/mes-cours">
                 <PlusCircle aria-hidden="true" />
                 Ajouter un cours
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button asChild size="lg" variant="secondary">
               <Link to="/assistant">
                 <MessageSquare aria-hidden="true" />
                 Demander à l'assistant
@@ -153,89 +167,86 @@ export default function Home() {
             </Button>
           </div>
         </div>
-        <div className="self-end md:self-center md:mr-6">
-          <TamponSerie serie={stats.serie} />
-          {stats.serie === 0 && (
-            <p className="annotation text-sm mt-2 max-w-[11rem] rotate-[-3deg]">Une révision aujourd'hui et la série commence.</p>
-          )}
-        </div>
+        <AnneauSerie serie={stats.serie} />
       </section>
 
-      {/* Bulletin : une seule fiche découpée en colonnes, comme un relevé de notes */}
-      <section aria-labelledby="titre-bulletin">
-        <div className="flex items-baseline justify-between mb-3">
-          <h2 id="titre-bulletin" className="text-2xl">Mon bulletin</h2>
-          <Link to="/analytiques" className="text-sm font-semibold text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary">
-            Voir ma progression
-          </Link>
+      <section aria-labelledby="titre-resume">
+        <div className="flex items-baseline justify-between mb-3 px-1">
+          <h2 id="titre-resume" className="text-[1.375rem]">Résumé</h2>
+          <Link to="/analytiques" className={lien}>Voir ma progression</Link>
         </div>
-        <div className="bg-card border border-border rounded-lg shadow-md grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-border overflow-hidden">
-          <CaseBulletin libelle="Cours" valeur={stats.cours} vers="/mes-cours" icone={BookOpen} />
-          <CaseBulletin libelle="Fiches" valeur={stats.fiches} vers="/fiches" icone={FileText} />
-          <CaseBulletin libelle="Quiz" valeur={stats.quiz} vers="/quiz" icone={BrainCircuit} />
-          <CaseBulletin
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <CarteStat libelle="Cours" valeur={stats.cours} vers="/mes-cours" icone={BookOpen} teinte="bg-[#00853f]" />
+          <CarteStat libelle="Fiches" valeur={stats.fiches} vers="/fiches" icone={FileText} teinte="bg-[#f5c400] text-[#1c1c1e]" />
+          <CarteStat libelle="Quiz" valeur={stats.quiz} vers="/quiz" icone={BrainCircuit} teinte="bg-[#cf1820]" />
+          <CarteStat
             libelle="Moyenne"
             valeur={
               <>
                 {surVingt(stats.scoreMoyen)}
-                <span className="text-2xl text-muted-foreground"> /20</span>
+                <span className="text-xl font-semibold text-muted-foreground"> /20</span>
               </>
             }
             detail={`${stats.scoreMoyen} % de bonnes réponses`}
             vers="/quiz"
-            icone={Clock}
+            icone={Award}
+            teinte="bg-[#0047db]"
           />
         </div>
       </section>
 
-      <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr]">
-        {/* Programme du jour : une liste à cocher */}
+      <div className="grid gap-10 lg:grid-cols-2">
+        {/* Programme du jour : liste à cocher façon Rappels */}
         <section aria-labelledby="titre-programme">
-          <div className="flex items-baseline justify-between mb-3">
-            <h2 id="titre-programme" className="text-2xl">Au programme aujourd'hui</h2>
-            <Link to="/planning" className="text-sm font-semibold text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary">
-              Planning
-            </Link>
+          <div className="flex items-baseline justify-between mb-3 px-1">
+            <h2 id="titre-programme" className="text-[1.375rem]">Aujourd'hui</h2>
+            <Link to="/planning" className={lien}>Planning</Link>
           </div>
           {planningDuJour.length > 0 ? (
-            <ul className="bg-card border border-border rounded-lg shadow-md divide-y divide-border">
-              {planningDuJour.map((session) => (
+            <ul className="bg-card rounded-2xl shadow-sm overflow-hidden">
+              {planningDuJour.map((session, i) => (
                 <li key={session.id || session._id}>
-                  <Link to="/planning" className="flex items-center gap-4 px-5 py-4 hover:bg-secondary/20 transition-colors">
-                    <span aria-hidden="true" className="w-5 h-5 rounded-[3px] border-[1.5px] border-encre/70 dark:border-foreground/60 shrink-0" />
-                    <span className="flex-1 min-w-0">
-                      <span className="block font-semibold text-foreground truncate">{session.sujet || session.matiere}</span>
-                      <span className="text-sm text-muted-foreground">{session.dureeMinutes} min</span>
+                  <Link to="/planning" className="flex items-center gap-3.5 pl-4 hover:bg-foreground/[0.03] active:bg-foreground/[0.06] transition-colors">
+                    <span aria-hidden="true" className="w-[22px] h-[22px] rounded-full border-2 border-input shrink-0" />
+                    <span className={cn("flex flex-1 min-w-0 items-center gap-3 py-3 pr-4", i < planningDuJour.length - 1 && "border-b border-border")}>
+                      <span className="flex-1 min-w-0">
+                        <span className="block font-medium text-foreground truncate">{session.sujet || session.matiere}</span>
+                        <span className="text-sm text-muted-foreground">{session.dureeMinutes} min</span>
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/70" aria-hidden="true" />
                     </span>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
                   </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <div className="border border-dashed border-input rounded-lg px-6 py-8 text-center bg-card/60">
-              <Calendar className="w-6 h-6 mx-auto text-muted-foreground" aria-hidden="true" />
+            <div className="rounded-2xl bg-card shadow-sm px-6 py-8 text-center">
+              <Calendar className="w-7 h-7 mx-auto text-muted-foreground" aria-hidden="true" />
               <p className="mt-3 text-muted-foreground">Rien de prévu pour aujourd'hui.</p>
-              <Link to="/planning" className="mt-2 inline-block text-sm font-semibold text-primary underline underline-offset-4">
+              <Link to="/planning" className={cn(lien, "mt-2 inline-block")}>
                 Préparer mon planning
               </Link>
             </div>
           )}
         </section>
 
-        {/* Raccourcis : une table des matières, pas une grille de cartes */}
+        {/* Raccourcis : liste groupée façon Réglages */}
         <section aria-labelledby="titre-raccourcis">
-          <h2 id="titre-raccourcis" className="text-2xl mb-3">Raccourcis</h2>
-          <ul className="border-t border-encre/80 dark:border-foreground/40">
-            {RACCOURCIS.map(({ titre, detail, vers, icone: Icone }) => (
-              <li key={titre} className="border-b border-border">
-                <Link to={vers} className="group flex items-center gap-4 py-3.5 px-1 hover:bg-secondary/20 transition-colors">
-                  <Icone className="w-5 h-5 text-primary shrink-0" aria-hidden="true" />
-                  <span className="flex-1 min-w-0">
-                    <span className="font-display text-lg font-semibold text-foreground">{titre}</span>
-                    <span className="block text-sm text-muted-foreground">{detail}</span>
+          <h2 id="titre-raccourcis" className="text-[1.375rem] mb-3 px-1">Raccourcis</h2>
+          <ul className="bg-card rounded-2xl shadow-sm overflow-hidden">
+            {RACCOURCIS.map(({ titre, detail, vers, icone: Icone, teinte }, i) => (
+              <li key={titre}>
+                <Link to={vers} className="group flex items-center gap-3.5 pl-4 hover:bg-foreground/[0.03] active:bg-foreground/[0.06] transition-colors">
+                  <span aria-hidden="true" className={cn("grid place-items-center w-[30px] h-[30px] rounded-[8px] text-white shrink-0", teinte)}>
+                    <Icone className="w-[17px] h-[17px]" strokeWidth={2.2} />
                   </span>
-                  <ArrowRight className={cn("w-4 h-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary")} aria-hidden="true" />
+                  <span className={cn("flex flex-1 min-w-0 items-center gap-3 py-3 pr-4", i < RACCOURCIS.length - 1 && "border-b border-border")}>
+                    <span className="flex-1 min-w-0">
+                      <span className="block font-medium text-foreground">{titre}</span>
+                      <span className="block text-sm text-muted-foreground">{detail}</span>
+                    </span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/70" aria-hidden="true" />
+                  </span>
                 </Link>
               </li>
             ))}

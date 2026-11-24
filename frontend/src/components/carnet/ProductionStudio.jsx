@@ -6,11 +6,11 @@ import LecteurPodcast from "./LecteurPodcast";
 
 function CarteMentale({ centre, branches = [] }) {
   const Noeud = ({ noeud, niveau }) => (
-    <li className="relative pl-5 before:absolute before:left-0 before:top-[1.05rem] before:w-3.5 before:border-t-[1.5px] before:border-encre/40 dark:before:border-foreground/30">
+    <li className="relative pl-5 before:absolute before:left-0 before:top-[1.05rem] before:w-3.5 before:border-t-[1.5px] before:border-border dark:before:border-foreground/30">
       <span
         className={
           niveau === 1
-            ? "inline-block my-1 rounded-sm border border-encre/70 dark:border-foreground/40 bg-card px-3 py-1 font-display text-lg font-semibold text-foreground shadow-sm"
+            ? "inline-block my-1 rounded-sm border border-border bg-card px-3 py-1 font-display text-lg font-semibold text-foreground shadow-sm"
             : niveau === 2
               ? "inline-block my-0.5 rounded-sm bg-secondary/40 px-2 py-0.5 text-foreground"
               : "inline-block my-0.5 text-foreground/80 text-sm"
@@ -19,7 +19,7 @@ function CarteMentale({ centre, branches = [] }) {
         {noeud.titre}
       </span>
       {noeud.enfants?.length > 0 && (
-        <ul className="ml-3 border-l-[1.5px] border-encre/40 dark:border-foreground/30">
+        <ul className="ml-3 border-l-[1.5px] border-border">
           {noeud.enfants.map((e, i) => (
             <Noeud key={i} noeud={e} niveau={niveau + 1} />
           ))}
@@ -30,10 +30,10 @@ function CarteMentale({ centre, branches = [] }) {
 
   return (
     <div className="overflow-x-auto">
-      <p className="inline-block rounded-full border-2 border-encre dark:border-foreground/70 bg-surligneur text-encre px-4 py-1.5 font-display text-xl font-semibold">
+      <p className="inline-block rounded-full bg-surligneur text-[#1c1c1e] px-4 py-1.5 text-xl font-bold">
         {centre}
       </p>
-      <ul className="mt-2 ml-5 border-l-[1.5px] border-encre/40 dark:border-foreground/30">
+      <ul className="mt-2 ml-5 border-l-[1.5px] border-border">
         {branches.map((b, i) => (
           <Noeud key={i} noeud={b} niveau={1} />
         ))}
@@ -49,7 +49,7 @@ function Frise({ titre, elements = [] }) {
       <ol className="relative border-l-2 border-marge/60 ml-2">
         {elements.map((e, i) => (
           <li key={i} className="relative pl-6 pb-6 last:pb-0">
-            <span aria-hidden="true" className="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full bg-card border-2 border-marge" />
+            <span aria-hidden="true" className="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full bg-card border-2 border-primary" />
             <p className="etiquette text-marge">{e.repere}</p>
             <p className="font-display text-lg font-semibold text-foreground">{e.titre}</p>
             {e.description && <p className="text-foreground/80 mt-0.5">{renderInline(e.description)}</p>}
@@ -62,7 +62,7 @@ function Frise({ titre, elements = [] }) {
 
 function Faq({ questions = [] }) {
   return (
-    <div className="border-t border-encre/70 dark:border-foreground/40">
+    <div className="border-t border-border">
       {questions.map((q, i) => (
         <details key={i} className="group border-b border-border">
           <summary className="flex cursor-pointer list-none items-start justify-between gap-4 py-3.5 font-semibold text-foreground">

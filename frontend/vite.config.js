@@ -22,7 +22,7 @@ const pwa = VitePWA({
     display: "standalone",
     display_override: ["window-controls-overlay", "standalone"],
     orientation: "any",
-    background_color: "#f6f1e6",
+    background_color: "#f2f2f7",
     theme_color: "#0a1f4a",
     categories: ["education", "productivity"],
     icons: [

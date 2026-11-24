@@ -27,26 +27,15 @@ export default function CarteQuiz({ quiz: q, onCommencer, onSupprimer }) {
 
         {derniereSession ? (
           <div
-            className="relative shrink-0 w-[4.5rem] h-[4.5rem] -rotate-6 text-marge"
+            className="shrink-0 rounded-xl bg-succes/15 px-3 py-2 text-center text-succes"
             role="img"
             aria-label={`Dernière note : ${noteSur20(derniereSession.score, derniereSession.total)} sur 20`}
           >
-            <svg viewBox="0 0 72 72" className="absolute inset-0" aria-hidden="true">
-              <path
-                d="M36 5c17 0 31 13 31 30S53 67 35 67 5 54 6 36 19 4 38 6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-              />
-            </svg>
-            <span aria-hidden="true" className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-              <span className="font-display text-xl font-semibold chiffres">{noteSur20(derniereSession.score, derniereSession.total)}</span>
-              <span className="text-xs font-semibold">/20</span>
-            </span>
+            <span aria-hidden="true" className="block text-xl font-bold leading-none chiffres">{noteSur20(derniereSession.score, derniereSession.total)}</span>
+            <span aria-hidden="true" className="block text-xs font-semibold mt-0.5">/20</span>
           </div>
         ) : (
-          <p className="annotation text-sm shrink-0 mt-1 -rotate-3">Pas encore tenté</p>
+          <p className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">Pas encore tenté</p>
         )}
       </div>
 

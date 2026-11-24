@@ -281,7 +281,7 @@ export default function Bibliotheque() {
                   </span>
                   <Button
                     variant="ghost"
-                    className="text-xs font-bold tracking-wider text-primary-600 dark:text-primary-400 hover:bg-transparent hover:text-primary-700 dark:hover:text-primary-300 hover:translate-x-0.5 transition-all flex items-center gap-1.5 px-0"
+                    className="text-xs font-bold tracking-wider text-primary-600 dark:text-primary hover:bg-transparent hover:text-primary-700 dark:hover:text-primary-300 hover:translate-x-0.5 transition-all flex items-center gap-1.5 px-0"
                   >
                     Lire <ChevronRight className="w-3.5 h-3.5" />
                   </Button>

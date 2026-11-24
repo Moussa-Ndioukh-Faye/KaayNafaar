@@ -18,7 +18,7 @@ function SourcesMessage({ sources }) {
               href={s.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-2 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg border border-primary-100 dark:border-primary-800/50 text-xs font-bold hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary rounded-lg border border-primary-100 dark:border-primary-800/50 text-xs font-bold hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors"
             >
               <Globe className="w-3 h-3" aria-hidden="true" />
               {s.titre}
@@ -64,7 +64,7 @@ export default function BulleMessage({ msg, enChargement }) {
         aria-hidden="true"
         className={cn(
           "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-1 border",
-          estEtudiant ? "bg-primary text-primary-foreground border-encre/70" : "bg-card text-primary border-encre/60 dark:border-foreground/40"
+          estEtudiant ? "bg-primary text-primary-foreground border-border" : "bg-card text-primary border-border"
         )}
       >
         {estEtudiant ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
@@ -72,12 +72,12 @@ export default function BulleMessage({ msg, enChargement }) {
 
       <div
         className={cn(
-          "relative max-w-[88%] sm:max-w-[75%] px-5 py-4 text-[0.95rem]",
+          "relative max-w-[88%] sm:max-w-[75%] px-4 py-3 text-[0.95rem]",
           estEtudiant
-            ? // La question de l'étudiant : un post-it jaune collé sur la page
-              "bg-surligneur-pale text-encre border border-encre/15 rounded-sm shadow-md rotate-[0.4deg]"
-            : // La réponse : une feuille posée, réglée
-              "bg-card text-card-foreground border border-border rounded-md shadow-md"
+            ? // La question de l'étudiant : bulle bleue, à la manière de Messages
+              "bg-primary text-primary-foreground rounded-[20px] rounded-br-md"
+            : // La réponse : bulle grise claire
+              "bg-card text-card-foreground rounded-[20px] rounded-bl-md shadow-sm"
         )}
       >
         <span className="sr-only">{estEtudiant ? "Toi :" : "Assistant :"}</span>
@@ -104,7 +104,7 @@ export default function BulleMessage({ msg, enChargement }) {
           </div>
         )}
 
-        <div className={cn("text-xs mt-3 chiffres", estEtudiant ? "text-right text-encre/60" : "text-left text-muted-foreground")}>
+        <div className={cn("text-xs mt-3 chiffres", estEtudiant ? "text-right text-white/80" : "text-left text-muted-foreground")}>
           {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
         </div>
       </div>

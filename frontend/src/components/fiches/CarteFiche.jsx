@@ -5,24 +5,21 @@ import { enTexte } from "../../lib/texte";
 import { telechargerHTML, imprimerFiche } from "../../utils/exportFiche";
 
 /**
- * Une fiche de révision présentée comme une fiche bristol :
- * en-tête séparé par un filet rouge, texte posé sur des lignes bleues.
+ * Une fiche de révision : carte blanche, en-tête et aperçu des notions.
  */
 export default function CarteFiche({ fiche, onOuvrir, onSupprimer }) {
   const concepts = fiche.contenu?.conceptsCles || [];
   const nbCartes = fiche.flashcards?.length || 0;
-  const inclinaison = Number(fiche.id) % 2 ? "-rotate-[0.5deg]" : "rotate-[0.4deg]";
 
   return (
     <article
       className={cn(
-        "group relative flex flex-col bg-card border border-border rounded-md shadow-md",
-        "transition-[transform,box-shadow] duration-200 hover:rotate-0 hover:-translate-y-0.5 hover:shadow-lg motion-reduce:rotate-0",
-        inclinaison
+        "group relative flex flex-col bg-card rounded-2xl shadow-sm",
+        "transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none"
       )}
     >
       {/* En-tête de la fiche */}
-      <header className="px-5 pt-4 pb-3 border-b-2 border-marge/60">
+      <header className="px-5 pt-4 pb-3 border-b border-border">
         <div className="flex items-center justify-between gap-3">
           <p className="etiquette truncate">{fiche.matiere || "Fiche de révision"}</p>
           <Button
@@ -66,12 +63,8 @@ export default function CarteFiche({ fiche, onOuvrir, onSupprimer }) {
         </p>
       </header>
 
-      {/* Corps : résumé posé sur la réglure (lignes alignées sur l'interlignage) */}
-      <div
-        className="flex-1 px-5 pt-[0.35rem] pb-2 text-[0.95rem] leading-7 text-foreground/85
-                   bg-[linear-gradient(to_bottom,transparent_calc(1.75rem-1px),hsl(var(--seyes-fort))_calc(1.75rem-1px))]
-                   bg-[length:100%_1.75rem] bg-[position:0_0.35rem]"
-      >
+      {/* Corps : résumé */}
+      <div className="flex-1 px-5 pt-3 pb-2 text-[0.95rem] leading-7 text-muted-foreground">
         <p className="line-clamp-3 min-h-[5.25rem]">{fiche.contenu?.resume || "Pas encore de résumé pour cette fiche."}</p>
         {concepts.length > 0 && (
           <p className="mt-1 line-clamp-1">
