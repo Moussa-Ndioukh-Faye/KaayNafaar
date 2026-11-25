@@ -49,6 +49,20 @@ export function demarrerPWA() {
   });
 
   if ("serviceWorker" in navigator && import.meta.env.PROD) {
-    registerSW({ immediate: true });
+    // iPhone : Safari ne cherche une nouvelle version qu'à l'ouverture. On vérifie aussi
+    // au retour sur l'app et toutes les heures, pour ne jamais rester sur un ancien design.
+    registerSW({
+      immediate: true,
+      onRegisteredSW(_url, enregistrement) {
+        if (!enregistrement) return;
+        const verifier = () => {
+          if (navigator.onLine) enregistrement.update().catch(() => {});
+        };
+        setInterval(verifier, 60 * 60 * 1000);
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") verifier();
+        });
+      },
+    });
   }
 }

@@ -14,6 +14,7 @@ import {
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 import BandeauHorsLigne from "./components/BandeauHorsLigne";
+import BarreOnglets from "./components/BarreOnglets";
 import { Toaster } from "./components/ui/toaster";
 import { authAPI } from "./services/api";
 
@@ -180,7 +181,7 @@ const Layout = ({ children }) => {
   const [sidebarOuverte, setSidebarOuverte] = useState(false);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden transition-colors duration-300">
+    <div className="flex h-[100dvh] bg-background overflow-hidden transition-colors duration-300">
       {/* WCAG 2.4.1 : lien d'évitement vers le contenu principal */}
       <a
         href="#contenu"
@@ -193,7 +194,7 @@ const Layout = ({ children }) => {
         fermer={() => setSidebarOuverte(false)}
       />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Navbar ouvrir={() => setSidebarOuverte(true)} />
+        <Navbar />
         {/* WCAG 2.1.1 : la zone qui défile doit être atteignable au clavier pour défiler aux flèches */}
         <main
           id="contenu"
@@ -204,6 +205,7 @@ const Layout = ({ children }) => {
         >
           {children}
         </main>
+        <BarreOnglets ouvrirMenu={() => setSidebarOuverte(true)} menuOuvert={sidebarOuverte} />
       </div>
     </div>
   );
