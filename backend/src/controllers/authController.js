@@ -528,9 +528,19 @@ const exporterDonnees = async (req, res) => {
 };
 
 // GET /api/auth/jeton-upload — jeton de 5 minutes, valable uniquement pour importer un cours
-const jetonUpload = (req, res) => {
-  res.set("Cache-Control", "no-store");
-  res.json({ success: true, jeton: genererJetonUpload(req.utilisateur, req.sessionId) });
+const jetonUpload = async (req, res) => {
+  try {
+    // Le middleware retire le hash du mot de passe de req.utilisateur : on le relit ici,
+    // sinon le jeton n'aurait pas d'empreinte (« pwv ») et serait refusé à l'envoi
+    // (« Session expirée »), même juste après une reconnexion.
+    const utilisateur = await User.findByPk(req.utilisateur.id, { attributes: ["id", "motDePasse"] });
+    if (!utilisateur) return res.status(401).json({ success: false, message: "Session invalide." });
+    res.set("Cache-Control", "no-store");
+    res.json({ success: true, jeton: genererJetonUpload(utilisateur, req.sessionId) });
+  } catch (error) {
+    console.error("Erreur jetonUpload:", error.message);
+    res.status(500).json({ success: false, message: "Impossible de préparer l'envoi du fichier." });
+  }
 };
 
 // POST /api/auth/logout — la session est révoquée côté serveur, pas seulement le cookie

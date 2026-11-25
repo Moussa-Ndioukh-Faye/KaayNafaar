@@ -238,4 +238,18 @@ describe("Sessions et appareils connectés", () => {
     Session.__store.forEach((s) => { s.derniereActivite = new Date(Date.now() - 4 * 24 * 3600 * 1000); });
     expect((await request(app).get("/api/auth/profil").set("Cookie", telephone)).status).toBe(401);
   });
+
+  test("le jeton d'envoi de fichier est accepté par la route d'import (régression « Session expirée »)", async () => {
+    const { telephone } = await deuxAppareils("upload@test.com");
+    const { body } = await request(app).get("/api/auth/jeton-upload").set("Cookie", telephone);
+    expect(body.jeton).toBeTruthy();
+    expect(jwt.decode(body.jeton).pwv).toBeTruthy(); // empreinte du mot de passe présente
+
+    // Sans fichier : l'authentification doit passer, la requête est refusée plus loin (400)
+    const res = await request(app).post("/api/courses").set("Authorization", `Bearer ${body.jeton}`).send({});
+    expect(res.status).not.toBe(401);
+
+    // Le même jeton n'ouvre aucune autre route
+    expect((await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${body.jeton}`)).status).toBe(401);
+  });
 });
