@@ -2,6 +2,7 @@ const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
 const FeedbackIA = require("../models/FeedbackIA");
 const { coursPossede } = require("../utils/coursPossede");
+const { normaliserQuestionsQuiz, normaliserFlashcards } = require("../services/normalisation");
 const { AIProviderManager } = require("../utils/aiProviderManager");
 const { rechercherContexte, mettreAJourProfilApprenant } = require("../utils/aiPro");
 const { orchestrerRecherche } = require("../utils/searchOrchestrator");
@@ -42,8 +43,9 @@ Structure attendue pour le quiz :
   "questions": [
     {
       "question": "Énoncé de la question ?",
-      "answers": ["Option A", "Option B", "Option C", "Option D"],
-      "correct": 0 (index de la bonne réponse)
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "reponseCorrecte": "Option B (texte exact de la bonne option)",
+      "explication": "Pourquoi c'est la bonne réponse, en une ou deux phrases"
     }
   ]
 }`;
@@ -139,10 +141,7 @@ const genererFiche = async (req, res) => {
               : (raw.concepts || []).map((c) => (typeof c === "string" ? c : c.term || c.definition || "")),
             pointsImportants: raw.pointsImportants || [],
             explications: raw.explications || {},
-            flashcards: (raw.flashcards || []).map((fc) => ({
-              question: fc.question || "",
-              reponse: fc.reponse || fc.answer || "",
-            })),
+            flashcards: normaliserFlashcards(raw.flashcards),
             matiere: raw.matiere || "",
             couleur: raw.couleur || "#6366f1",
             genereeParIA: true,
@@ -195,7 +194,14 @@ const genererQuiz = async (req, res) => {
       onDone: async (texteComplet) => {
         if (streamAborted) return;
         try {
-          const quizData = JSON.parse(nettoyerJSON(texteComplet));
+          const brut = JSON.parse(nettoyerJSON(texteComplet));
+          // Format attendu par le lecteur de quiz (options + reponseCorrecte)
+          const questions = normaliserQuestionsQuiz(brut.questions);
+          if (!questions.length) throw new Error("Aucune question exploitable");
+          const quizData = {
+            titre: String(brut.titre || brut.title || titreCours || "Quiz").slice(0, 200),
+            questions,
+          };
           const quiz = await Quiz.create({
             ...quizData,
             difficulte,

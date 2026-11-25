@@ -1,52 +1,42 @@
 const { Queue } = require("bullmq");
 const redisConf = require("../config/redis");
-const fs = require("fs").promises;
-const pdf = require("pdf-parse");
-const { extraireTexteImage } = require("./ocr");
 const { indexerCours } = require("./aiPro");
-const { extraireDocx, extrairePptx } = require("./extraction");
+const { lireDocument } = require("./lectureDocument");
 const Course = require("../models/Course");
 
 const queueName = "extraction-cours";
+const AUCUN_TEXTE = "Aucun texte n'a pu être lu dans ce document. Essaie un PDF non protégé ou une photo plus nette.";
 
 /**
- * Extraction du texte (PDF, image, texte) puis indexation IA d'un cours.
- * Exécutée par le worker BullMQ quand Redis est disponible, sinon directement
- * dans le processus (hébergement sans Redis).
+ * Lecture du document (page par page, IA pour les PDF scannés et les photos)
+ * puis indexation pour la recherche. Exécutée par le worker BullMQ quand Redis est
+ * disponible, sinon directement dans le processus (hébergement sans Redis).
  */
 const traiterCours = async ({ coursId, fichierPath, originalname, utilisateurId, titre, contenuDirect }) => {
-  console.log(`[Worker] Traitement du cours ${coursId} (${titre})`);
-
-  let contenu = contenuDirect || "";
+  console.log(`[Worker] Traitement du cours ${coursId}`);
   try {
+    let contenu = contenuDirect || "";
+    let pages = null;
+
     if (!contenu && fichierPath) {
-      const extension = originalname.split(".").pop().toLowerCase();
-
-      if (extension === "pdf") {
-        const dataBuffer = await fs.readFile(fichierPath);
-        const data = await pdf(dataBuffer);
-        contenu = data.text;
-      } else if (["jpg", "jpeg", "png"].includes(extension)) {
-        contenu = await extraireTexteImage(fichierPath);
-      } else if (extension === "txt") {
-        contenu = await fs.readFile(fichierPath, "utf8");
-      } else if (extension === "docx") {
-        contenu = await extraireDocx(fichierPath);
-      } else if (extension === "pptx") {
-        contenu = await extrairePptx(fichierPath);
-      }
+      const extension = String(originalname || "").split(".").pop().toLowerCase();
+      const lecture = await lireDocument(fichierPath, extension);
+      contenu = lecture.texte;
+      pages = lecture.pages;
+      console.log(`[Worker] Cours ${coursId} : ${pages.length} page(s) lue(s) (${lecture.methode}), ${contenu.length} caractères`);
+      await Course.update({ contenu }, { where: { id: coursId } });
     }
 
-    if (contenu) {
-      if (!contenuDirect) {
-        await Course.update({ contenu }, { where: { id: coursId } });
-      }
-
-      await indexerCours(contenu, { coursId, utilisateurId, titre });
-      console.log(`[Worker] ✅ Cours ${coursId} traité avec succès`);
+    if (!contenu) {
+      console.warn(`[Worker] Cours ${coursId} : aucun texte trouvé dans le document`);
+      // Sans ce message, le cours resterait affiché « Traitement en cours… » indéfiniment
+      await Course.update({ contenu: AUCUN_TEXTE }, { where: { id: coursId } });
+      return;
     }
+    const ok = await indexerCours(contenu, { coursId, utilisateurId, titre }, pages);
+    console.log(`[Worker] ${ok ? "✅" : "⚠️"} Cours ${coursId} ${ok ? "indexé" : "non indexé"}`);
   } catch (err) {
-    console.error(`[Worker] ❌ Erreur sur le cours ${coursId}:`, err);
+    console.error(`[Worker] ❌ Erreur sur le cours ${coursId}:`, err.message);
     throw err;
   }
 };
@@ -78,4 +68,4 @@ const extractionQueue = {
   },
 };
 
-module.exports = { extractionQueue, worker, traiterCours };
+module.exports = { extractionQueue, worker, traiterCours, AUCUN_TEXTE };

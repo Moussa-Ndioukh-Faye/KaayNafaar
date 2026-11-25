@@ -2,5 +2,5 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: ['**/tests/**/*.test.js'],
   verbose: true,
-  setupFilesAfterEnv: ['<rootDir>/tests/setupSessions.js'],
+  setupFilesAfterEnv: ['<rootDir>/tests/setupModeles.js'],
 };

@@ -1,5 +1,5 @@
 /**
- * Modèle Session simulé pour tous les tests (en mémoire).
+ * Modèles simulés pour tous les tests (en mémoire) : Session, CarnetMessage, CarnetProduction.
  * Les jetons de test portent sid = "session-test" : cette session est toujours active,
  * sauf si un test la révoque explicitement.
  */
@@ -58,3 +58,7 @@ jest.mock("../src/models/Session", () => {
   return Session;
 });
 
+
+// Historique du chat et productions des carnets, en mémoire pour tous les tests
+jest.mock("../src/models/CarnetMessage", () => require("./support/modeleMemoire")("CarnetMessage"));
+jest.mock("../src/models/CarnetProduction", () => require("./support/modeleMemoire")("CarnetProduction"));
