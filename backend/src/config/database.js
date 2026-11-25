@@ -50,6 +50,18 @@ const connectDB = async () => {
       await dbConfig.sequelize.sync();
       console.log("✅ Schéma vérifié (sync sans alter).");
     }
+
+    if (dbConfig.sequelize.getDialect() === "postgres") {
+      // Migrations et index : une erreur ici est signalée mais ne doit JAMAIS faire
+      // basculer sur SQLite (le site tournerait sans les données de production).
+      try {
+        await require("./migrations").executerMigrations(dbConfig.sequelize);
+        await require("../utils/indexation").preparerIndexRAG();
+        console.log("✅ Migrations et index de recherche à jour.");
+      } catch (err) {
+        console.error("❌ Migrations ou index non appliqués, à corriger :", err.message);
+      }
+    }
   } catch (err) {
     console.error("❌ Échec de la connexion initiale:", err.message);
 

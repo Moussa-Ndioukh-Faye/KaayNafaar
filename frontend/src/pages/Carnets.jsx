@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2, ArrowRight, BookOpen, StickyNote } from "lucide-react";
+import { Plus, Trash2, ArrowRight, BookOpen, StickyNote, Sparkles } from "lucide-react";
 import { carnetsAPI, coursAPI } from "../services/api";
 import { Button } from "../components/ui/button";
 
@@ -34,7 +34,7 @@ export default function Carnets() {
     setErreur("");
     try {
       const { data } = await carnetsAPI.creer({ titre: titre.trim(), coursIds: choisis });
-      setCarnets((l) => [{ ...data.carnet, nbSources: data.carnet.coursIds.length, nbNotes: 0, studio: [] }, ...l]);
+      setCarnets((l) => [{ ...data.carnet, nbSources: data.carnet.coursIds.length, nbNotes: 0, nbProductions: 0 }, ...l]);
       setFormulaire(false);
       setTitre("");
       setChoisis([]);
@@ -158,7 +158,7 @@ export default function Carnets() {
                   size="icon"
                   aria-label={`Supprimer le carnet ${c.titre}`}
                   onClick={() => supprimer(c)}
-                  className="relative z-10 w-9 h-9 -mr-2 text-muted-foreground hover:text-marge hover:bg-marge/10"
+                  className="relative z-10 w-9 h-9 -mr-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 aria-hidden="true" />
                 </Button>
@@ -172,6 +172,12 @@ export default function Carnets() {
                   <StickyNote className="w-4 h-4" aria-hidden="true" />
                   {c.nbNotes} note{c.nbNotes > 1 ? "s" : ""}
                 </span>
+                {c.nbProductions > 0 && (
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4" aria-hidden="true" />
+                    {c.nbProductions} production{c.nbProductions > 1 ? "s" : ""}
+                  </span>
+                )}
                 <ArrowRight className="w-4 h-4 ml-auto group-hover:translate-x-1 group-hover:text-primary transition-transform" aria-hidden="true" />
               </div>
             </li>

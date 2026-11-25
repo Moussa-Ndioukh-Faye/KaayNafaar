@@ -8,6 +8,8 @@ const Course = require("../models/Course");
 const Progression = require("../models/Progression");
 const { Op } = require("sequelize");
 const { extractionQueue } = require("../utils/worker");
+const { supprimerIndexCours } = require("../utils/indexation");
+const { creerCoursDepuisLien } = require("../services/cours");
 
 // GET /api/courses — Lister les cours de l'utilisateur
 const getCours = async (req, res) => {
@@ -61,30 +63,15 @@ const getCoursParId = async (req, res) => {
 
 // POST /api/courses — Créer un cours
 // POST /api/courses/depuis-lien  { url, matiere?, titre? } — une page web devient un cours
-const { importerLien, ErreurImport } = require("../utils/importLien");
+const { ErreurImport } = require("../utils/importLien");
 const importerDepuisLien = async (req, res) => {
   try {
-    const { titre, texte, url } = await importerLien(req.body.url);
-    const cours = await Course.create({
-      titre: (typeof req.body.titre === "string" && req.body.titre.trim().slice(0, 200)) || titre,
-      matiere: (typeof req.body.matiere === "string" && req.body.matiere.trim().slice(0, 100)) || "Web",
-      contenu: texte,
-      niveau: "intermédiaire",
-      tags: ["web"],
-      dureeEstimee: Math.max(5, Math.round(texte.split(/\s+/).length / 200)),
+    const { cours, url } = await creerCoursDepuisLien({
       utilisateurId: req.utilisateur.id,
-      fichierPDF: null,
+      url: req.body.url,
+      titre: req.body.titre,
+      matiere: req.body.matiere,
     });
-    extractionQueue
-      .add("extraire-et-indexer", {
-        coursId: cours.id,
-        fichierPath: null,
-        originalname: "lien.txt",
-        utilisateurId: req.utilisateur.id,
-        titre: cours.titre,
-        contenuDirect: texte,
-      })
-      .catch((err) => console.error("Indexation du lien:", err.message));
     res.status(201).json({ success: true, message: "Page importée.", cours, source: url });
   } catch (error) {
     if (error instanceof ErreurImport) return res.status(400).json({ success: false, message: error.message });
@@ -180,6 +167,20 @@ const modifierCours = async (req, res) => {
     if (dureeEstimee !== undefined) cours.dureeEstimee = dureeEstimee;
 
     await cours.save();
+
+    // Texte ou titre modifié : les passages indexés sont recalculés (sinon la recherche
+    // et les citations porteraient sur l'ancienne version du cours)
+    if ((contenu !== undefined || titre !== undefined) && cours.contenu) {
+      extractionQueue
+        .add("reindexer", {
+          coursId: cours.id,
+          utilisateurId: req.utilisateur.id,
+          titre: cours.titre,
+          contenuDirect: cours.contenu,
+        })
+        .catch((e) => console.error("Réindexation du cours:", e.message));
+    }
+
     res.json({ success: true, cours });
   } catch (error) {
     console.error("Erreur modifierCours:", error);
@@ -205,6 +206,10 @@ const supprimerCours = async (req, res) => {
 
     const fichier = cours.fichierPDF;
     await Course.destroy({ where: { id: cours.id, utilisateurId: req.utilisateur.id } });
+    // Ses passages indexés aussi : l'assistant ne doit plus citer un cours supprimé
+    await supprimerIndexCours(cours.id, req.utilisateur.id).catch((e) =>
+      console.error("Suppression index du cours:", e.message)
+    );
     // Minimisation des données : le fichier importé est supprimé avec le cours
     await supprimerFichier(fichier);
 

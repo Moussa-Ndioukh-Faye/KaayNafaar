@@ -1,15 +1,10 @@
 /**
  * Moteur IA Avancé — Kaay Nafaar
- * Gestion des Embeddings, RAG et Recherche Sémantique
+ * Embeddings (Gemini), cache, et points d'entrée RAG de l'assistant
  */
 
 const crypto = require("crypto");
 const { GoogleGenerativeAIEmbeddings } = require("@langchain/google-genai");
-const { PGVectorStore } = require("@langchain/community/vectorstores/pgvector");
-const { Pool } = require("pg");
-const { parametres, optionsSSL } = require("../config/connexionPostgres");
-const { RecursiveCharacterTextSplitter } = require("@langchain/textsplitters");
-const { sequelize } = require("../config/database");
 const { redis } = require("../config/redis");
 
 // Configuration des Embeddings (Google Gemini)
@@ -20,61 +15,8 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
   model: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-2",
 });
 
-// Configuration du Vector Store Postgres
-const config = {
-  // Construit à la demande : DATABASE_URL peut être corrigée au démarrage (pooler)
-  get postgresConnectionOptions() {
-    const ssl = optionsSSL();
-    return { type: "postgres", ...parametres(), ...(ssl ? { ssl } : {}) };
-  },
-  tableName: "course_embeddings",
-  columns: {
-    idColumnName: "id",
-    vectorColumnName: "embedding",
-    contentColumnName: "text",
-    metadataColumnName: "metadata",
-  },
-};
-
-/**
- * Vector store partagé (une seule instance pour tout le processus).
- *
- * Avant : PGVectorStore.initialize() était appelé à chaque recherche et à chaque
- * indexation. Chaque appel créait un nouveau pool de connexions PostgreSQL jamais
- * fermé, et relançait un appel d'embedding pour mesurer la dimension des vecteurs.
- * Sur Supabase (nombre de connexions limité), l'appli finissait par être refusée.
- */
-let vectorStorePromise = null;
-let poolVecteurs = null;
-
-const obtenirVectorStore = () => {
-  if (!vectorStorePromise) {
-    poolVecteurs = new Pool({
-      ...config.postgresConnectionOptions,
-      max: parseInt(process.env.VECTOR_POOL_MAX || "3", 10),
-      idleTimeoutMillis: 30000,
-    });
-    poolVecteurs.on("error", (err) => console.error("[Vector store] Erreur de connexion:", err.message));
-
-    vectorStorePromise = PGVectorStore.initialize(embeddings, { ...config, pool: poolVecteurs }).catch((err) => {
-      // Échec (base ou clé IA indisponible) : on réessaiera au prochain appel
-      vectorStorePromise = null;
-      const pool = poolVecteurs;
-      poolVecteurs = null;
-      if (pool) pool.end().catch(() => {});
-      throw err;
-    });
-  }
-  return vectorStorePromise;
-};
-
-/** Ferme proprement les connexions du vector store (arrêt du serveur, tests) */
-const fermerVectorStore = async () => {
-  const pool = poolVecteurs;
-  vectorStorePromise = null;
-  poolVecteurs = null;
-  if (pool) await pool.end();
-};
+// Les passages sont stockés dans la table course_embeddings (pgvector) :
+// écriture dans utils/indexation.js, lecture dans utils/passages.js.
 
 const CACHE_EMBEDDING_PREFIX = "embedding:";
 const CACHE_EMBEDDING_TTL = 86400; // 24h
@@ -101,6 +43,19 @@ const obtenirEmbedding = async (texte) => {
   return vecteur;
 };
 
+/** Embeddings d'une liste de passages (indexation, par lots) */
+const embedderTextes = async (textes) => {
+  if (!textes.length) return [];
+  return embeddings.embedDocuments(textes);
+};
+
+/** Change la « version » RAG de l'utilisateur : les résultats en cache deviennent obsolètes */
+const invaliderCacheRAG = async (userId) => {
+  try {
+    if (redis && typeof redis.incr === "function") await redis.incr(`rag:version:${userId}`);
+  } catch (_) { /* Redis non disponible */ }
+};
+
 /**
  * Clé de cache RAG avec version et hash SHA256 complet
  */
@@ -118,118 +73,45 @@ const cleCacheRAG = async (userId, query) => {
 };
 
 /**
- * Recherche hybride : combine vector search + mots-clés (RRF fusion)
+ * Contexte pour l'assistant : même moteur que les carnets (rechercherPassages),
+ * sur tous les cours de l'étudiant. Résultat mis en cache 1 h (invalidé à chaque indexation).
  */
 const rechercherContexteHybride = async (query, userId, k = 6) => {
   try {
     const cacheKey = await cleCacheRAG(userId, query);
-
-    // 1. Vérifier le cache Redis (silencieux)
     try {
-      if (redis && typeof redis.get === 'function') {
-        const cachedResult = await redis.get(cacheKey);
-        if (cachedResult) {
-          console.log("⚡ RAG : Résultat récupéré du cache");
-          return JSON.parse(cachedResult);
-        }
+      if (redis && typeof redis.get === "function") {
+        const enCache = await redis.get(cacheKey);
+        if (enCache) return JSON.parse(enCache);
       }
     } catch (_) { /* Redis non disponible */ }
 
-    // 2. Vector search + Keyword search
-    const vectorStore = await obtenirVectorStore();
-    const [vectorResults, keywordResults] = await Promise.all([
-      vectorStore.similaritySearch(query, k * 2, { utilisateurId: userId }).catch(() => []),
-      rechercherParMotsCles(query, userId, k * 2).catch(() => []),
-    ]);
+    const { rechercherPassages, formaterPassages } = require("./passages");
+    const passages = await rechercherPassages({ question: query, userId, k });
+    const vus = new Set();
+    const sources = passages
+      .filter((p) => p.coursId && !vus.has(p.coursId) && vus.add(p.coursId))
+      .map((p) => ({ id: p.coursId, titre: p.titre }));
+    const resultat = { context: formaterPassages(passages), sources };
 
-    // 3. RRF (Reciprocal Rank Fusion)
-    const fusionIds = new Map();
-    const K = 60;
-
-    const ajouterScore = (results, type) => {
-      results.forEach((r, i) => {
-        const id = r.pageContent.substring(0, 100);
-        if (!fusionIds.has(id)) {
-          fusionIds.set(id, { ...r, score: 0, ranks: [] });
-        }
-        const item = fusionIds.get(id);
-        item.ranks.push({ type, rank: i + 1 });
-        item.score += 1 / (K + i);
-      });
-    };
-
-    ajouterScore(vectorResults, "vector");
-    ajouterScore(keywordResults, "keyword");
-
-    const fusionnes = [...fusionIds.values()]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, k);
-
-    const context = fusionnes.map(r => r.pageContent).join("\n\n");
-    const sources = [...new Set(fusionnes.map(r => {
-      const meta = r.metadata || {};
-      return meta.coursId ? JSON.stringify({ id: meta.coursId, titre: meta.titre }) : null;
-    }))].filter(Boolean).map(s => JSON.parse(s));
-
-    const finalResult = { context, sources };
-
-    // Stocker dans Redis (silencieux)
     try {
-      if (context && redis && typeof redis.set === 'function') {
-        await redis.set(cacheKey, JSON.stringify(finalResult), "EX", 3600);
+      if (resultat.context && redis && typeof redis.set === "function") {
+        await redis.set(cacheKey, JSON.stringify(resultat), "EX", 3600);
       }
     } catch (_) { /* Redis non disponible */ }
-
-    return finalResult;
+    return resultat;
   } catch (err) {
     console.error("❌ Erreur recherche hybride:", err.message);
     return { context: "", sources: [] };
   }
 };
 
-const rechercherParMotsCles = async (query, userId, limit = 6) => {
+/** Indexation d'un cours (voir utils/indexation.js) ; renvoie true si au moins un passage */
+const indexerCours = async (text, metadata, pages = null) => {
   try {
-    const mots = query.replace(/[^\w\s-]/g, "").trim().split(/\s+/).filter(m => m.length > 2).join(" & ");
-    if (!mots) return [];
-
-    const sql = `
-      SELECT id, text, metadata,
-         ts_rank(to_tsvector('french', text), plainto_tsquery('french', :query)) AS score
-      FROM course_embeddings
-      WHERE metadata->>'utilisateurId' = :userId
-        AND to_tsvector('french', text) @@ plainto_tsquery('french', :query)
-      ORDER BY score DESC
-      LIMIT :limit
-    `;
-
-    const results = await sequelize.query(sql, {
-      replacements: { query: mots, userId: String(userId), limit },
-      type: sequelize.QueryTypes.SELECT,
-    });
-
-    return results.map(r => ({
-      pageContent: r.text,
-      metadata: typeof r.metadata === "string" ? JSON.parse(r.metadata) : r.metadata,
-      score: r.score,
-    }));
-  } catch (err) {
-    console.error("❌ Erreur recherche mots-clés:", err.message);
-    return [];
-  }
-};
-
-const indexerCours = async (text, metadata) => {
-  try {
-    const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 });
-    const docs = await splitter.createDocuments([text], [metadata]);
-    const vectorStore = await obtenirVectorStore();
-    await vectorStore.addDocuments(docs);
-    try {
-      if (redis && typeof redis.incr === 'function') {
-        await redis.incr(`rag:version:${metadata.utilisateurId}`);
-      }
-    } catch (_) { /* Redis non disponible */ }
-    return true;
+    const { indexerDocument } = require("./indexation");
+    const n = await indexerDocument({ ...metadata, texte: text, pages });
+    return n > 0;
   } catch (err) {
     console.error("❌ Erreur indexation vectorielle:", err.message);
     return false;
@@ -258,11 +140,11 @@ const mettreAJourProfilApprenant = async (userId, userMessage, _assistantRespons
 };
 
 module.exports = {
+  embedderTextes,
+  invaliderCacheRAG,
   indexerCours,
   rechercherContexte,
   rechercherContexteHybride,
   obtenirEmbedding,
   mettreAJourProfilApprenant,
-  obtenirVectorStore,
-  fermerVectorStore,
 };

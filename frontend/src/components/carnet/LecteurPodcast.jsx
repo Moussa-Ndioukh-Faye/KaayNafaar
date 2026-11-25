@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Square } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Square, Hand, Loader2, Send } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
 
@@ -19,8 +19,11 @@ const choisirVoix = (voix) => {
  * Résumé audio : le script (deux voix, Awa et Moussa) est lu par la synthèse vocale
  * du téléphone ou de l'ordinateur. Gratuit, sans fichier à télécharger, et le texte
  * reste affiché (sous-titres, accessibilité).
+ *
+ * Mode interactif (si `onQuestion` est fourni) : l'étudiant interrompt l'écoute, pose
+ * sa question ; la réponse des deux voix est insérée à cet endroit puis lue.
  */
-export default function LecteurPodcast({ titre, repliques = [] }) {
+export default function LecteurPodcast({ titre, repliques = [], langue = "fr", onQuestion }) {
   const disponible = typeof window !== "undefined" && "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
   const [voix, setVoix] = useState({ Awa: null, Moussa: null });
   const [index, setIndex] = useState(0);
@@ -28,6 +31,14 @@ export default function LecteurPodcast({ titre, repliques = [] }) {
   const [vitesse, setVitesse] = useState(1);
   const lectureRef = useRef(false);
   const ligneRefs = useRef([]);
+  // Script lu : les répliques, plus les réponses aux questions posées pendant l'écoute
+  const [script, setScript] = useState(repliques);
+  const [questionOuverte, setQuestionOuverte] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [attente, setAttente] = useState(false);
+  const [erreurQuestion, setErreurQuestion] = useState("");
+
+  useEffect(() => setScript(repliques), [repliques]);
 
   useEffect(() => {
     if (!disponible) return undefined;
@@ -43,14 +54,20 @@ export default function LecteurPodcast({ titre, repliques = [] }) {
 
   const lire = useCallback(
     (i) => {
-      if (!disponible || i >= repliques.length) {
+      if (!disponible || i >= script.length) {
         lectureRef.current = false;
         setEnLecture(false);
         return;
       }
-      const r = repliques[i];
+      const r = script[i];
+      if (r.muet) {
+        // La question de l'étudiant est affichée, pas lue
+        setIndex(i + 1);
+        lire(i + 1);
+        return;
+      }
       const enonce = new window.SpeechSynthesisUtterance(r.texte);
-      enonce.lang = "fr-FR";
+      enonce.lang = langue === "en" ? "en-US" : "fr-FR";
       enonce.rate = vitesse;
       const v = voix[r.voix];
       if (v) enonce.voice = v;
@@ -65,14 +82,14 @@ export default function LecteurPodcast({ titre, repliques = [] }) {
       ligneRefs.current[i]?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
       window.speechSynthesis.speak(enonce);
     },
-    [disponible, repliques, vitesse, voix]
+    [disponible, script, vitesse, voix, langue]
   );
 
   const demarrer = () => {
     window.speechSynthesis.cancel();
     lectureRef.current = true;
     setEnLecture(true);
-    lire(index >= repliques.length ? 0 : index);
+    lire(index >= script.length ? 0 : index);
   };
 
   const arreter = (retourDebut = false) => {
@@ -83,7 +100,7 @@ export default function LecteurPodcast({ titre, repliques = [] }) {
   };
 
   const aller = (i) => {
-    const cible = Math.max(0, Math.min(repliques.length - 1, i));
+    const cible = Math.max(0, Math.min(script.length - 1, i));
     const continuer = lectureRef.current;
     if (disponible) window.speechSynthesis.cancel();
     setIndex(cible);
@@ -93,14 +110,53 @@ export default function LecteurPodcast({ titre, repliques = [] }) {
     }
   };
 
-  const minutes = Math.max(1, Math.round(repliques.reduce((n, r) => n + r.texte.split(/\s+/).length, 0) / 150 / vitesse));
+  const minutes = Math.max(1, Math.round(script.reduce((n, r) => n + r.texte.split(/\s+/).length, 0) / 150 / vitesse));
+
+  // Après insertion d'une réponse, la lecture reprend dessus (script mis à jour)
+  const repriseRef = useRef(null);
+  useEffect(() => {
+    if (repriseRef.current === null) return;
+    const debut = repriseRef.current;
+    repriseRef.current = null;
+    if (disponible) {
+      lectureRef.current = true;
+      setEnLecture(true);
+      lire(debut);
+    } else setIndex(debut);
+  }, [script, lire, disponible]);
+
+  const poserQuestion = async (e) => {
+    e.preventDefault();
+    const texte = question.trim();
+    if (!texte || attente) return;
+    arreter(false);
+    setAttente(true);
+    setErreurQuestion("");
+    try {
+      const reponse = await onQuestion(texte, Math.max(0, index - 1));
+      const position = Math.min(index, script.length);
+      repriseRef.current = position;
+      setScript((s) => [
+        ...s.slice(0, position),
+        { voix: "Toi", texte, muet: true, intervention: true },
+        ...reponse.map((r) => ({ ...r, intervention: true })),
+        ...s.slice(position),
+      ]);
+      setQuestion("");
+      setQuestionOuverte(false);
+    } catch (err) {
+      setErreurQuestion(err?.response?.data?.message || "Pas de réponse pour le moment. Réessaie.");
+    } finally {
+      setAttente(false);
+    }
+  };
 
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3">
         <div className="mr-auto min-w-0">
           <p className="etiquette">Environ {minutes} min · Awa et Moussa</p>
-          {titre && <p className="font-display text-xl text-foreground truncate">{titre}</p>}
+          {titre && <p className="text-xl font-bold text-foreground truncate">{titre}</p>}
         </div>
         {disponible ? (
           <div className="flex items-center gap-2" role="group" aria-label="Commandes du lecteur">
@@ -146,21 +202,72 @@ export default function LecteurPodcast({ titre, repliques = [] }) {
         )}
       </div>
 
+      {onQuestion && (
+        <div className="mt-4">
+          {questionOuverte ? (
+            <form onSubmit={poserQuestion} className="rounded-2xl bg-muted p-3">
+              <label htmlFor="question-podcast" className="text-sm font-semibold text-foreground">
+                Ta question à Awa et Moussa
+              </label>
+              <div className="mt-2 flex gap-2">
+                <input
+                  id="question-podcast"
+                  className="input-field"
+                  maxLength={500}
+                  placeholder="Ex. : pourquoi le port 22 ?"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  autoComplete="off"
+                />
+                <Button type="submit" size="icon" className="rounded-full shrink-0" disabled={attente || !question.trim()} aria-label="Envoyer la question">
+                  {attente ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Send aria-hidden="true" />}
+                </Button>
+              </div>
+              {attente && (
+                <p role="status" className="mt-2 text-sm text-muted-foreground">
+                  Awa et Moussa préparent leur réponse…
+                </p>
+              )}
+              {erreurQuestion && (
+                <p role="alert" className="mt-2 text-sm text-destructive">
+                  {erreurQuestion}
+                </p>
+              )}
+            </form>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                arreter(false);
+                setQuestionOuverte(true);
+              }}
+            >
+              <Hand aria-hidden="true" />
+              Poser une question pendant l'écoute
+            </Button>
+          )}
+        </div>
+      )}
+
       <ol className="mt-5 space-y-2 max-h-[26rem] overflow-y-auto pr-1">
-        {repliques.map((r, i) => (
+        {script.map((r, i) => (
           <li
             key={i}
             ref={(el) => (ligneRefs.current[i] = el)}
             aria-current={enLecture && i === index ? "true" : undefined}
             className={cn(
-              "grid grid-cols-[4rem_1fr] items-baseline gap-2 rounded-md px-3 py-2 transition-colors",
-              i === index && (enLecture || index > 0) ? "bg-secondary/40" : ""
+              "grid grid-cols-[4rem_1fr] items-baseline gap-2 rounded-xl px-3 py-2 transition-colors",
+              i === index && (enLecture || index > 0) ? "bg-secondary" : "",
+              r.intervention && "ring-1 ring-primary/30"
             )}
           >
             <button
               type="button"
               onClick={() => aller(i)}
-              className={cn("text-left text-sm font-semibold", r.voix === "Awa" ? "text-primary" : "text-marge")}
+              className={cn(
+                "text-left text-sm font-semibold",
+                r.voix === "Awa" ? "text-primary" : r.voix === "Toi" ? "text-succes" : "text-destructive"
+              )}
             >
               {r.voix}
             </button>

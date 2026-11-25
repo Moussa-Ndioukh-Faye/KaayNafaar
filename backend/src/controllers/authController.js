@@ -11,6 +11,8 @@ const Quiz = require("../models/Quiz");
 const FeedbackIA = require("../models/FeedbackIA");
 const Carnet = require("../models/Carnet");
 const Session = require("../models/Session");
+const CarnetMessage = require("../models/CarnetMessage");
+const CarnetProduction = require("../models/CarnetProduction");
 const { creerSession, revoquerSession, revoquerToutes, listerSessions } = require("../utils/sessions");
 const { Op } = require("sequelize");
 const db = require("../config/database"); // getter : suit le basculement SQLite
@@ -330,6 +332,8 @@ const supprimerCompte = async (req, res) => {
     const cours = await Course.findAll({ where: { utilisateurId: uid }, attributes: ["fichierPDF"] });
 
     await FeedbackIA.destroy({ where: { utilisateurId: uid } });
+    await CarnetMessage.destroy({ where: { utilisateurId: uid } });
+    await CarnetProduction.destroy({ where: { utilisateurId: uid } });
     await Carnet.destroy({ where: { utilisateurId: uid } });
     await Session.destroy({ where: { utilisateurId: uid } });
     await Quiz.destroy({ where: { utilisateurId: uid } });
@@ -495,7 +499,7 @@ const reinitialiserMotDePasse = async (req, res) => {
 const exporterDonnees = async (req, res) => {
   try {
     const uid = req.utilisateur.id;
-    const [utilisateur, cours, fiches, quiz, progression, feedbacks, carnets, sessions] = await Promise.all([
+    const [utilisateur, cours, fiches, quiz, progression, feedbacks, carnets, sessions, messagesCarnets, productionsCarnets] = await Promise.all([
       User.findByPk(uid, { attributes: { exclude: CHAMPS_PRIVES } }),
       Course.findAll({ where: { utilisateurId: uid }, attributes: { exclude: ["fichierPDF"] } }),
       Fiche.findAll({ where: { utilisateurId: uid } }),
@@ -504,6 +508,8 @@ const exporterDonnees = async (req, res) => {
       FeedbackIA.findAll({ where: { utilisateurId: uid } }),
       Carnet.findAll({ where: { utilisateurId: uid } }),
       listerSessions(uid),
+      CarnetMessage.findAll({ where: { utilisateurId: uid } }),
+      CarnetProduction.findAll({ where: { utilisateurId: uid } }),
     ]);
 
     const date = new Date().toISOString().slice(0, 10);
@@ -519,6 +525,8 @@ const exporterDonnees = async (req, res) => {
       progression,
       feedbacksIA: feedbacks,
       carnets,
+      messagesCarnets,
+      productionsCarnets,
       sessions,
     });
   } catch (error) {

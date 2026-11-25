@@ -161,88 +161,73 @@ export const iaAPI = {
 /**
  * Fetch avec streaming SSE — gère les Server-Sent Events
  */
-const fetchStream = (endpoint, body, onDelta, onDone, onError, onPassages) => {
+/**
+ * Lecture d'un flux SSE (« data: {json} ») envoyé par le serveur.
+ * Gestionnaires nommés : onPassages, onDelta, onSuivi, onDone, onError.
+ * Renvoie un AbortController pour interrompre la réponse.
+ */
+const fluxSSE = (endpoint, body, gestionnaires = {}) => {
   const controller = new AbortController();
+  const { onPassages, onDelta, onSuivi, onDone, onError } = gestionnaires;
+  const chemin = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
 
-  // S'assurer d'inclure le préfixe /api pour le proxy Vercel
-  const base = API_URL; // "/api"
-  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const traiter = (ligne) => {
+    const t = ligne.trim();
+    if (!t.startsWith("data: ")) return;
+    let evenement;
+    try {
+      evenement = JSON.parse(t.slice(6));
+    } catch (_) {
+      return; // ligne malformée ignorée
+    }
+    if (evenement.passages) onPassages?.(evenement.passages);
+    else if (evenement.error) onError?.(evenement.error);
+    else if (evenement.suivi) onSuivi?.(evenement.suivi);
+    else if (evenement.done) onDone?.(evenement);
+    else if (evenement.delta) onDelta?.(evenement.delta);
+  };
 
   (async () => {
     try {
-      const response = await fetch(`${base}${cleanEndpoint}`, {
+      const response = await fetch(`${API_URL}${chemin}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(body),
         signal: controller.signal,
       });
-
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         onError?.(err.message || "Erreur serveur");
         return;
       }
-
       if (!response.body) {
-        onError?.("Response body is null");
+        onError?.("Réponse vide du serveur");
         return;
       }
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let buffer = "";
-
-      const read = async () => {
-        try {
-          const { done, value } = await reader.read();
-          if (done) return;
-
-          buffer += decoder.decode(value, { stream: true });
-
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith("data: ")) continue;
-
-            try {
-              const parsed = JSON.parse(trimmed.slice(6));
-              if (parsed.passages) {
-                onPassages?.(parsed.passages);
-              } else if (parsed.error) {
-                onError?.(parsed.error);
-              } else if (parsed.done) {
-                onDone?.(parsed);
-              } else if (parsed.delta) {
-                onDelta?.(parsed.delta);
-              }
-            } catch (_) {
-              // Ignorer les lignes malformées
-            }
-          }
-
-          read();
-        } catch (err) {
-          if (err.name !== "AbortError") {
-            onError?.(err.message);
-          }
-        }
-      };
-
-      read();
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        onError?.(err.message);
+      let tampon = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        tampon += decoder.decode(value, { stream: true });
+        const lignes = tampon.split("\n");
+        tampon = lignes.pop() || "";
+        lignes.forEach(traiter);
       }
+      if (tampon) traiter(tampon);
+    } catch (err) {
+      if (err.name !== "AbortError") onError?.(err.message);
     }
   })();
 
   return controller;
 };
+
+// Ancienne signature, conservée pour l'assistant, les fiches et les quiz
+const fetchStream = (endpoint, body, onDelta, onDone, onError, onPassages) =>
+  fluxSSE(endpoint, body, { onDelta, onDone, onError, onPassages });
 
 export const analyticsAPI = {
   get: () => api.get("/analytics"),
@@ -259,10 +244,24 @@ export const carnetsAPI = {
   obtenir: (id) => api.get(`/carnets/${id}`),
   modifier: (id, data) => api.put(`/carnets/${id}`, data),
   supprimer: (id) => api.delete(`/carnets/${id}`),
+  reglages: (id, reglages) => api.put(`/carnets/${id}/reglages`, reglages),
+  // Notes
   ajouterNote: (id, note) => api.post(`/carnets/${id}/notes`, note),
   supprimerNote: (id, noteId) => api.delete(`/carnets/${id}/notes/${noteId}`),
-  // La génération peut prendre du temps sur les modèles gratuits
-  studio: (id, type) => api.post(`/carnets/${id}/studio`, { type }, { timeout: 120000 }),
-  chatStream: (id, messages, { onPassages, onDelta, onDone, onError }) =>
-    fetchStream(`/carnets/${id}/chat`, { messages }, onDelta, onDone, onError, onPassages),
+  noteEnSource: (id, noteId) => api.post(`/carnets/${id}/notes/${noteId}/source`),
+  // Guide et chat
+  guide: (id, forcer = false) => api.get(`/carnets/${id}/guide`, { params: forcer ? { forcer: 1 } : {}, timeout: 90000 }),
+  messages: (id) => api.get(`/carnets/${id}/messages`),
+  effacerMessages: (id) => api.delete(`/carnets/${id}/messages`),
+  chatStream: (id, { question, coursIds }, gestionnaires) => fluxSSE(`/carnets/${id}/chat`, { question, coursIds }, gestionnaires),
+  // Studio (la génération peut prendre du temps sur les modèles gratuits)
+  studio: (id, type, options = {}, coursIds = []) =>
+    api.post(`/carnets/${id}/studio`, { type, options, coursIds }, { timeout: 150000 }),
+  supprimerProduction: (id, pid) => api.delete(`/carnets/${id}/productions/${pid}`),
+  exporterProduction: (id, pid) => api.post(`/carnets/${id}/productions/${pid}/exporter`),
+  intervention: (id, pid, question, position) =>
+    api.post(`/carnets/${id}/productions/${pid}/intervention`, { question, position }, { timeout: 60000 }),
+  // Découverte de sources sur le web
+  decouvrir: (id, sujet) => api.post(`/carnets/${id}/decouvrir`, { sujet }, { timeout: 45000 }),
+  ajouterSourcesWeb: (id, urls) => api.post(`/carnets/${id}/sources/web`, { urls }, { timeout: 90000 }),
 };
