@@ -5,6 +5,7 @@
  *   pour empêcher toute confusion d'algorithme.
  * - Empreinte du mot de passe (« pwv ») dans le jeton : changer de mot de passe
  *   invalide immédiatement toutes les autres sessions ouvertes.
+ * - Identifiant de session (« sid ») : la session est vérifiée et révocable côté serveur.
  */
 
 const crypto = require("crypto");
@@ -22,8 +23,8 @@ const empreinteMotDePasse = (hashMotDePasse) => {
     .slice(0, 16);
 };
 
-const genererToken = (utilisateur) => {
-  const charge = { id: utilisateur.id };
+const genererToken = (utilisateur, sid) => {
+  const charge = { id: utilisateur.id, sid };
   const pwv = empreinteMotDePasse(utilisateur.motDePasse);
   if (pwv) charge.pwv = pwv;
   return jwt.sign(charge, process.env.JWT_SECRET, {
@@ -36,8 +37,8 @@ const genererToken = (utilisateur) => {
 // un fichier directement au serveur (le proxy Vercel limite la taille des requêtes).
 // Le jeton de session, lui, ne quitte jamais le cookie httpOnly.
 const PORTEE_UPLOAD = "upload";
-const genererJetonUpload = (utilisateur) => {
-  const charge = { id: utilisateur.id, portee: PORTEE_UPLOAD };
+const genererJetonUpload = (utilisateur, sid) => {
+  const charge = { id: utilisateur.id, sid, portee: PORTEE_UPLOAD };
   const pwv = empreinteMotDePasse(utilisateur.motDePasse);
   if (pwv) charge.pwv = pwv;
   return jwt.sign(charge, process.env.JWT_SECRET, { algorithm: ALGORITHME, expiresIn: "5m" });

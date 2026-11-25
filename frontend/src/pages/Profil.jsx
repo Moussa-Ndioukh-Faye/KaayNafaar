@@ -16,6 +16,7 @@ import {
 import { useAuth } from "../App";
 import { Link } from "react-router-dom";
 import { authAPI } from "../services/api";
+import AppareilsConnectes from "../components/profil/AppareilsConnectes";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
@@ -267,6 +268,9 @@ export default function Profil() {
             </form>
          </Card>
       </div>
+
+      {/* Appareils connectés : sessions ouvertes, déconnexion à distance */}
+      <AppareilsConnectes />
 
       {/* Mes données (RGPD / loi sénégalaise 2008-12) */}
       <Card className="rounded-xl shadow-lg border-none bg-white dark:bg-gray-800">

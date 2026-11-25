@@ -5,6 +5,7 @@ const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
 const Progression = require("../models/Progression");
 const Carnet = require("../models/Carnet");
+const Session = require("../models/Session");
 
 User.hasMany(Course, { foreignKey: "utilisateurId", as: "courses" });
 Course.belongsTo(User, { foreignKey: "utilisateurId", as: "utilisateur" });
@@ -25,4 +26,7 @@ Progression.belongsTo(User, { foreignKey: "utilisateurId", as: "utilisateur" });
 User.hasMany(Carnet, { foreignKey: "utilisateurId", as: "carnets", onDelete: "CASCADE" });
 Carnet.belongsTo(User, { foreignKey: "utilisateurId", as: "utilisateur" });
 
-module.exports = { sequelize, User, Course, Fiche, Quiz, Progression, Carnet };
+User.hasMany(Session, { foreignKey: "utilisateurId", as: "sessions", onDelete: "CASCADE" });
+Session.belongsTo(User, { foreignKey: "utilisateurId", as: "utilisateur" });
+
+module.exports = { sequelize, User, Course, Fiche, Quiz, Progression, Carnet, Session };
