@@ -107,7 +107,7 @@ const app = require("../server");
 jest.setTimeout(10000);
 
 const makeToken = (uid = 1) =>
-  jwt.sign({ id: uid }, process.env.JWT_SECRET || "test-jwt-secret-at-least-32-chars!!", { expiresIn: "1h" });
+  jwt.sign({ id: uid, sid: "session-test" }, process.env.JWT_SECRET || "test-jwt-secret-at-least-32-chars!!", { expiresIn: "1h" });
 const authCookie = (uid = 1) => `token=${makeToken(uid)}`;
 
 beforeEach(() => {

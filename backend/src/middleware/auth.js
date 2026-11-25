@@ -4,6 +4,7 @@
 
 const User = require("../models/User");
 const { verifierToken, empreinteMotDePasse, PORTEE_UPLOAD } = require("../utils/jeton");
+const { verifierSession } = require("../utils/sessions");
 
 // Seule route où un jeton « upload » est accepté
 const estRouteUpload = (req) => req.method === "POST" && req.originalUrl.split("?")[0].replace(/\/$/, "") === "/api/courses";
@@ -55,6 +56,18 @@ const proteger = async (req, res, next) => {
         message: "Session expirée. Veuillez vous reconnecter.",
       });
     }
+
+    // La session doit exister côté serveur, ne pas être révoquée ni expirée
+    // (déconnexion à distance, déconnexion de tous les appareils, inactivité)
+    const session = await verifierSession(decoded.sid, utilisateur.id);
+    if (!session) {
+      return res.status(401).json({
+        success: false,
+        code: "SESSION_REVOQUEE",
+        message: "Session terminée. Veuillez vous reconnecter.",
+      });
+    }
+    req.sessionId = session.id;
 
     // Ne jamais garder le hash du mot de passe dans l'objet de requête
     if (utilisateur.dataValues) delete utilisateur.dataValues.motDePasse;

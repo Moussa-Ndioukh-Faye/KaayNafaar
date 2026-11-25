@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { body, validationResult } = require("express-validator");
+const { body, param, validationResult } = require("express-validator");
 const {
   inscription,
   connexion,
@@ -15,6 +15,9 @@ const {
   reinitialiserMotDePasse,
   jetonUpload,
   logout,
+  mesSessions,
+  fermerSession,
+  fermerAutresSessions,
 } = require("../controllers/authController");
 const { limiteurConnexionCompte, limiteurEmailsSortants } = require("../middleware/securite");
 const { proteger } = require("../middleware/auth");
@@ -106,6 +109,17 @@ router.post(
   reinitialiserMotDePasse
 );
 router.post("/logout", logout);
+
+// Appareils connectés : liste, déconnexion d'un appareil, de tous les autres
+router.get("/sessions", proteger, mesSessions);
+router.post("/sessions/deconnecter-autres", proteger, fermerAutresSessions);
+router.delete(
+  "/sessions/:id",
+  proteger,
+  param("id").isUUID(4).withMessage("Session invalide"),
+  validate,
+  fermerSession
+);
 
 // Jeton de 5 minutes pour envoyer un fichier directement au serveur
 router.get("/jeton-upload", proteger, jetonUpload);

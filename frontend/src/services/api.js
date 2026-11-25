@@ -60,6 +60,10 @@ export const authAPI = {
   // Portabilité des données (RGPD art. 20)
   exporterDonnees: () => api.get("/auth/export", { responseType: "blob" }),
   logout: () => api.post("/auth/logout"),
+  // Appareils connectés (sessions)
+  sessions: () => api.get("/auth/sessions"),
+  fermerSession: (id) => api.delete(`/auth/sessions/${encodeURIComponent(id)}`),
+  fermerAutresSessions: () => api.post("/auth/sessions/deconnecter-autres"),
 };
 
 // ═══════════════════════════════════════════════

@@ -10,12 +10,14 @@ const Fiche = require("../models/Fiche");
 const Quiz = require("../models/Quiz");
 const FeedbackIA = require("../models/FeedbackIA");
 const Carnet = require("../models/Carnet");
+const Session = require("../models/Session");
+const { creerSession, revoquerSession, revoquerToutes, listerSessions } = require("../utils/sessions");
 const { Op } = require("sequelize");
 const db = require("../config/database"); // getter : suit le basculement SQLite
 const { supprimerFichier } = require("../utils/fichiers");
 
 const bcrypt = require("bcryptjs");
-const { genererToken, genererJetonUpload } = require("../utils/jeton");
+const { genererToken, genererJetonUpload, verifierToken } = require("../utils/jeton");
 const {
   verificationEmailActive,
   envoyerVerification,
@@ -64,6 +66,14 @@ const envoyerTokenCookie = (res, token, req) => {
 };
 
 const effacerCookie = (res, req) => res.clearCookie("token", optionsCookie(req));
+
+// Nouvelle connexion : session enregistrée côté serveur, puis jeton qui la référence
+const ouvrirSession = async (req, res, utilisateur) => {
+  const session = await creerSession(req, utilisateur);
+  envoyerTokenCookie(res, genererToken(utilisateur, session.id), req);
+  journaliser("session.ouverte", req, { utilisateurId: utilisateur.id, appareil: session.appareil });
+  return session;
+};
 
 // POST /api/auth/inscription
 const inscription = async (req, res) => {
@@ -121,8 +131,7 @@ const inscription = async (req, res) => {
       });
     }
 
-    const token = genererToken(utilisateur);
-    envoyerTokenCookie(res, token, req);
+    await ouvrirSession(req, res, utilisateur);
 
     res.status(201).json({
       success: true,
@@ -184,8 +193,7 @@ const connexion = async (req, res) => {
       { where: { utilisateurId: utilisateur.id } }
     ).catch(err => console.error("Erreur update last login:", err));
 
-    const token = genererToken(utilisateur);
-    envoyerTokenCookie(res, token, req);
+    await ouvrirSession(req, res, utilisateur);
 
     res.json({
       success: true,
@@ -285,10 +293,10 @@ const changerMotDePasse = async (req, res) => {
       console.error("Notification changement de mot de passe:", err.message)
     );
 
-    // Les autres sessions sont révoquées (empreinte du mot de passe dans le JWT) :
-    // on émet un nouveau jeton pour garder la session courante active.
-    const token = genererToken(utilisateur);
-    envoyerTokenCookie(res, token, req);
+    // Les autres appareils sont déconnectés ; la session courante reste ouverte
+    // avec un nouveau jeton (nouvelle empreinte du mot de passe).
+    await revoquerToutes(utilisateur.id, req.sessionId);
+    envoyerTokenCookie(res, genererToken(utilisateur, req.sessionId), req);
 
     res.json({ success: true, message: "Mot de passe modifié avec succès." });
   } catch (error) {
@@ -323,6 +331,7 @@ const supprimerCompte = async (req, res) => {
 
     await FeedbackIA.destroy({ where: { utilisateurId: uid } });
     await Carnet.destroy({ where: { utilisateurId: uid } });
+    await Session.destroy({ where: { utilisateurId: uid } });
     await Quiz.destroy({ where: { utilisateurId: uid } });
     await Fiche.destroy({ where: { utilisateurId: uid } });
     await Course.destroy({ where: { utilisateurId: uid } });
@@ -372,8 +381,7 @@ const verifierEmail = async (req, res) => {
     await utilisateur.update({ emailVerifie: true, jetonVerification: null, jetonVerificationExpire: null });
 
     // Connexion directe après confirmation
-    const token = genererToken(utilisateur);
-    envoyerTokenCookie(res, token, req);
+    await ouvrirSession(req, res, utilisateur);
     res.json({ success: true, message: "Adresse email confirmée. Bienvenue !", utilisateur: profilPublic(utilisateur) });
   } catch (error) {
     console.error("Erreur verifierEmail:", error);
@@ -468,6 +476,7 @@ const reinitialiserMotDePasse = async (req, res) => {
     utilisateur.jetonVerification = null;
     utilisateur.jetonVerificationExpire = null;
     await utilisateur.save(); // nouveau hash → toutes les sessions existantes sont révoquées
+    await revoquerToutes(utilisateur.id);
 
     journaliser("mot_de_passe.reinitialise", req, { utilisateurId: utilisateur.id });
     notifierMotDePasseModifie(utilisateur).catch((err) =>
@@ -486,7 +495,7 @@ const reinitialiserMotDePasse = async (req, res) => {
 const exporterDonnees = async (req, res) => {
   try {
     const uid = req.utilisateur.id;
-    const [utilisateur, cours, fiches, quiz, progression, feedbacks, carnets] = await Promise.all([
+    const [utilisateur, cours, fiches, quiz, progression, feedbacks, carnets, sessions] = await Promise.all([
       User.findByPk(uid, { attributes: { exclude: CHAMPS_PRIVES } }),
       Course.findAll({ where: { utilisateurId: uid }, attributes: { exclude: ["fichierPDF"] } }),
       Fiche.findAll({ where: { utilisateurId: uid } }),
@@ -494,6 +503,7 @@ const exporterDonnees = async (req, res) => {
       Progression.findOne({ where: { utilisateurId: uid } }),
       FeedbackIA.findAll({ where: { utilisateurId: uid } }),
       Carnet.findAll({ where: { utilisateurId: uid } }),
+      listerSessions(uid),
     ]);
 
     const date = new Date().toISOString().slice(0, 10);
@@ -509,6 +519,7 @@ const exporterDonnees = async (req, res) => {
       progression,
       feedbacksIA: feedbacks,
       carnets,
+      sessions,
     });
   } catch (error) {
     console.error("Erreur exporterDonnees:", error);
@@ -519,16 +530,82 @@ const exporterDonnees = async (req, res) => {
 // GET /api/auth/jeton-upload — jeton de 5 minutes, valable uniquement pour importer un cours
 const jetonUpload = (req, res) => {
   res.set("Cache-Control", "no-store");
-  res.json({ success: true, jeton: genererJetonUpload(req.utilisateur) });
+  res.json({ success: true, jeton: genererJetonUpload(req.utilisateur, req.sessionId) });
 };
 
-// POST /api/auth/logout
-const logout = (req, res) => {
+// POST /api/auth/logout — la session est révoquée côté serveur, pas seulement le cookie
+const logout = async (req, res) => {
+  try {
+    const token = req.cookies?.token;
+    if (token) {
+      const { id, sid } = verifierToken(token);
+      if (await revoquerSession(sid, id)) journaliser("session.fermee", req, { utilisateurId: id });
+    }
+  } catch (_) {
+    // jeton déjà expiré ou invalide : rien à révoquer
+  }
   effacerCookie(res, req);
   res.json({ success: true, message: "Déconnecté avec succès." });
 };
 
+// GET /api/auth/sessions — appareils connectés
+const mesSessions = async (req, res) => {
+  try {
+    const sessions = await listerSessions(req.utilisateur.id);
+    res.set("Cache-Control", "no-store");
+    res.json({
+      success: true,
+      sessions: sessions.map((s) => ({
+        id: s.id,
+        appareil: s.appareil,
+        typeAppareil: s.typeAppareil,
+        ipTronquee: s.ipTronquee,
+        derniereActivite: s.derniereActivite,
+        connecteLe: s.createdAt,
+        actuelle: s.id === req.sessionId,
+      })),
+    });
+  } catch (error) {
+    console.error("Erreur mesSessions:", error.message);
+    res.status(500).json({ success: false, message: "Impossible de charger les appareils connectés." });
+  }
+};
+
+// DELETE /api/auth/sessions/:id — déconnecter un appareil
+const fermerSession = async (req, res) => {
+  try {
+    const n = await revoquerSession(req.params.id, req.utilisateur.id);
+    if (!n) return res.status(404).json({ success: false, message: "Session introuvable." });
+    journaliser("session.revoquee", req, { utilisateurId: req.utilisateur.id });
+    const actuelle = req.params.id === req.sessionId;
+    if (actuelle) effacerCookie(res, req);
+    res.json({ success: true, actuelle, message: actuelle ? "Tu es déconnecté." : "Appareil déconnecté." });
+  } catch (error) {
+    console.error("Erreur fermerSession:", error.message);
+    res.status(500).json({ success: false, message: "Impossible de déconnecter cet appareil." });
+  }
+};
+
+// POST /api/auth/sessions/deconnecter-autres — tous les appareils sauf celui-ci
+const fermerAutresSessions = async (req, res) => {
+  try {
+    const n = await revoquerToutes(req.utilisateur.id, req.sessionId);
+    journaliser("sessions.autres_revoquees", req, { utilisateurId: req.utilisateur.id, nombre: n });
+    res.json({
+      success: true,
+      nombre: n,
+      message: n ? `${n} appareil${n > 1 ? "s" : ""} déconnecté${n > 1 ? "s" : ""}.` : "Aucun autre appareil connecté.",
+    });
+  } catch (error) {
+    console.error("Erreur fermerAutresSessions:", error.message);
+    res.status(500).json({ success: false, message: "Impossible de déconnecter les autres appareils." });
+  }
+};
+
 module.exports = {
+  mesSessions,
+  fermerSession,
+  fermerAutresSessions,
   inscription,
   connexion,
   getProfil,

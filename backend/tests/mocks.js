@@ -13,7 +13,7 @@ const mockModelData = {
 };
 
 function makeToken(userId = 1) {
-  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  return jwt.sign({ id: userId, sid: "session-test" }, process.env.JWT_SECRET, { expiresIn: "1h" });
 }
 
 function authCookie(userId = 1) {
