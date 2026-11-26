@@ -26,6 +26,8 @@ services:
         value: gemini-3.6-flash
       - key: GEMINI_MODEL_SECOURS
         value: gemini-3.5-flash-lite
+      - key: LECTURE_IA
+        value: toujours
       - key: GEMINI_EMBEDDING_MODEL
         value: gemini-embedding-2
       # GROQ_MODEL facultatif : le serveur lit la liste des modèles Groq disponibles et choisit le meilleur

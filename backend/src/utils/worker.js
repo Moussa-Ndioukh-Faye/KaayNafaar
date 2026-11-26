@@ -3,16 +3,17 @@ const redisConf = require("../config/redis");
 const { indexerCours } = require("./aiPro");
 const { lireDocument } = require("./lectureDocument");
 const Course = require("../models/Course");
+const suivi = require("./suiviLecture");
 
 const queueName = "extraction-cours";
-const AUCUN_TEXTE = "Aucun texte n'a pu être lu dans ce document. Essaie un PDF non protégé ou une photo plus nette.";
+const { AUCUN_TEXTE } = suivi;
 
 /**
  * Lecture du document (page par page, IA pour les PDF scannés et les photos)
  * puis indexation pour la recherche. Exécutée par le worker BullMQ quand Redis est
  * disponible, sinon directement dans le processus (hébergement sans Redis).
  */
-const traiterCours = async ({ coursId, fichierPath, originalname, utilisateurId, titre, contenuDirect }) => {
+const traiterCours = async ({ coursId, fichierPath, originalname, utilisateurId, titre, contenuDirect, noteEtudiant }) => {
   console.log(`[Worker] Traitement du cours ${coursId}`);
   try {
     let contenu = contenuDirect || "";
@@ -20,9 +21,18 @@ const traiterCours = async ({ coursId, fichierPath, originalname, utilisateurId,
 
     if (!contenu && fichierPath) {
       const extension = String(originalname || "").split(".").pop().toLowerCase();
-      const lecture = await lireDocument(fichierPath, extension);
-      contenu = lecture.texte;
+      suivi.mettreAJour(coursId, { etape: "lecture", pagesLues: 0, total: null });
+      const lecture = await lireDocument(fichierPath, extension, {
+        onProgression: (pagesLues, total) => suivi.mettreAJour(coursId, { etape: "lecture", pagesLues, total }),
+      });
       pages = lecture.pages;
+      // Notes tapées par l'étudiant avec le fichier : gardées en tête du cours
+      if (noteEtudiant?.trim()) {
+        const note = `Notes de l'étudiant :\n${noteEtudiant.trim()}`;
+        pages = pages.length ? [{ ...pages[0], texte: `${note}\n\n${pages[0].texte}` }, ...pages.slice(1)] : [{ n: 1, texte: note }];
+        lecture.texte = note + (lecture.texte ? `\n\n${lecture.texte}` : "");
+      }
+      contenu = lecture.texte;
       console.log(`[Worker] Cours ${coursId} : ${pages.length} page(s) lue(s) (${lecture.methode}), ${contenu.length} caractères`);
       await Course.update({ contenu }, { where: { id: coursId } });
     }
@@ -33,11 +43,16 @@ const traiterCours = async ({ coursId, fichierPath, originalname, utilisateurId,
       await Course.update({ contenu: AUCUN_TEXTE }, { where: { id: coursId } });
       return;
     }
+    suivi.mettreAJour(coursId, { etape: "indexation" });
     const ok = await indexerCours(contenu, { coursId, utilisateurId, titre }, pages);
     console.log(`[Worker] ${ok ? "✅" : "⚠️"} Cours ${coursId} ${ok ? "indexé" : "non indexé"}`);
   } catch (err) {
     console.error(`[Worker] ❌ Erreur sur le cours ${coursId}:`, err.message);
+    // Ne pas laisser le cours affiché « en cours de lecture » pour toujours
+    await Course.update({ contenu: AUCUN_TEXTE }, { where: { id: coursId, contenu: suivi.EN_TRAITEMENT } }).catch(() => {});
     throw err;
+  } finally {
+    suivi.terminer(coursId);
   }
 };
 
