@@ -56,6 +56,10 @@ const pwa = VitePWA({
 
 export default defineConfig({
   plugins: [react(), pwa],
+  // Version affichée dans les signalements d'erreur (commit Vercel, sinon version du paquet)
+  define: {
+    __APP_VERSION__: JSON.stringify((process.env.VERCEL_GIT_COMMIT_SHA || "").slice(0, 7) || process.env.npm_package_version || "dev"),
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

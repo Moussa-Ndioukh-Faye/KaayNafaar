@@ -20,6 +20,7 @@ import AppareilsConnectes from "../components/profil/AppareilsConnectes";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
+import { messageErreur } from "@/lib/erreurs";
 
 export default function Profil() {
   const { utilisateur, connecter, deconnecter } = useAuth();
@@ -83,7 +84,7 @@ export default function Profil() {
       const erreurs = err.response?.data?.errors;
       setMessage({
         type: "error",
-        texte: erreurs?.[0]?.msg || err.response?.data?.message || "Mot de passe actuel incorrect.",
+        texte: erreurs?.[0]?.msg || messageErreur(err, "Mot de passe actuel incorrect."),
       });
     } finally {
       setEnvoi(false);
@@ -121,7 +122,7 @@ export default function Profil() {
       deconnecter();
       window.location.href = "/";
     } catch (err) {
-      setMessage({ type: "error", texte: err.response?.data?.message || "Erreur lors de la suppression." });
+      setMessage({ type: "error", texte: messageErreur(err, "Erreur lors de la suppression.") });
     }
   };
 

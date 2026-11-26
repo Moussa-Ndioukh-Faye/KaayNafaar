@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../compone
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { messageErreur } from "@/lib/erreurs";
 
 const MATIERES = ["Informatique", "Mathématiques", "Physique", "Économie"];
 
@@ -87,7 +88,7 @@ export default function Bibliotheque() {
       setImportIds(prev => new Set(prev).add(id));
       toast({ title: "Fiche ajoutée", description: `"${titre}" est maintenant dans ta bibliothèque.` });
     } catch (err) {
-      const msg = err.response?.data?.message || "Erreur lors de l'import.";
+      const msg = messageErreur(err, "Erreur lors de l'import.");
       toast({ title: "Import impossible", description: msg, variant: "destructive" });
     }
   };

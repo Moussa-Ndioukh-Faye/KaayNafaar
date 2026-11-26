@@ -5,6 +5,7 @@ import { Button } from "../ui/button";
 import { Fenetre, ControleSegmente } from "../ui/fenetre";
 import { STYLES_CHAT, LONGUEURS_CHAT, LANGUES } from "./catalogue";
 import { cn } from "../../lib/utils";
+import { messageErreur } from "@/lib/erreurs";
 
 /** Réglages des réponses du chat de ce carnet : style, longueur, langue, consignes */
 export default function ReglagesChat({ ouverte, fermer, carnet, onReglages }) {
@@ -24,7 +25,7 @@ export default function ReglagesChat({ ouverte, fermer, carnet, onReglages }) {
       onReglages(data.reglages);
       fermer();
     } catch (e) {
-      setErreur(e.response?.data?.message || "Impossible d'enregistrer les réglages.");
+      setErreur(messageErreur(e, "Impossible d'enregistrer les réglages."));
     } finally {
       setOccupe(false);
     }

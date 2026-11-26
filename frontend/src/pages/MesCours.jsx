@@ -4,6 +4,7 @@ import { coursAPI } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { cn } from "../lib/utils";
+import { messageErreur } from "@/lib/erreurs";
 
 const NIVEAUX = ["débutant", "intermédiaire", "avancé"];
 
@@ -82,7 +83,7 @@ export default function MesCours() {
       setSucces("Page importée : elle est maintenant dans tes cours.");
       setTimeout(() => setSucces(""), 4000);
     } catch (err) {
-      setErreur(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || "Impossible d'importer cette page.");
+      setErreur(messageErreur(err, "Impossible d'importer cette page."));
     } finally {
       setImportLien(false);
     }
@@ -124,7 +125,7 @@ export default function MesCours() {
       chargerCours();
       setTimeout(() => setSucces(""), 3000);
     } catch (err) {
-      setErreur(err.response?.data?.message || "Erreur lors de la création.");
+      setErreur(messageErreur(err, "Erreur lors de la création."));
     } finally {
       setEnvoi(false);
     }

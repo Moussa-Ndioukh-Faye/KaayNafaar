@@ -5,6 +5,7 @@
  */
 
 import axios from "axios";
+import { messageErreur, referenceErreur } from "@/lib/erreurs";
 
 // Utiliser le proxy Vercel (défini dans vercel.json) pour éviter les problèmes de cookies tiers sur mobile
 const getBaseURL = () => {
@@ -31,6 +32,9 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Message clair et référence prêts à afficher, partout : error.messageUtilisateur
+    error.messageUtilisateur = messageErreur(error);
+    error.reference = referenceErreur(error);
     // `silencieux` : vérification de session au démarrage, un 401 est alors normal (visiteur)
     if (error.response?.status === 401 && !error.config?.silencieux && !window.location.pathname.includes("/connexion")) {
       window.location.href = "/connexion?session=expiree";

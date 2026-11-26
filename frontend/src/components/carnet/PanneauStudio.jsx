@@ -9,6 +9,7 @@ import ProductionStudio from "./ProductionStudio";
 import OptionsStudio from "./OptionsStudio";
 import { TYPES_STUDIO, typeStudio } from "./catalogue";
 import { cn } from "../../lib/utils";
+import { messageErreur } from "@/lib/erreurs";
 
 const dateCourte = (d) =>
   new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -51,7 +52,7 @@ export default function PanneauStudio({ carnet, setCarnet, actives, onDemanderCh
       setOuverte(data.production);
       setAnnonce(`${typeStudio(type).nom} prêt.`);
     } catch (err) {
-      onErreur(err.response?.data?.message || "La génération a échoué. Réessaie.");
+      onErreur(messageErreur(err, "La génération a échoué. Réessaie."));
     } finally {
       setGeneration(null);
     }
@@ -73,7 +74,7 @@ export default function PanneauStudio({ carnet, setCarnet, actives, onDemanderCh
       setExporte({ vers: data.vers, message: data.message });
       setOuverte(null);
     } catch (err) {
-      onErreur(err.response?.data?.message || "L'export a échoué.");
+      onErreur(messageErreur(err, "L'export a échoué."));
     }
   };
 
@@ -88,7 +89,7 @@ export default function PanneauStudio({ carnet, setCarnet, actives, onDemanderCh
       setCarnet(data.carnet);
       setAnnonce("La note est maintenant une source du carnet.");
     } catch (err) {
-      onErreur(err.response?.data?.message || "Impossible de transformer la note en source.");
+      onErreur(messageErreur(err, "Impossible de transformer la note en source."));
     }
   };
 

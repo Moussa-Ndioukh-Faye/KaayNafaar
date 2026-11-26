@@ -4,6 +4,7 @@ import { Loader2, Search, Upload, ExternalLink } from "lucide-react";
 import { carnetsAPI, coursAPI } from "../../services/api";
 import { Button } from "../ui/button";
 import { Fenetre, ControleSegmente } from "../ui/fenetre";
+import { messageErreur } from "@/lib/erreurs";
 
 const ONGLETS = [
   { id: "cours", nom: "Mes cours" },
@@ -34,7 +35,7 @@ export default function AjoutSources({ ouverte, fermer, carnet, tousLesCours, on
     try {
       await action();
     } catch (err) {
-      setMessage({ type: "erreur", texte: err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || "Échec. Réessaie." });
+      setMessage({ type: "erreur", texte: messageErreur(err, "Échec. Réessaie.") });
     } finally {
       setOccupe(false);
     }

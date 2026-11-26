@@ -13,9 +13,10 @@ import {
 
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
-import BandeauHorsLigne from "./components/BandeauHorsLigne";
 import BarreOnglets from "./components/BarreOnglets";
 import { Toaster } from "./components/ui/toaster";
+import { LimiteErreur, LimitePage } from "./components/erreurs/LimiteErreur";
+import BandeauHorsLigne from "./components/erreurs/BandeauHorsLigne";
 import { authAPI } from "./services/api";
 
 const Home = lazy(() => import("./pages/Home"));
@@ -37,38 +38,6 @@ const VerifierEmail = lazy(() => import("./pages/VerifierEmail"));
 const MotDePasseOublie = lazy(() => import("./pages/MotDePasseOublie"));
 const ReinitialiserMotDePasse = lazy(() => import("./pages/ReinitialiserMotDePasse"));
 const Page404 = lazy(() => import("./pages/Page404"));
-
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-  componentDidCatch(error, info) {
-    console.error("Erreur de rendu:", error, info);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex items-center justify-center h-screen bg-background p-4">
-          <div className="text-center max-w-md">
-            <div className="w-16 h-16 rounded-full border border-border bg-card rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">⚠️</span>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Une erreur est survenue</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Veuillez rafraîchir la page ou réessayer plus tard.</p>
-            <button onClick={() => window.location.reload()} className="px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors">
-              Rafraîchir
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 // ═══════════════════════════════════════════════
 // Contexte d'authentification global
@@ -214,16 +183,20 @@ const Layout = ({ children }) => {
 // ═══════════════════════════════════════════════
 // Application principale
 // ═══════════════════════════════════════════════
+// Chaque page a sa propre limite d'erreur : un plantage (ou un morceau de page qui ne se charge
+// pas après un déploiement) n'emporte que la page, la navigation reste utilisable
 const SuspenseWrapper = ({ children }) => (
+  <LimitePage>
   <Suspense fallback={<div className="flex items-center justify-center h-full min-h-[60vh]"><div role="status" aria-label="Chargement" className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600" /></div>}>
     {children}
   </Suspense>
+  </LimitePage>
 );
 
 export default function App() {
   return (
     <AuthProvider>
-      <ErrorBoundary>
+      <LimiteErreur pleinEcran>
         <Router>
           <Routes>
           {/* Pages publiques */}
@@ -252,7 +225,7 @@ export default function App() {
           <Route path="*" element={<SuspenseWrapper><Page404 /></SuspenseWrapper>} />
         </Routes>
       </Router>
-      </ErrorBoundary>
+      </LimiteErreur>
     </AuthProvider>
   );
 }

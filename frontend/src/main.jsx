@@ -6,6 +6,10 @@ import "@fontsource-variable/hanken-grotesk";
 import "./index.css";
 import App from "./App";
 import { demarrerPWA } from "./pwa";
+import { installerSignalementGlobal } from "./lib/erreurs";
+
+// Erreurs qui échappent à React : signalées au serveur (logs) pour être corrigées
+installerSignalementGlobal();
 
 // Application installable : service worker + invitation d'installation
 demarrerPWA();

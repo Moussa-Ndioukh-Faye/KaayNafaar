@@ -3,6 +3,7 @@ import { Smartphone, Laptop, Tablet, LogOut, ShieldCheck } from "lucide-react";
 import { authAPI } from "../../services/api";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
+import { messageErreur } from "@/lib/erreurs";
 
 const ICONES = { telephone: Smartphone, tablette: Tablet, ordinateur: Laptop };
 
@@ -34,7 +35,7 @@ export default function AppareilsConnectes() {
       setSessions(data.sessions || []);
       setErreur("");
     } catch (e) {
-      setErreur(e.response?.data?.message || "Impossible de charger les appareils connectés.");
+      setErreur(messageErreur(e, "Impossible de charger les appareils connectés."));
     }
   }, []);
 
@@ -56,7 +57,7 @@ export default function AppareilsConnectes() {
       setSessions((liste) => liste.filter((x) => x.id !== s.id));
       setAnnonce(`${s.appareil} a été déconnecté.`);
     } catch (e) {
-      setAnnonce(e.response?.data?.message || "Impossible de déconnecter cet appareil.");
+      setAnnonce(messageErreur(e, "Impossible de déconnecter cet appareil."));
     } finally {
       setEnCours(null);
     }
@@ -74,7 +75,7 @@ export default function AppareilsConnectes() {
       setSessions((liste) => liste.filter((x) => x.actuelle));
       setAnnonce(data.message);
     } catch (e) {
-      setAnnonce(e.response?.data?.message || "Impossible de déconnecter les autres appareils.");
+      setAnnonce(messageErreur(e, "Impossible de déconnecter les autres appareils."));
     } finally {
       setEnCours(null);
     }

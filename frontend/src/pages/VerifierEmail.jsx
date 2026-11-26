@@ -5,6 +5,7 @@ import { useAuth } from "../App";
 import { authAPI } from "../services/api";
 import { LogoComplet } from "../components/marque/Logo";
 import EmailEnvoye from "../components/auth/EmailEnvoye";
+import { messageErreur } from "@/lib/erreurs";
 
 /** Page ouverte depuis le lien reçu par email : /verifier-email?token=… */
 export default function VerifierEmail() {
@@ -33,7 +34,7 @@ export default function VerifierEmail() {
         setTimeout(() => navigate("/"), 2500);
       })
       .catch((err) => {
-        setMessage(err.response?.data?.message || "Ce lien est invalide ou a expiré.");
+        setMessage(messageErreur(err, "Ce lien est invalide ou a expiré."));
         setEtat("invalide");
       });
   }, [token, connecter, navigate]);

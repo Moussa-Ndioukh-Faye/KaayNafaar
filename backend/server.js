@@ -7,6 +7,11 @@ const path = require("path");
 const fs = require("fs");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const express = require("express");
+// Express 4 : les erreurs des fonctions async rejoignent le gestionnaire global
+require("./src/erreurs/capturerAsync");
+const { referenceRequete, routeIntrouvable, gestionnaireErreurs } = require("./src/erreurs/middleware");
+const { installerGardiens } = require("./src/erreurs/processus");
+const { filtrerUrl, filtrerDonnees } = require("./src/middleware/filtreRequetes");
 
 // Garantir que le dossier uploads/ existe et est accessible
 const uploadDir = path.join(__dirname, "uploads");
@@ -46,9 +51,16 @@ const app = express();
 const sautsProxy = parseInt(process.env.TRUST_PROXY || "1", 10);
 app.set("trust proxy", Number.isNaN(sautsProxy) ? 1 : sautsProxy);
 
+// Référence de requête (X-Request-Id), reprise dans les logs et les réponses d'erreur
+app.use(referenceRequete);
+
+// Analyse des paramètres d'URL sans objets imbriqués (?a[b]=… reste un simple texte) :
+// supprime la pollution de prototype et les objets inattendus dans req.query
+app.set("query parser", "simple");
+
 // Logger de requêtes simple (chemin seul : pas de query string dans les logs)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  console.log(`[${new Date().toISOString()}] [${req.id}] ${req.method} ${req.path}`);
   next();
 });
 
@@ -72,6 +84,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["X-Request-Id", "Retry-After"],
     maxAge: 600,
   })
 );
@@ -98,6 +111,10 @@ app.use(helmet({
 app.use(limiteurGlobal);
 app.use(validerTaillePayload);
 
+// Attaques par l'URL ou la méthode HTTP : bloquées avant toute route (après helmet et CORS,
+// pour que la réponse de refus porte elle aussi les en-têtes de sécurité)
+app.use(filtrerUrl);
+
 // cookies
 if (!process.env.COOKIE_SECRET || process.env.COOKIE_SECRET.length < 32) {
   console.error("❌ COOKIE_SECRET doit faire au moins 32 caractères!");
@@ -108,7 +125,9 @@ app.use(cookieParser(process.env.COOKIE_SECRET));
 // ── Parsing du corps ──────────────────────────────────────────────
 // Les fichiers passent par multer (multipart) : 10 Mo suffisent pour le JSON
 app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// Pas d'analyseur de formulaires HTML : l'application n'envoie que du JSON ou des fichiers,
+// et un formulaire posté depuis un autre site est un vecteur CSRF classique
+app.use(filtrerDonnees);
 
 // Anti-injection NoSQL
 app.use(sanitiserInputs);
@@ -131,31 +150,12 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Serveur opérationnel", version: "1.1.0" });
 });
 
-// Middleware de gestion d'erreurs global
-app.use((err, req, res, _next) => {
-  console.error("Erreur serveur:", err.stack);
+// Erreurs signalées par l'application (écran planté, erreur inattendue)
+app.use("/api/erreurs-client", require("./src/routes/erreursClient"));
 
-  // Erreurs d'upload (taille, type de fichier) : erreur client
-  if (err.name === "MulterError" || err.code === "TYPE_FICHIER_INVALIDE") {
-    return res.status(400).json({ success: false, message: err.message });
-  }
-  if (err.type === "entity.too.large") {
-    return res.status(413).json({ success: false, message: "Requête trop volumineuse." });
-  }
-
-  const statut = err.status || err.statusCode || 500;
-  // OWASP A05 : ne pas divulguer les détails internes des erreurs 5xx en production
-  const message =
-    statut >= 500 && process.env.NODE_ENV === "production"
-      ? "Erreur interne du serveur"
-      : err.message || "Erreur interne du serveur";
-  res.status(statut).json({ success: false, message });
-});
-
-// 404 pour routes inconnues
-app.use("*", (req, res) => {
-  res.status(404).json({ success: false, message: "Route introuvable" });
-});
+// Route inconnue, puis gestionnaire d'erreurs global (voir src/erreurs)
+app.use("*", routeIntrouvable);
+app.use(gestionnaireErreurs);
 
 const { worker } = require("./src/utils/worker");
 const PORT = process.env.PORT || 5001;
@@ -186,6 +186,7 @@ if (require.main === module) {
       console.log("👋 Arrêt terminé");
       process.exit(0);
     };
+    installerGardiens({ arreter });
     process.on("SIGTERM", () => arreter("SIGTERM"));
     process.on("SIGINT", () => arreter("SIGINT"));
   })();
