@@ -9,7 +9,6 @@ Application full-stack (React + Node.js + PostgreSQL + LangChain) pour aider les
 ```
 revision/
 ├── .github/workflows/       CI/CD GitHub Actions
-├── scripts/                 Scripts de déploiement (VPS)
 ├── backend/                 Node.js + Express + PostgreSQL (pgvector)
 │   ├── src/
 │   │   ├── config/          database.js (Sequelize)
@@ -23,9 +22,7 @@ revision/
 │   │   └── pages/           Home, MesCours, Fiches, Quiz, AssistantIA
 │   ├── vercel.json          Configuration Vercel
 │   └── Dockerfile           Multi-stage (build + nginx)
-├── docker-compose.yml       Stack complète (dev)
-├── docker-compose.prod.yml  Stack production (VPS, sans frontend)
-└── caddy/                   Reverse proxy (SSL Let's Encrypt)
+└── docker-compose.yml       Stack complète (développement local)
 ```
 
 ---
@@ -49,7 +46,10 @@ git clone <url> && cd revision
 cp backend/.env.example backend/.env
 # Éditer backend/.env avec vos clés API
 
-# 3. Lancer toute la stack (Docker)
+# 3. Mot de passe de la base locale (fichier .env à la racine, jamais commité)
+echo "DB_PASSWORD=$(openssl rand -hex 16)" > .env
+
+# 4. Lancer toute la stack (Docker)
 docker compose up --build
 ```
 
@@ -91,59 +91,21 @@ npm start                # Vite dev server (port 3000)
 3. Configurer :
    - **Root Directory :** `frontend`
    - **Framework :** Vite
-   - **Variable d'environnement :** `VITE_API_URL` → `https://api.votre-domaine.com`
+   - **Variable d'environnement :** `VITE_BACKEND_URL` → URL du backend Render
 4. Déployer (auto-déploiement sur chaque push `main`)
 
-### Backend → VPS (Docker)
+### Backend → Render
 
-**Option A : Déploiement manuel**
+Le backend est décrit dans `render.yaml` (Blueprint Render). Les secrets se règlent
+**uniquement** dans le tableau de bord Render (Environment), jamais dans le dépôt.
 
-```bash
-# Sur le VPS
-git clone <url> /opt/kaay-nafaar
-cd /opt/kaay-nafaar
-cp backend/.env.example backend/.env
-# Éditer backend/.env avec vos vraies clés
-docker compose -f docker-compose.prod.yml up -d
-```
+### Base de données → Supabase (PostgreSQL + pgvector)
 
-**Option B : Script automatisé**
+Renseigner `DATABASE_URL` sur Render avec le rôle applicatif dédié (pas le rôle `postgres`).
 
-```bash
-# Depuis votre machine
-./scripts/deploy.sh user@votre-vps.com
-```
+### CI (GitHub Actions)
 
-**Configuration du VPS (1ère fois) :**
-
-```bash
-# Lancer le script de setup
-# (nécessite sudo)
-chmod +x scripts/setup-vps.sh
-./scripts/setup-vps.sh
-```
-
-Puis configurer Caddy pour le SSL (éditer `/etc/caddy/Caddyfile`) :
-
-```
-api.ton-domaine.com {
-    reverse_proxy localhost:5001
-}
-```
-
-### CI/CD (GitHub Actions)
-
-Le workflow CI (`ci.yml`) exécute automatiquement :
-- Tests backend (Jest)
-- Lint backend
-- Build frontend
-- Lint frontend
-- Déploiement backend sur le VPS (si configuré avec les secrets GitHub)
-
-**Secrets GitHub à configurer :**
-- `VPS_HOST` : IP de votre VPS
-- `VPS_USER` : Utilisateur SSH
-- `VPS_SSH_KEY` : Clé privée SSH
+Le workflow `ci.yml` exécute les tests et le lint du backend et du frontend, puis le build.
 
 ---
 
