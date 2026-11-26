@@ -301,3 +301,108 @@ describe("Durcissement de la session", () => {
     expect(res.body.fiche.flashcards).toEqual([{ question: "Q ?", reponse: "R" }]);
   });
 });
+
+describe("serveur complet", () => {
+  test("route inconnue → 404 ROUTE_INTROUVABLE", async () => {
+    const res = await request(app).get("/api/nexiste-pas");
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ code: "ROUTE_INTROUVABLE" });
+  });
+
+  test("signalement d'erreur client : accepté, jeton et email masqués dans les logs", async () => {
+    const spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const res = await request(app)
+      .post("/api/erreurs-client")
+      .send({
+        type: "rendu",
+        message: "Plantage pour moussa@exemple.sn avec eyJhbGciOiJIUzI1NiJ9.eyJpZCI6Mn0abcdefghij.abcdefghijk",
+        page: "/carnets/3?token=secret",
+      });
+    expect(res.status).toBe(204);
+    const ligne = spy.mock.calls.map((c) => c[0]).join("\n");
+    expect(ligne).toContain("/carnets/3");
+    expect(ligne).not.toMatch(/secret|moussa@|eyJhbGci/);
+    spy.mockRestore();
+  });
+});
+
+describe("attaques par l'URL et la méthode HTTP", () => {
+  const creerCompte = async (email) => {
+    const res = await request(app).post("/api/auth/inscription").send({ nom: "Awa", email, motDePasse: "secret123" });
+    return { cookie: res.headers["set-cookie"] };
+  };
+  const essai = (methode, url) => request(app)[methode](url);
+
+  test.each([
+    ["remontée de dossiers", "/api/courses/..%2f..%2fetc%2fpasswd"],
+    ["remontée double encodée", "/api/courses/%252e%252e%252f%252e%252e%252fetc"],
+    ["antislash", "/api/courses/..%5c..%5cwindows"],
+    ["octet nul", "/api/courses/1%00.pdf"],
+    ["injection de ligne (CRLF)", "/api/health?x=%0d%0aSet-Cookie:%20token=pirate"],
+    ["encodage invalide", "/api/health?q=%E0%A4%A"],
+  ])("%s → 400", async (_nom, url) => {
+    const res = await essai("get", url);
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe("URL_INVALIDE");
+    expect(res.headers["set-cookie"]).toBeUndefined();
+  });
+
+  test("URL démesurée → 414", async () => {
+    const res = await essai("get", `/api/health?q=${"a".repeat(3000)}`);
+    expect(res.status).toBe(414);
+  });
+
+  test("méthode TRACE → 405 avec la liste des méthodes permises", async () => {
+    const res = await request(app).trace("/api/health");
+    expect(res.status).toBe(405);
+    expect(res.headers.allow).toMatch(/GET/);
+  });
+
+  test("substitution de méthode (GET déguisé en DELETE) refusée", async () => {
+    const { cookie } = await creerCompte("override@test.com");
+    const res = await request(app).post("/api/carnets/1").set("Cookie", cookie).set("X-HTTP-Method-Override", "DELETE").send({});
+    expect(res.status).toBe(400);
+  });
+
+  test("pollution de prototype dans le corps JSON refusée", async () => {
+    const res = await request(app)
+      .post("/api/auth/connexion")
+      .set("Content-Type", "application/json")
+      .send('{"email":"a@b.sn","motDePasse":"x","__proto__":{"admin":true}}');
+    expect(res.status).toBe(400);
+    expect({}.admin).toBeUndefined();
+  });
+
+  test("pollution de prototype dans l'URL : pas d'objet imbriqué créé", async () => {
+    const res = await essai("get", "/api/health?__proto__[admin]=1&constructor[prototype][admin]=1");
+    expect(res.status).toBe(400);
+    expect({}.admin).toBeUndefined();
+  });
+
+  test("formulaire HTML posté depuis un autre site (vecteur CSRF) → 415", async () => {
+    const res = await request(app)
+      .post("/api/auth/connexion")
+      .set("Content-Type", "application/x-www-form-urlencoded")
+      .send("email=a%40b.sn&motDePasse=x");
+    expect(res.status).toBe(415);
+  });
+
+  test("paramètres dupliqués (HPP) : la dernière valeur seule est gardée", async () => {
+    const { cookie } = await creerCompte("hpp@test.com");
+    const res = await essai("get", "/api/fiches?search=a&search=b").set("Cookie", cookie);
+    expect(res.status).not.toBe(500);
+  });
+
+  test("identifiant non numérique dans l'URL (injection) refusé proprement", async () => {
+    const { cookie } = await creerCompte("idor@test.com");
+    const res = await request(app).delete("/api/courses/1%20OR%201=1").set("Cookie", cookie);
+    expect([400, 404]).toContain(res.status);
+    expect(JSON.stringify(res.body)).not.toMatch(/sequelize|SELECT|stack/i);
+  });
+
+  test("une erreur ne révèle jamais la pile ni la technologie", async () => {
+    const res = await essai("get", "/api/nexiste/../../x");
+    expect(JSON.stringify(res.body)).not.toMatch(/at \w+ \(|node_modules|express|sequelize/i);
+    expect(res.headers["x-powered-by"]).toBeUndefined();
+  });
+});

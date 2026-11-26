@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus, Trash2, ArrowRight, BookOpen, StickyNote, Sparkles } from "lucide-react";
 import { carnetsAPI, coursAPI } from "../services/api";
 import { Button } from "../components/ui/button";
+import { messageErreur } from "@/lib/erreurs";
 
 /** Liste des carnets : chaque carnet réunit plusieurs cours pour réviser un même examen */
 export default function Carnets() {
@@ -39,7 +40,7 @@ export default function Carnets() {
       setTitre("");
       setChoisis([]);
     } catch (err) {
-      setErreur(err.response?.data?.message || "Impossible de créer le carnet.");
+      setErreur(messageErreur(err, "Impossible de créer le carnet."));
     } finally {
       setEnvoi(false);
     }

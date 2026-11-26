@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Play, Pause, SkipBack, SkipForward, Square, Hand, Loader2, Send } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
+import { messageErreur } from "@/lib/erreurs";
 
 const VITESSES = [0.85, 1, 1.15, 1.3];
 
@@ -145,7 +146,7 @@ export default function LecteurPodcast({ titre, repliques = [], langue = "fr", o
       setQuestion("");
       setQuestionOuverte(false);
     } catch (err) {
-      setErreurQuestion(err?.response?.data?.message || "Pas de réponse pour le moment. Réessaie.");
+      setErreurQuestion(messageErreur(err, "Pas de réponse pour le moment. Réessaie."));
     } finally {
       setAttente(false);
     }
