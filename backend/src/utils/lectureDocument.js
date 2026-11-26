@@ -14,6 +14,8 @@ const fs = require("fs").promises;
 const pdf = require("pdf-parse");
 const { extraireTexteImage } = require("./ocr");
 const { extraireDocx, extrairePptx } = require("./extraction");
+const { avecReessais } = require("./reessai");
+const { modelesGemini, mettreAuRepos } = require("./aiProviderManager");
 
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const TAILLE_MAX_GEMINI = 18 * 1024 * 1024; // requête « inline » limitée à ~20 Mo
@@ -32,29 +34,45 @@ Règles :
 const appelerGeminiFichier = async (buffer, mimeType, consigne = CONSIGNE_TRANSCRIPTION) => {
   const cle = process.env.GEMINI_API_KEY;
   if (!cle || buffer.length > TAILLE_MAX_GEMINI) return null;
-  const modele = process.env.GEMINI_VISION_MODEL || process.env.GEMINI_MODEL || "gemini-3.6-flash";
-
-  const reponse = await fetch(`${GEMINI_URL}/${encodeURIComponent(modele)}:generateContent`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "x-goog-api-key": cle },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: "user",
-          parts: [{ inline_data: { mime_type: mimeType, data: buffer.toString("base64") } }, { text: consigne }],
-        },
-      ],
-      generationConfig: { temperature: 0, maxOutputTokens: 32768 },
-    }),
-    signal: AbortSignal.timeout(180000),
+  // Modèles retenus par le gestionnaire (découverts au démarrage, hors modèles au repos)
+  const modeles = [
+    process.env.GEMINI_VISION_MODEL,
+    ...modelesGemini(),
+    process.env.GEMINI_MODEL || "gemini-3.6-flash",
+  ].filter((m, i, t) => m && t.indexOf(m) === i);
+  const corps = JSON.stringify({
+    contents: [
+      {
+        role: "user",
+        parts: [{ inline_data: { mime_type: mimeType, data: buffer.toString("base64") } }, { text: consigne }],
+      },
+    ],
+    generationConfig: { temperature: 0, maxOutputTokens: 32768 },
   });
-  if (!reponse.ok) {
-    console.error(`[Lecture] Gemini ${reponse.status}`);
-    return null;
+
+  for (const modele of modeles) {
+    try {
+      const donnees = await avecReessais(
+        async () => {
+          const reponse = await fetch(`${GEMINI_URL}/${encodeURIComponent(modele)}:generateContent`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": cle },
+            body: corps,
+            signal: AbortSignal.timeout(180000),
+          });
+          if (!reponse.ok) throw Object.assign(new Error(`Gemini ${reponse.status}`), { status: reponse.status });
+          return reponse.json();
+        },
+        { tentatives: 3, base: 2500, quoi: `Lecture du document (${modele})` }
+      );
+      const texte = (donnees.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").trim();
+      if (texte) return texte;
+    } catch (err) {
+      console.error(`[Lecture] ${modele} : ${err.status || err.message}`);
+      if (err.status === 429) mettreAuRepos(modele, 60000);
+    }
   }
-  const donnees = await reponse.json();
-  const texte = (donnees.candidates?.[0]?.content?.parts || []).map((p) => p.text || "").join("").trim();
-  return texte || null;
+  return null;
 };
 
 /** Sépare un texte « <<<PAGE n>>> … » (transcription) ou « — Page n — » (contenu stocké) en pages */

@@ -37,8 +37,18 @@ const genererToken = (utilisateur, sid) => {
 // un fichier directement au serveur (le proxy Vercel limite la taille des requêtes).
 // Le jeton de session, lui, ne quitte jamais le cookie httpOnly.
 const PORTEE_UPLOAD = "upload";
+// Jetons « upload » déjà utilisés : chacun ne sert qu'une fois (un jeton intercepté est inutile)
+const jetonsUtilises = new Map(); // jti → expiration (ms)
+const consommerJetonUpload = (decoded) => {
+  const maintenant = Date.now();
+  for (const [jti, exp] of jetonsUtilises) if (exp < maintenant) jetonsUtilises.delete(jti);
+  if (!decoded.jti || jetonsUtilises.has(decoded.jti)) return false;
+  jetonsUtilises.set(decoded.jti, (decoded.exp || 0) * 1000 || maintenant + 5 * 60 * 1000);
+  return true;
+};
+
 const genererJetonUpload = (utilisateur, sid) => {
-  const charge = { id: utilisateur.id, sid, portee: PORTEE_UPLOAD };
+  const charge = { id: utilisateur.id, sid, portee: PORTEE_UPLOAD, jti: crypto.randomUUID() };
   const pwv = empreinteMotDePasse(utilisateur.motDePasse);
   if (pwv) charge.pwv = pwv;
   return jwt.sign(charge, process.env.JWT_SECRET, { algorithm: ALGORITHME, expiresIn: "5m" });
@@ -47,4 +57,4 @@ const genererJetonUpload = (utilisateur, sid) => {
 const verifierToken = (token) =>
   jwt.verify(token, process.env.JWT_SECRET, { algorithms: [ALGORITHME] });
 
-module.exports = { genererToken, genererJetonUpload, verifierToken, empreinteMotDePasse, PORTEE_UPLOAD };
+module.exports = { genererToken, genererJetonUpload, consommerJetonUpload, verifierToken, empreinteMotDePasse, PORTEE_UPLOAD };

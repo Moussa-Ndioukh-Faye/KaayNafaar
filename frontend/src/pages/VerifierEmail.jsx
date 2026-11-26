@@ -23,6 +23,8 @@ export default function VerifierEmail() {
     // Un seul appel : le jeton est à usage unique (StrictMode monte deux fois en dev)
     if (!token || dejaEnvoye.current) return;
     dejaEnvoye.current = true;
+    // Retirer le jeton de la barre d'adresse (historique, captures d'écran, partage du lien)
+    window.history.replaceState(null, "", "/verifier-email");
     authAPI
       .verifierEmail(token)
       .then(({ data }) => {

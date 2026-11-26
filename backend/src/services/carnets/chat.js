@@ -73,6 +73,7 @@ const reformulerQuestion = async (historique, question) => {
     const brut = await avecDelai(
       aiManager.complete({
         ordre: ORDRE_RAPIDE,
+        optionnel: true, // petite tâche : un essai par modèle, jamais sur un modèle saturé
         maxTokens: 120,
         messages: [
           {
@@ -101,6 +102,7 @@ const suggererSuivi = async ({ question, reponse, langue = "fr" }) => {
     const brut = await avecDelai(
       aiManager.complete({
         ordre: ORDRE_RAPIDE,
+        optionnel: true, // petite tâche : un essai par modèle, jamais sur un modèle saturé
         maxTokens: 220,
         messages: [
           {

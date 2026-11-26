@@ -3,7 +3,7 @@
  */
 
 const User = require("../models/User");
-const { verifierToken, empreinteMotDePasse, PORTEE_UPLOAD } = require("../utils/jeton");
+const { verifierToken, empreinteMotDePasse, consommerJetonUpload, PORTEE_UPLOAD } = require("../utils/jeton");
 const { verifierSession } = require("../utils/sessions");
 
 // Seule route où un jeton « upload » est accepté
@@ -36,6 +36,9 @@ const proteger = async (req, res, next) => {
     // Un jeton « upload » (5 min) ne sert qu'à importer un cours, nulle part ailleurs
     if (decoded.portee && (decoded.portee !== PORTEE_UPLOAD || !estRouteUpload(req))) {
       return res.status(401).json({ success: false, message: "Jeton non valable pour cette action." });
+    }
+    if (decoded.portee === PORTEE_UPLOAD && !consommerJetonUpload(decoded)) {
+      return res.status(401).json({ success: false, message: "Jeton d'envoi déjà utilisé. Réessaie l'import." });
     }
 
     // Récupérer l'utilisateur

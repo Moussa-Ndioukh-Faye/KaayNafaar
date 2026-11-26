@@ -253,8 +253,11 @@ describe("Lecture des documents", () => {
   test("si Gemini échoue, le texte trouvé est gardé (pas de plantage)", async () => {
     process.env.GEMINI_API_KEY = "test";
     mockPagesPdf.valeur = ["Titre seul"];
+    process.env.REESSAI_ECHELLE = "0";
     global.fetch = jest.fn(async () => ({ ok: false, status: 503 }));
     const r = await lireDocument(fichier("scan.pdf"), "pdf");
+    delete process.env.REESSAI_ECHELLE;
+    expect(global.fetch.mock.calls.length).toBeGreaterThan(1); // 503 passager : nouvel essai
     expect(r.methode).toBe("texte");
     expect(r.texte).toBe("Titre seul");
   });
