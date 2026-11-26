@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { BookOpen, Plus, Search, Trash2, FileUp, X, CheckCircle2, AlertCircle, Link2 } from "lucide-react";
+import { BookOpen, Plus, Search, Trash2, FileUp, X, CheckCircle2, AlertCircle, Link2, Loader2, ScanText } from "lucide-react";
 import { coursAPI } from "../services/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -12,6 +12,30 @@ const NIVEAUX = ["débutant", "intermédiaire", "avancé"];
 const COUVERTURES = ["#0047db", "#cf1820", "#00853f", "#e8590c", "#5b4bdb", "#0b7f9e"];
 const couleurMatiere = (matiere = "") =>
   COUVERTURES[[...matiere].reduce((somme, c) => somme + c.charCodeAt(0), 0) % COUVERTURES.length];
+
+/** Où en est la lecture du document par l'IA (badge de la carte) */
+function EtatLecture({ lecture }) {
+  if (lecture.etat === "echec" || lecture.etat === "interrompue") {
+    return (
+      <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive">
+        <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+        {lecture.etat === "echec" ? "Lecture impossible" : "Lecture interrompue : réimporte"}
+      </span>
+    );
+  }
+  const texte =
+    lecture.etat === "indexation"
+      ? "Préparation des révisions…"
+      : lecture.total
+        ? `L'IA lit ton document… ${lecture.pagesLues}/${lecture.total} p.`
+        : "L'IA lit ton document…";
+  return (
+    <span role="status" className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+      <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+      {texte}
+    </span>
+  );
+}
 
 /** Carte de cours : pastille de couleur de la matière, titre, détails */
 function CarteCours({ cours: c, onSupprimer }) {
@@ -43,7 +67,9 @@ function CarteCours({ cours: c, onSupprimer }) {
       </div>
       <div className="mt-auto pt-4 flex items-center justify-between gap-2 text-sm text-muted-foreground">
         <span className="truncate">{details}</span>
-        {c.resumeIA ? (
+        {c.lecture ? (
+          <EtatLecture lecture={c.lecture} />
+        ) : c.resumeIA ? (
           <span className="shrink-0 rounded-full bg-succes/15 px-2.5 py-0.5 text-xs font-semibold text-succes">Résumé prêt</span>
         ) : Array.isArray(c.tags) && c.tags.length ? (
           <span className="truncate">{c.tags.join(", ")}</span>
@@ -92,12 +118,22 @@ export default function MesCours() {
 
   useEffect(() => { chargerCours(); }, []);
 
-  const chargerCours = async () => {
+  // Tant qu'un document est en cours de lecture, la liste se met à jour toute seule
+  const lectureEnCours = cours.some((c) => c.lecture && ["lecture", "indexation"].includes(c.lecture.etat));
+  useEffect(() => {
+    if (!lectureEnCours) return undefined;
+    const minuterie = setInterval(() => {
+      if (document.visibilityState === "visible") chargerCours({ silencieux: true });
+    }, 4000);
+    return () => clearInterval(minuterie);
+  }, [lectureEnCours]);
+
+  const chargerCours = async ({ silencieux = false } = {}) => {
     try {
       const { data } = await coursAPI.getCours();
       setCours(data.cours ?? []);
-    } catch (_) {
-      setErreur("Impossible de charger les cours.");
+    } catch (err) {
+      if (!silencieux) setErreur(messageErreur(err, "Impossible de charger les cours."));
     } finally {
       setChargement(false);
     }
@@ -105,8 +141,9 @@ export default function MesCours() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.titre.trim() || !form.matiere.trim() || !form.contenu.trim()) {
-      setErreur("Titre, matière et contenu sont requis.");
+    // Avec un fichier, l'IA lit le document : le contenu tapé est facultatif (il devient une note)
+    if (!form.titre.trim() || !form.matiere.trim() || (!fichier && !form.contenu.trim())) {
+      setErreur(fichier ? "Titre et matière sont requis." : "Titre, matière et contenu (ou un fichier) sont requis.");
       return;
     }
     setEnvoi(true);
@@ -121,7 +158,7 @@ export default function MesCours() {
       setAfficherFormulaire(false);
       setForm({ titre: "", matiere: "", contenu: "", niveau: "intermédiaire", tags: "", dureeEstimee: 30 });
       setFichier(null);
-      setSucces("Cours ajouté avec succès !");
+      setSucces(fichier ? "Cours ajouté : l'IA lit ton document. Tu peux continuer pendant ce temps." : "Cours ajouté avec succès !");
       chargerCours();
       setTimeout(() => setSucces(""), 3000);
     } catch (err) {
@@ -255,12 +292,16 @@ export default function MesCours() {
 
               <div className="space-y-2">
                 <label htmlFor="mescours-champ-187" className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
-                  Contenu du cours * <span className="text-gray-500 font-normal">(Texte brut pour analyse IA)</span>
+                  {fichier ? (
+                    <>Notes <span className="text-muted-foreground font-normal">(facultatif : l'IA lira ton document)</span></>
+                  ) : (
+                    <>Contenu du cours * <span className="text-muted-foreground font-normal">(ou joins un fichier ci-dessous)</span></>
+                  )}
                 </label>
                 <textarea id="mescours-champ-187"
                   className="input-field h-40 resize-none"
-                  required
-                  placeholder="Colle ici le texte de tes leçons ou notes…"
+                  required={!fichier}
+                  placeholder={fichier ? "Ajoute si tu veux une remarque du prof, un chapitre à cibler…" : "Colle ici le texte de tes leçons ou notes…"}
                   value={form.contenu} maxLength={50000}
                   onChange={(e) => setForm({ ...form, contenu: e.target.value })}
                 />

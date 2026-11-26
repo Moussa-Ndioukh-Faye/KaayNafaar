@@ -8,6 +8,7 @@ const Course = require("../models/Course");
 const Progression = require("../models/Progression");
 const { Op } = require("sequelize");
 const { extractionQueue } = require("../utils/worker");
+const { avecEtatLecture, EN_TRAITEMENT } = require("../utils/suiviLecture");
 const { supprimerIndexCours } = require("../utils/indexation");
 const { creerCoursDepuisLien } = require("../services/cours");
 
@@ -31,7 +32,7 @@ const getCours = async (req, res) => {
       where,
       order: [["createdAt", "DESC"]],
     });
-    res.json({ success: true, count: cours.length, cours });
+    res.json({ success: true, count: cours.length, cours: cours.map(avecEtatLecture) });
   } catch (error) {
     console.error("Erreur getCours:", error);
     res.status(500).json({ success: false, message: "Impossible de récupérer les cours." });
@@ -54,7 +55,7 @@ const getCoursParId = async (req, res) => {
         .json({ success: false, message: "Cours introuvable." });
     }
 
-    res.json({ success: true, cours });
+    res.json({ success: true, cours: avecEtatLecture(cours) });
   } catch (error) {
     console.error("Erreur getCoursParId:", error);
     res.status(500).json({ success: false, message: "Impossible de récupérer ce cours." });
@@ -101,7 +102,8 @@ const creerCours = async (req, res) => {
     const cours = await Course.create({
       titre,
       matiere,
-      contenu: contenu || "Traitement en cours...", // Texte temporaire si extraction en arrière-plan
+      // Avec un fichier, c'est TOUJOURS le fichier qui est lu (le texte tapé devient une note)
+      contenu: fichierPath ? EN_TRAITEMENT : contenu,
       niveau: niveau || "intermédiaire",
       tags: tags || [],
       dureeEstimee: dureeEstimee || 30,
@@ -125,7 +127,9 @@ const creerCours = async (req, res) => {
         originalname: req.file ? req.file.originalname : "manuel.txt",
         utilisateurId: req.utilisateur.id,
         titre: cours.titre,
-        contenuDirect: contenu, // Si le texte est déjà là, on l'indexera direct dans le worker
+        // Sans fichier : le texte tapé est indexé tel quel. Avec un fichier : il s'ajoute en note.
+        contenuDirect: fichierPath ? null : contenu,
+        noteEtudiant: fichierPath && contenu ? String(contenu).slice(0, 20000) : null,
       }).catch(err => console.error("Erreur ajout file d'attente:", err));
     }
 
