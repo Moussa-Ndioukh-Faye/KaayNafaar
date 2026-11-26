@@ -97,7 +97,8 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "blob:", "https://*"],
-      connectSrc: ["'self'", "https://185-98-136-82.sslip.io", "https://*.vercel.app", "https://*.trycloudflare.com", "https://*.google.com", "https://*.groq.com"],
+      // L'API ne sert pas de pages : ses réponses n'ont rien à charger ailleurs
+      connectSrc: ["'self'"],
       fontSrc: ["'self'", "https:", "data:"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],

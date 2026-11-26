@@ -1,12 +1,41 @@
 node_modules/
-.env
-.env.local
-.env.*.local
-uploads/
 dist/
 build/
-*.log
+coverage/
 .DS_Store
+
+# ── Secrets : ne JAMAIS commiter (dépôt public) ────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+id_rsa*
+id_ed25519*
+*.keystore
+credentials*.json
+service-account*.json
+secrets/
+
+# Sessions, jetons et cookies locaux (curl, tests manuels)
+cookies*.txt
+*.cookies
+*.har
+
+# Données d'utilisateurs et sauvegardes de base
+uploads/
 *.sqlite
-# Fichiers de session locaux (curl)
-cookies.txt
+*.sqlite3
+*.db
+*.sql
+*.dump
+*.backup
+dump*/
+
+# Journaux et diagnostics locaux
+*.log
+logs/
+diag*.js

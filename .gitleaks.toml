@@ -1,0 +1,18 @@
+# Détection de secrets (CI) : règles par défaut de gitleaks + exceptions connues
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Valeurs factices des tests et de la CI, exemples de configuration"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)package-lock\.json$''',
+  '''^backend/tests/''',
+  '''^frontend/src/.*\.test\.jsx?$''',
+  '''^frontend/src/.*/__tests__/''',
+  '''^\.agents/''',
+]
+regexes = [
+  '''ci-(test|cookie)-secret-not-for-production''',
+  '''ci-dummy-key''',
+]
