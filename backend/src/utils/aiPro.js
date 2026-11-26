@@ -13,7 +13,19 @@ const embeddings = new GoogleGenerativeAIEmbeddings({
   apiKey: process.env.GEMINI_API_KEY || "cle-gemini-non-configuree",
   // text-embedding-004 a été arrêté le 14 janvier 2026 ; remplaçant recommandé : gemini-embedding-2
   model: process.env.GEMINI_EMBEDDING_MODEL || "gemini-embedding-2",
+  // Nouvelles tentatives gérées ici (avecReessais) pour maîtriser l'attente sur 429/503
+  maxRetries: 0,
 });
+
+const { avecReessais } = require("./reessai");
+
+/** Un vecteur vide ou absent est une erreur (sinon un passage serait indexé sans embedding) */
+const verifierVecteurs = (vecteurs, attendus) => {
+  if (!Array.isArray(vecteurs) || vecteurs.length !== attendus || vecteurs.some((v) => !Array.isArray(v) || !v.length)) {
+    throw Object.assign(new Error("Embeddings incomplets renvoyés par Gemini"), { status: 503 });
+  }
+  return vecteurs;
+};
 
 // Les passages sont stockés dans la table course_embeddings (pgvector) :
 // écriture dans utils/indexation.js, lecture dans utils/passages.js.
@@ -32,7 +44,10 @@ const obtenirEmbedding = async (texte) => {
     }
   } catch (_) { /* Redis non disponible */ }
 
-  const [vecteur] = await embeddings.embedDocuments([texte]);
+  const [vecteur] = await avecReessais(
+    async () => verifierVecteurs(await embeddings.embedDocuments([texte]), 1),
+    { tentatives: 3, base: 800, quoi: "Embedding de la question" }
+  );
   
   try {
     if (redis && typeof redis.set === 'function') {
@@ -43,10 +58,14 @@ const obtenirEmbedding = async (texte) => {
   return vecteur;
 };
 
-/** Embeddings d'une liste de passages (indexation, par lots) */
+/** Embeddings d'une liste de passages (indexation, par lots) — patient : l'indexation n'est pas pressée */
 const embedderTextes = async (textes) => {
   if (!textes.length) return [];
-  return embeddings.embedDocuments(textes);
+  return avecReessais(async () => verifierVecteurs(await embeddings.embedDocuments(textes), textes.length), {
+    tentatives: 5,
+    base: 3000,
+    quoi: "Embeddings des passages",
+  });
 };
 
 /** Change la « version » RAG de l'utilisateur : les résultats en cache deviennent obsolètes */

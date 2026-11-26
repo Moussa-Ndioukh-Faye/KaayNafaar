@@ -174,6 +174,9 @@ if (require.main === module) {
       console.log(`📚 Environnement : ${process.env.NODE_ENV || "development"}`);
     });
 
+    // Cours lus mais non indexés (quota IA dépassé à l'import) : réindexés automatiquement
+    require("./src/utils/rattrapageIndex").demarrerRattrapage();
+
     // ── Graceful Shutdown ──────────────────────────────────────────
     const arreter = async (signal) => {
       console.log(`\n🛑 Signal ${signal} reçu, arrêt gracieux...`);

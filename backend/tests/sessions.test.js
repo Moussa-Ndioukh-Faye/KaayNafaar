@@ -252,4 +252,14 @@ describe("Sessions et appareils connectés", () => {
     // Le même jeton n'ouvre aucune autre route
     expect((await request(app).get("/api/auth/profil").set("Authorization", `Bearer ${body.jeton}`)).status).toBe(401);
   });
+
+  test("le jeton d'envoi ne sert qu'une fois (un jeton intercepté est inutile)", async () => {
+    const { telephone } = await deuxAppareils("unique@test.com");
+    const { body } = await request(app).get("/api/auth/jeton-upload").set("Cookie", telephone);
+    expect(jwt.decode(body.jeton).jti).toBeTruthy();
+    const premier = await request(app).post("/api/courses").set("Authorization", `Bearer ${body.jeton}`).send({});
+    expect(premier.status).not.toBe(401);
+    const second = await request(app).post("/api/courses").set("Authorization", `Bearer ${body.jeton}`).send({});
+    expect(second.status).toBe(401);
+  });
 });

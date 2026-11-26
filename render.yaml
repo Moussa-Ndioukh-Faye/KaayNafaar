@@ -24,10 +24,11 @@ services:
       # Modèles IA (modifiables ici quand un fournisseur retire un modèle)
       - key: GEMINI_MODEL
         value: gemini-3.6-flash
+      - key: GEMINI_MODEL_SECOURS
+        value: gemini-3.5-flash-lite
       - key: GEMINI_EMBEDDING_MODEL
         value: gemini-embedding-2
-      - key: GROQ_MODEL
-        value: llama-3.3-70b-versatile
+      # GROQ_MODEL facultatif : le serveur lit la liste des modèles Groq disponibles et choisit le meilleur
       # Sécurité : Vercel (rewrite /api) + Render = 2 proxys devant le serveur
       - key: TRUST_PROXY
         value: "2"

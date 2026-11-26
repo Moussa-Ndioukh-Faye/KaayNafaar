@@ -21,6 +21,7 @@ const TAILLE_PASSAGE = 1100;
 const CHEVAUCHEMENT = 160;
 const PAGE_COURTE = 450; // diapositives : on regroupe jusqu'à ~ cette taille
 const LOT_EMBEDDINGS = 50;
+const PAUSE_ENTRE_LOTS_MS = 1500;
 const PASSAGES_MAX = 800; // ~ un manuel de 300 pages
 
 const decoupeur = new RecursiveCharacterTextSplitter({
@@ -113,6 +114,8 @@ const indexerDocument = async ({ coursId, utilisateurId, titre, pages, texte }) 
   const aEmbarquer = passages.map((p) => `Cours : ${titre}${p.section ? ` — ${p.section}` : ""}\n\n${p.texte}`);
   const vecteurs = [];
   for (let i = 0; i < aEmbarquer.length; i += LOT_EMBEDDINGS) {
+    // Petite pause entre les lots : le quota gratuit de Gemini est compté par minute
+    if (i > 0 && process.env.NODE_ENV !== "test") await new Promise((r) => setTimeout(r, PAUSE_ENTRE_LOTS_MS));
     vecteurs.push(...(await embedderTextes(aEmbarquer.slice(i, i + LOT_EMBEDDINGS))));
   }
 
